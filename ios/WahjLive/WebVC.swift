@@ -30,6 +30,9 @@ final class WebVC: UIViewController, WKScriptMessageHandler, WKNavigationDelegat
         cfg.allowsPictureInPictureMediaPlayback = false
         cfg.websiteDataStore = .default()
         cfg.userContentController.add(WeakHandler(self), name: "wahj")
+        let top = Int(UIApplication.shared.windows.first?.safeAreaInsets.top ?? 47)
+        let bottom = Int(UIApplication.shared.windows.first?.safeAreaInsets.bottom ?? 34)
+        cfg.userContentController.addUserScript(WKUserScript(source: "document.documentElement.style.setProperty('--nst','\(max(top, 20))px');document.documentElement.style.setProperty('--nsb','\(bottom)px')", injectionTime: .atDocumentStart, forMainFrameOnly: true))
         let ua = "WahjLive-iOS/\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1")"
         cfg.applicationNameForUserAgent = ua
 
@@ -173,6 +176,20 @@ final class WebVC: UIViewController, WKScriptMessageHandler, WKNavigationDelegat
             return decisionHandler(.cancel)
         }
         decisionHandler(.allow)
+    }
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { pushInsets() }
+
+    override func viewSafeAreaInsetsDidChange() {
+        super.viewSafeAreaInsetsDidChange()
+        pushInsets()
+    }
+
+    /// WKWebView doesn't always report env(safe-area-inset-*) — pass the real values in.
+    private func pushInsets() {
+        let i = view.safeAreaInsets
+        let js = "document.documentElement.style.setProperty('--nst','\(Int(i.top))px');document.documentElement.style.setProperty('--nsb','\(Int(i.bottom))px')"
+        web?.evaluateJavaScript(js, completionHandler: nil)
     }
 
     func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) { showError() }

@@ -10,6 +10,10 @@ const store = {
   set(k, v) { try { localStorage.setItem("wahj." + k, JSON.stringify(v)); } catch (e) {} },
 };
 
+/* ---------------- app settings (this device) ---------------- */
+const P = Object.assign({ haptics: true, fxSound: true, reduceFx: false, showLat: true, chatOnStream: true, autoSound: true }, store.get("prefs", {}));
+const setP = (k, v) => { P[k] = v; store.set("prefs", P); };
+
 /* ---------------- state ---------------- */
 const S = {
   token: store.get("token", ""),
@@ -51,8 +55,21 @@ const T = {
     unfollow: "متابَع", followers: "متابِع", past: "بثوث سابقة", edit: "تعديل الملف", save: "حفظ", bio: "نبذة", color: "لون الحساب",
     settings: "الإعدادات", language: "اللغة", logout: "تسجيل الخروج", focusGuide: "دليل إخفاء الإشعارات في آيفون",
     focusSteps: "١. افتح تطبيق «الاختصارات» ← «الأتمتة» ← «أتمتة جديدة»<br>٢. اختر «تطبيق» ← وهج ← «عند الفتح»<br>٣. اختر «تشغيل فوري»<br>٤. أضف إجراء «تعيين التركيز» ← «عدم الإزعاج» ← تشغيل<br><br>الآن كل مرة تفتح وهج يتفعّل عدم الإزعاج تلقائياً ✓",
-    openShortcuts: "فتح الاختصارات", errs: { bad_handle: "اسم المستخدم: ٣–٢٠ حرفاً إنجليزياً أو أرقام", weak_password: "كلمة المرور ٦ أحرف على الأقل", taken: "الاسم محجوز", bad_login: "بيانات الدخول غير صحيحة", rate: "محاولات كثيرة، انتظر قليلاً", net: "تعذّر الاتصال", auth: "سجّل الدخول أولاً", not_invited: "لم تتم دعوتك", login: "سجّل الدخول للمشاركة", slow: "انتظر لحظة", guests_full: "اكتمل عدد الضيوف (٣)" },
+    openShortcuts: "فتح الاختصارات", errs: { bad_handle: "اسم المستخدم: ٣–٢٠ حرفاً إنجليزياً أو أرقام", weak_password: "كلمة المرور ٦ أحرف على الأقل", taken: "الاسم محجوز", bad_login: "بيانات الدخول غير صحيحة", rate: "محاولات كثيرة، انتظر قليلاً", net: "تعذّر الاتصال", auth: "سجّل الدخول أولاً", not_invited: "لم تتم دعوتك", login: "سجّل الدخول للمشاركة", slow: "انتظر لحظة", guests_full: "اكتمل عدد الضيوف (٣)", bad_email: "البريد الإلكتروني غير صحيح", email_taken: "هذا البريد مسجّل مسبقاً", bad_code: "الرمز غير صحيح أو منتهي", mail_off: "إرسال البريد غير مفعّل في السيرفر بعد", bad_link: "الرابط غير صحيح", bad_old: "كلمة المرور الحالية غير صحيحة", bad_image: "الصورة غير مدعومة", fx_off: "البثّاث أوقف المؤثرات", ch_off: "البثّاث أوقف التحديات", co_off: "البثّاث لا يقبل طلبات البث المشترك" },
     sentFx: "أرسل", hypeTrain: "قطار الحماس 🚀", latency: "تأخير", guestsN: "ضيوف", layoutSplit: "شاشة مقسومة", layoutFocus: "تركيز",
+    settingsT: "الإعدادات", secAccount: "الحساب", secStream: "إعدادات البث الافتراضية", secRoom: "قواعد غرفتي", secWatch: "المشاهدة", secNotif: "الإشعارات", secApp: "التطبيق", secAbout: "حول",
+    editProfile: "تعديل الملف الشخصي", changePass: "تغيير كلمة المرور", oldPass: "كلمة المرور الحالية", deleteAcc: "حذف الحساب", deleteQ: "سيُحذف حسابك نهائياً. اكتب كلمة المرور للتأكيد", deleted: "تم حذف الحساب",
+    usernameLocked: "اسم المستخدم لا يمكن تغييره", photo: "الصورة", changePhoto: "تغيير الصورة", removePhoto: "حذف الصورة", link: "رابط (يوتيوب، تيك توك…)", saved: "تم الحفظ ✓",
+    followingN: "يتابع", streamsN: "بث", hoursN: "ساعة بث", bestPeak: "أعلى مشاهدة", gamesPlayed: "ألعابه", joined: "انضم",
+    allowFx: "السماح بالمؤثرات", allowFxD: "يرسل المشاهدون مؤثرات تظهر في البث", allowCh: "السماح بالتحديات", coStreamWho: "من يطلب البث المشترك", everyone: "الجميع", followersOnly: "المتابِعون", nobody: "لا أحد",
+    slowMode: "الوضع البطيء للدردشة", off: "إيقاف", haptics: "الاهتزاز", fxSound: "أصوات المؤثرات", reduceFx: "تقليل المؤثرات", reduceFxD: "بدون اهتزاز الشاشة والوميض", showLat: "إظهار التأخير والإطارات",
+    chatOnStream: "إظهار الدردشة فوق البث", autoSound: "تشغيل الصوت تلقائياً", chatOverlayDef: "الشات فوق اللعبة تلقائياً", clearCache: "مسح بيانات التطبيق المؤقتة", version: "الإصدار",
+    email: "البريد الإلكتروني", handleOrEmail: "اسم المستخدم أو البريد", forgot: "نسيت كلمة المرور؟", sendCode: "إرسال الرمز", code: "الرمز من البريد",
+    newPass: "كلمة مرور جديدة", resetDone: "تم تغيير كلمة المرور ✓", codeSent: "أرسلنا رمزاً إلى بريدك (تفقّد الرسائل غير المرغوبة)", notifyMail: "تنبيهات البريد", notifyMailD: "رسالة عندما يبدأ من تتابعهم البث",
+    pickGame: "اختر اللعبة", onPhone: "ألعاب على هاتفك", popular: "الأكثر شعبية", searchGames: "ابحث عن أي لعبة…", noGames: "لا توجد نتائج", otherGame: "لعبة أخرى (بدون صورة)", change: "تغيير",
+    nowPlaying: "ألعاب يُبث عليها الآن", speedTest: "اختبار سرعة السيرفر", sStart: "ابدأ الاختبار", sAgain: "أعد الاختبار", ping: "الاستجابة", jitter: "التذبذب", down: "التنزيل", up: "الرفع", server: "السيرفر",
+    sPing: "قياس الاستجابة…", sDown: "قياس التنزيل…", sUp: "قياس الرفع…", ms: "مللي ثانية", mbps: "ميغابت/ث",
+    vGreat: "ممتاز ✓ يمكنك البث بجودة {q}", vOk: "جيد — يُنصح بالبث بجودة {q}", vBad: "الرفع ضعيف — البث قد يتقطع. جرّب شبكة أخرى أو جودة 540p",
     sound: "الصوت", voiceLink: "صوت الضيوف", you: "أنت", hostTag: "البثّاث", guestTag: "ضيف", chAccepted: "قَبِل التحدي!", chDone: "نجح في التحدي! 🎉",
     chFailed: "فشل التحدي 😅", secs: "ث", profile: "حسابي", noPast: "لا توجد بثوث سابقة", pendingLive: "البث لم يبدأ بعد…", camNA: "الكاميرا أثناء اللعب غير مدعومة في آيفون",
   },
@@ -83,8 +100,21 @@ const T = {
     unfollow: "Following", followers: "followers", past: "Past streams", edit: "Edit profile", save: "Save", bio: "Bio", color: "Accent color",
     settings: "Settings", language: "Language", logout: "Sign out", focusGuide: "Hide notifications on iPhone",
     focusSteps: "1. Open Shortcuts → Automation → New Automation<br>2. Choose App → Wahj → Is Opened<br>3. Choose Run Immediately<br>4. Add action Set Focus → Do Not Disturb → On<br><br>Now Do Not Disturb turns on automatically every time you open Wahj ✓",
-    openShortcuts: "Open Shortcuts", errs: { bad_handle: "Username: 3–20 latin letters/digits", weak_password: "Password needs 6+ characters", taken: "Username taken", bad_login: "Wrong username or password", rate: "Too many attempts, wait a bit", net: "Connection failed", auth: "Sign in first", not_invited: "You were not invited", login: "Sign in to take part", slow: "Slow down a moment", guests_full: "Guest slots are full (3)" },
+    openShortcuts: "Open Shortcuts", errs: { bad_handle: "Username: 3–20 latin letters/digits", weak_password: "Password needs 6+ characters", taken: "Username taken", bad_login: "Wrong username or password", rate: "Too many attempts, wait a bit", net: "Connection failed", auth: "Sign in first", not_invited: "You were not invited", login: "Sign in to take part", slow: "Slow down a moment", guests_full: "Guest slots are full (3)", bad_email: "Invalid email address", email_taken: "Email already registered", bad_code: "Wrong or expired code", mail_off: "Email sending isn't enabled on the server yet", bad_link: "Invalid link", bad_old: "Current password is wrong", bad_image: "Unsupported image", fx_off: "The streamer turned effects off", ch_off: "The streamer turned challenges off", co_off: "The streamer isn't accepting co-stream requests" },
     sentFx: "sent", hypeTrain: "HYPE TRAIN 🚀", latency: "Delay", guestsN: "guests", layoutSplit: "Split screen", layoutFocus: "Focus",
+    settingsT: "Settings", secAccount: "Account", secStream: "Default stream settings", secRoom: "My room rules", secWatch: "Watching", secNotif: "Notifications", secApp: "App", secAbout: "About",
+    editProfile: "Edit profile", changePass: "Change password", oldPass: "Current password", deleteAcc: "Delete account", deleteQ: "Your account will be permanently deleted. Enter your password to confirm", deleted: "Account deleted",
+    usernameLocked: "Username can't be changed", photo: "Photo", changePhoto: "Change photo", removePhoto: "Remove photo", link: "Link (YouTube, TikTok…)", saved: "Saved ✓",
+    followingN: "following", streamsN: "streams", hoursN: "hours live", bestPeak: "best peak", gamesPlayed: "Games", joined: "Joined",
+    allowFx: "Allow effects", allowFxD: "Viewers can send effects onto the stream", allowCh: "Allow challenges", coStreamWho: "Who can ask to co-stream", everyone: "Everyone", followersOnly: "Followers", nobody: "Nobody",
+    slowMode: "Chat slow mode", off: "Off", haptics: "Haptics", fxSound: "Effect sounds", reduceFx: "Reduce effects", reduceFxD: "No screen shake or flashes", showLat: "Show delay & FPS",
+    chatOnStream: "Show chat over the stream", autoSound: "Play sound automatically", chatOverlayDef: "Chat over game by default", clearCache: "Clear cached app data", version: "Version",
+    email: "Email", handleOrEmail: "Username or email", forgot: "Forgot password?", sendCode: "Send code", code: "Code from email",
+    newPass: "New password", resetDone: "Password changed ✓", codeSent: "We emailed you a code (check spam too)", notifyMail: "Email alerts", notifyMailD: "Get an email when people you follow go live",
+    pickGame: "Pick the game", onPhone: "Games on your phone", popular: "Popular", searchGames: "Search any game…", noGames: "No results", otherGame: "Other game (no picture)", change: "Change",
+    nowPlaying: "Games live now", speedTest: "Server speed test", sStart: "Start test", sAgain: "Test again", ping: "Ping", jitter: "Jitter", down: "Download", up: "Upload", server: "Server",
+    sPing: "Measuring ping…", sDown: "Measuring download…", sUp: "Measuring upload…", ms: "ms", mbps: "Mbps",
+    vGreat: "Excellent ✓ you can stream at {q}", vOk: "Good — streaming at {q} is recommended", vBad: "Upload is weak — the stream may stutter. Try another network or 540p",
     sound: "Sound", voiceLink: "Guest voice", you: "You", hostTag: "HOST", guestTag: "GUEST", chAccepted: "accepted the challenge!", chDone: "completed the challenge! 🎉",
     chFailed: "failed the challenge 😅", secs: "s", profile: "Profile", noPast: "No past streams", pendingLive: "Stream hasn't started yet…", camNA: "Face cam while gaming isn't supported on iPhone",
   },
@@ -121,7 +151,7 @@ window.__native = (e) => {
 const plat = () => (S.native && S.native.platform) || (/iphone|ipad/i.test(navigator.userAgent) ? "ios-web" : /android/i.test(navigator.userAgent) ? "android-web" : "web");
 const isIOS = () => plat() === "ios";
 const isAndroid = () => plat() === "android";
-const haptic = (k = "light") => Native.has() && Native.post("haptic", { k });
+const haptic = (k = "light") => P.haptics && Native.has() && Native.post("haptic", { k });
 
 /* ---------------- api ---------------- */
 async function api(path, body, method) {
@@ -143,7 +173,13 @@ function toast(msg, ms = 2600) {
   el.classList.add("on");
   clearTimeout(toastT);
   toastT = setTimeout(() => el.classList.remove("on"), ms);
+  el.onclick = () => el.classList.remove("on");
 }
+const pwField = (id, ph, ac = "current-password") => `<div class="pwrap"><input class="inp pw" id="${id}" type="text" placeholder="${ph}" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" dir="ltr" data-ac="${ac}"><button class="eye" type="button" data-eye="${id}">${ic("eye")}</button></div>`;
+function bindEyes(root = document) {
+  $$("[data-eye]", root).forEach((b) => (b.onclick = () => { const i = $("#" + b.dataset.eye, root); const on = i.classList.toggle("show"); b.innerHTML = ic(on ? "eyeoff" : "eye"); }));
+}
+const gIcon = (src, cls = "gi", size = "") => src ? `<img class="${cls}" src="${esc(src)}" alt="" loading="lazy" ${size ? `style="width:${size}px;height:${size}px"` : ""} onerror="this.style.visibility='hidden'">` : "";
 let sheetClose = null;
 function sheet(html, onMount) {
   const sc = $("#scrim"), sh = $("#sheet");
@@ -164,7 +200,9 @@ function confirmBox(q, yes) {
   sheet(`<h3>${esc(q)}</h3><div class="row" style="margin-top:8px"><button class="btn g" data-n>${t("no")}</button><button class="btn d" data-y>${t("yes")}</button></div>`,
     (sh, close) => { $("[data-n]", sh).onclick = close; $("[data-y]", sh).onclick = () => { close(); yes(); }; });
 }
-const avatar = (u, cls = "") => `<div class="av ${cls}" style="background:${esc((u && u.color) || "#7C5CFF")}">${esc(((u && (u.name || u.handle)) || "?").trim().charAt(0).toUpperCase())}</div>`;
+const avatar = (u, cls = "", style = "") => (u && u.avatar)
+  ? `<div class="av ${cls}" style="background:${esc(u.color || "#7C5CFF")};overflow:hidden;${style}"><img src="${esc(u.avatar)}" alt="" style="width:100%;height:100%;object-fit:cover"></div>`
+  : `<div class="av ${cls}" style="background:${esc((u && u.color) || "#7C5CFF")};${style}">${esc(((u && (u.name || u.handle)) || "?").trim().charAt(0).toUpperCase())}</div>`;
 const fmtN = (n) => (n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + "K" : String(n | 0));
 const fmtDur = (ms) => { const s = Math.max(0, ms / 1000 | 0); const h = s / 3600 | 0, m = (s % 3600) / 60 | 0, x = s % 60; return (h ? h + ":" : "") + String(m).padStart(h ? 2 : 1, "0") + ":" + String(x).padStart(2, "0"); };
 const CATS = ["all", "action", "sports", "br", "racing", "strategy", "retro", "chill"];
@@ -347,6 +385,7 @@ const FX = {
   ac: null,
   audio() { try { this.ac = this.ac || new (window.AudioContext || window.webkitAudioContext)(); if (this.ac.state === "suspended") this.ac.resume(); return this.ac; } catch (e) { return null; } },
   tone(freqs, dur, type = "sawtooth", vol = 0.12) {
+    if (!P.fxSound) return;
     const ac = this.audio(); if (!ac) return;
     const g = ac.createGain(); g.connect(ac.destination);
     g.gain.setValueAtTime(0.0001, ac.currentTime); g.gain.exponentialRampToValueAtTime(vol, ac.currentTime + 0.03);
@@ -381,8 +420,8 @@ const FX = {
       case "confetti": this.confetti(canvas); sound && this.tone([523, 659, 784], 0.5, "triangle", 0.08); break;
       case "hearts": this.floaty(root, "💖", 18, { spread: true }); break;
       case "fire": this.floaty(root, "🔥", 22, { spread: true, gap: 45 }); sound && this.tone([90, 120], 0.8, "sawtooth", 0.05); break;
-      case "shake": stage.classList.remove("shake"); void stage.offsetWidth; stage.classList.add("shake"); sound && this.tone([55, 70], 0.6, "square", 0.1); break;
-      case "lightning": { const f = document.createElement("div"); f.className = "flash"; root.appendChild(f); setTimeout(() => f.remove(), 700); this.floaty(root, "⚡", 6, { spread: true, size: 54 }); sound && this.tone([1800, 60], 0.35, "sawtooth", 0.08); break; }
+      case "shake": if (P.reduceFx) { this.floaty(root, "💥", 6, { spread: true }); break; } stage.classList.remove("shake"); void stage.offsetWidth; stage.classList.add("shake"); sound && this.tone([55, 70], 0.6, "square", 0.1); break;
+      case "lightning": { if (P.reduceFx) { this.floaty(root, "⚡", 6, { spread: true, size: 54 }); break; } const f = document.createElement("div"); f.className = "flash"; root.appendChild(f); setTimeout(() => f.remove(), 700); this.floaty(root, "⚡", 6, { spread: true, size: 54 }); sound && this.tone([1800, 60], 0.35, "sawtooth", 0.08); break; }
       case "airhorn": this.floaty(root, "📯", 4, { size: 60, gap: 200 }); sound && [0, 280, 560].forEach((d) => setTimeout(() => this.tone([466, 470, 932], 0.24, "sawtooth", 0.1), d)); break;
       case "boo": this.floaty(root, "👻", 10, { spread: true, size: 44 }); sound && this.tone([150, 110], 1, "triangle", 0.12); break;
       case "wave": this.floaty(root, "🌊", 14, { spread: true, gap: 60 }); sound && this.tone([200, 300], 0.9, "sine", 0.08); break;
@@ -498,19 +537,23 @@ VIEWS.auth = (root) => {
   root.innerHTML = `<div class="view auth">
     <div class="hero"><div class="logo">${ic("live")}</div><h1>${S.lang === "ar" ? "وهج" : "Wahj"}<span style="opacity:.5;font-weight:500"> Live</span></h1><p>${t("tag")}</p></div>
     <div class="seg" id="am"><button class="on" data-m="login">${t("login")}</button><button data-m="register">${t("register")}</button></div>
-    <div class="field" style="margin-top:16px"><input class="inp" id="ah" placeholder="${t("handle")}" autocapitalize="none" autocomplete="username" dir="ltr"></div>
+    <div class="field" style="margin-top:16px"><input class="inp" id="ah" placeholder="${t("handleOrEmail")}" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" dir="ltr"></div>
+    <div class="field hide" id="aew"><input class="inp" id="ae" type="email" inputmode="email" placeholder="${t("email")}" autocapitalize="none" autocorrect="off" spellcheck="false" dir="ltr"></div>
     <div class="field hide" id="anw"><input class="inp" id="an" placeholder="${t("name")}"></div>
-    <div class="field"><input class="inp" id="ap" type="password" placeholder="${t("password")}" autocomplete="current-password" dir="ltr"></div>
+    <div class="field">${pwField("ap", t("password"))}</div>
     <button class="btn p" id="ago" style="margin-top:10px">${t("go")}</button>
+    <button class="link" id="afg">${t("forgot")}</button>
     <button class="btn" id="aguest" style="margin-top:6px;color:var(--mut)">${t("guest")}</button>
     <div class="row" style="justify-content:center;margin-top:14px"><button class="chip" id="alang">${ic("globe")} ${S.lang === "ar" ? "English" : "العربية"}</button></div>
   </div>`;
-  $$("#am button").forEach((b) => (b.onclick = () => { mode = b.dataset.m; $$("#am button").forEach((x) => x.classList.toggle("on", x === b)); $("#anw").classList.toggle("hide", mode !== "register"); }));
+  $$("#am button").forEach((b) => (b.onclick = () => { mode = b.dataset.m; $$("#am button").forEach((x) => x.classList.toggle("on", x === b)); $("#anw").classList.toggle("hide", mode !== "register"); $("#aew").classList.toggle("hide", mode !== "register"); $("#afg").classList.toggle("hide", mode === "register"); $("#ah").placeholder = mode === "register" ? t("handle") : t("handleOrEmail"); }));
+  bindEyes(root);
+  $("#afg").onclick = forgotSheet;
   $("#alang").onclick = () => { S.lang = S.lang === "ar" ? "en" : "ar"; store.set("lang", S.lang); applyLang(); go("auth"); };
   $("#aguest").onclick = () => { store.set("guest", true); go("home"); };
   const submit = async () => {
     const b = $("#ago"); b.disabled = true;
-    const r = await api("/api/" + mode, { handle: $("#ah").value, name: $("#an").value, password: $("#ap").value });
+    const r = await api("/api/" + mode, { handle: $("#ah").value.trim(), email: $("#ae").value.trim(), name: $("#an").value, password: $("#ap").value });
     b.disabled = false;
     if (r.error) return toast(terr(r.error));
     S.token = r.token; S.user = r.user; store.set("token", r.token); store.set("user", r.user);
@@ -519,32 +562,175 @@ VIEWS.auth = (root) => {
     afterLogin();
   };
   $("#ago").onclick = submit;
-  $("#ap").onkeydown = (e) => e.key === "Enter" && submit();
+  $("#ae").onkeydown = (e) => { if (e.key === "Enter") $("#ap").focus(); };
+  $("#ap").onkeydown = (e) => { if (e.key === "Enter") submit(); };
+};
+
+function forgotSheet() {
+  sheet(`<h3>${ic("mail")} ${t("forgot")}</h3>
+    <div class="field"><input class="inp" id="fe" type="email" inputmode="email" placeholder="${t("email")}" autocapitalize="none" autocorrect="off" dir="ltr"></div>
+    <button class="btn p" id="fs">${t("sendCode")}</button>
+    <div id="fstep2" class="hide"><p class="mut small" style="margin:14px 4px 4px">${t("codeSent")}</p>
+      <div class="field"><input class="inp" id="fc" inputmode="numeric" maxlength="6" placeholder="${t("code")}" dir="ltr" style="letter-spacing:6px;font-weight:700"></div>
+      <div class="field">${pwField("fp", t("newPass"))}</div>
+      <button class="btn p" id="fr">${t("save")}</button></div>`, (sh, close) => {
+    bindEyes(sh);
+    $("#fs", sh).onclick = async () => {
+      const b = $("#fs", sh); b.disabled = true;
+      const r = await api("/api/forgot", { email: $("#fe", sh).value.trim() });
+      b.disabled = false;
+      if (r.error) return toast(terr(r.error));
+      $("#fstep2", sh).classList.remove("hide"); b.classList.add("hide"); $("#fc", sh).focus();
+    };
+    $("#fr", sh).onclick = async () => {
+      const r = await api("/api/reset", { email: $("#fe", sh).value.trim(), code: $("#fc", sh).value.trim(), password: $("#fp", sh).value });
+      if (r.error) return toast(terr(r.error));
+      S.token = r.token; S.user = r.user; store.set("token", r.token); store.set("user", r.user);
+      Native.post("auth", { token: r.token, user: r.user });
+      close(); toast(t("resetDone")); afterLogin();
+    };
+  });
+}
+
+/* ---------- game catalog ---------- */
+const Games = {
+  top: null, phone: null,
+  async loadTop() { if (this.top) return this.top; const r = await api("/api/games/top"); this.top = (r.items || []).slice(0, 40); return this.top; },
+  async search(q) { const r = await api("/api/games/search?q=" + encodeURIComponent(q) + "&c=" + (S.lang === "ar" ? "sa" : "us")); return r.items || []; },
+  phoneList() {
+    if (!isAndroid()) return Promise.resolve([]);
+    if (this.phone) return Promise.resolve(this.phone);
+    return new Promise((res) => {
+      const off = Native.on((e) => { if (e.type === "games") { off(); this.phone = e.list || []; res(this.phone); } });
+      Native.post("games", {});
+      setTimeout(() => { off(); res(this.phone || []); }, 4000);
+    });
+  },
+};
+function gamePicker(onPick) {
+  sheet(`<h3>${ic("game")} ${t("pickGame")}</h3>
+    <div class="cin" style="background:var(--card);border-color:var(--line)">${ic("search")}<input id="gq" placeholder="${t("searchGames")}" style="padding-inline:10px" autocorrect="off"></div>
+    <div id="gres"></div>
+    <div id="gphone"></div>
+    <div class="h2" style="margin-top:18px">${ic("zap")} ${t("popular")}</div><div id="gtop"><div style="height:120px;position:relative"><div class="spin"></div></div></div>
+    <button class="btn g" style="margin-top:16px" id="gother">${t("otherGame")}</button>`, (sh, close) => {
+    const grid = (list) => list.length ? `<div class="ggrid">${list.map((g, i) => `<button class="gg" data-i="${i}">${gIcon(g.icon || g.iconData)}<span>${esc(g.name)}</span></button>`).join("")}</div>` : `<p class="mut small" style="padding:14px;text-align:center">${t("noGames")}</p>`;
+    const bind = (el, list) => $$("[data-i]", el).forEach((b) => (b.onclick = () => { haptic(); close(); onPick(list[+b.dataset.i]); }));
+    Games.phoneList().then((l) => { if (!l.length) return; const el = $("#gphone", sh); el.innerHTML = `<div class="h2" style="margin-top:18px">${ic("phone")} ${t("onPhone")}</div>` + grid(l); bind(el, l); });
+    Games.loadTop().then((l) => { const el = $("#gtop", sh); el.innerHTML = grid(l); bind(el, l); });
+    let qt;
+    $("#gq", sh).oninput = (e) => {
+      clearTimeout(qt);
+      const q = e.target.value.trim();
+      if (!q) return ($("#gres", sh).innerHTML = "");
+      qt = setTimeout(async () => {
+        const local = (Games.phone || []).filter((g) => g.name.toLowerCase().includes(q.toLowerCase()));
+        const list = [...local, ...(await Games.search(q))];
+        const el = $("#gres", sh); el.innerHTML = grid(list); bind(el, list);
+      }, 350);
+    };
+    $("#gother", sh).onclick = () => { close(); onPick({ name: $("#gq", sh).value.trim(), icon: "" }); };
+  });
+}
+
+/* ---------- speed test ---------- */
+VIEWS.speed = (root) => {
+  const R = 100, C = 2 * Math.PI * R, ARC = C * 0.75;
+  root.innerHTML = `<div class="view"><div class="top"><button class="ibtn" id="sb">${ic("back")}</button><div class="h1">${t("speedTest")}</div></div>
+  <div class="scroll" style="padding-bottom:calc(30px + var(--sb))">
+    <div class="gauge"><svg viewBox="0 0 240 240"><defs><linearGradient id="gg" x1="0" x2="1"><stop offset="0" stop-color="#7C5CFF"/><stop offset=".6" stop-color="#FF4D8D"/><stop offset="1" stop-color="#FF9A3D"/></linearGradient></defs>
+      <circle cx="120" cy="120" r="${R}" stroke="rgba(255,255,255,.08)" stroke-width="16" fill="none" stroke-linecap="round" stroke-dasharray="${ARC} ${C}"/>
+      <circle id="garc" cx="120" cy="120" r="${R}" stroke="url(#gg)" stroke-width="16" fill="none" stroke-linecap="round" stroke-dasharray="0 ${C}" style="transition:stroke-dasharray .25s"/></svg>
+      <div class="v"><b id="gv">–</b><span id="gu">${t("mbps")}</span><span id="gs" style="margin-top:6px"></span></div></div>
+    <div class="sres">
+      <div class="kpi"><span class="small">${t("ping")}</span><br><b id="rp">–</b> <span class="small">${t("ms")}</span></div>
+      <div class="kpi"><span class="small">${t("jitter")}</span><br><b id="rj">–</b> <span class="small">${t("ms")}</span></div>
+      <div class="kpi"><span class="small">${t("down")}</span><br><b id="rd">–</b> <span class="small">${t("mbps")}</span></div>
+      <div class="kpi"><span class="small">${t("up")}</span><br><b id="ru">–</b> <span class="small">${t("mbps")}</span></div>
+    </div>
+    <div class="tile row" style="margin-top:12px">${ic("globe")}<span class="mut">${t("server")}</span><span class="sp"></span><b id="rs" dir="ltr">–</b></div>
+    <div id="sv"></div>
+    <button class="btn p" id="sgo" style="margin-top:16px">${ic("gauge")} ${t("sStart")}</button>
+  </div></div>`;
+  $("#sb").onclick = () => go(S.token ? "me" : "home");
+  let alive = true;
+  const setG = (v, max, unit) => { $("#gv").textContent = v < 10 ? v.toFixed(1) : Math.round(v); $("#gu").textContent = unit; $("#garc").setAttribute("stroke-dasharray", `${ARC * Math.min(1, Math.log10(1 + v) / Math.log10(1 + max))} ${C}`); };
+  const run = async () => {
+    const b = $("#sgo"); b.disabled = true; $("#sv").innerHTML = "";
+    ["rp", "rj", "rd", "ru"].forEach((i) => ($("#" + i).textContent = "–"));
+    // ping
+    $("#gs").textContent = t("sPing");
+    const pings = []; let colo = "";
+    for (let i = 0; i < 12 && alive; i++) {
+      const t0 = performance.now();
+      const r = await fetch("/api/speed/ping?r=" + Math.random(), { cache: "no-store" }).then((x) => x.json()).catch(() => null);
+      const dt = performance.now() - t0;
+      if (r) { colo = r.colo + (r.country ? " · " + r.country : ""); if (i > 1) pings.push(dt); setG(dt, 300, t("ms")); }
+    }
+    const ping = Math.min(...pings), jit = pings.length > 1 ? pings.slice(1).reduce((a, x, i) => a + Math.abs(x - pings[i]), 0) / (pings.length - 1) : 0;
+    $("#rp").textContent = Math.round(ping); $("#rj").textContent = Math.round(jit); $("#rs").textContent = "Cloudflare " + colo;
+    // download (parallel streams, ~8s)
+    $("#gs").textContent = t("sDown");
+    let got = 0; const tD = performance.now(); let stop = false;
+    const dl = async () => { while (!stop && alive) { const r = await fetch("/api/speed/down?bytes=8000000&r=" + Math.random(), { cache: "no-store" }); const rd = r.body.getReader(); for (;;) { const { done, value } = await rd.read(); if (done || stop) { if (stop) rd.cancel().catch(() => {}); break; } got += value.length; } } };
+    const tick = setInterval(() => setG((got * 8) / ((performance.now() - tD) / 1000) / 1e6, 1000, t("mbps")), 200);
+    const ws = [dl(), dl(), dl(), dl()];
+    await sleep(8000); stop = true; clearInterval(tick); await Promise.allSettled(ws);
+    const down = (got * 8) / ((performance.now() - tD) / 1000) / 1e6;
+    $("#rd").textContent = down.toFixed(1);
+    // upload (parallel, ~8s)
+    $("#gs").textContent = t("sUp");
+    const blob = new Blob([crypto.getRandomValues(new Uint8Array(65536))]);
+    const parts = Array(32).fill(blob); const body = new Blob(parts); // 2 MB
+    let sent = 0; const tU = performance.now(); stop = false;
+    const ul = async () => { while (!stop && alive) { await fetch("/api/speed/up", { method: "POST", body, cache: "no-store" }).catch(() => {}); if (!stop) sent += body.size; } };
+    const tick2 = setInterval(() => setG((sent * 8) / ((performance.now() - tU) / 1000) / 1e6, 1000, t("mbps")), 200);
+    const us = [ul(), ul(), ul()];
+    await sleep(8000); stop = true; clearInterval(tick2); await Promise.allSettled(us);
+    const up = (sent * 8) / ((performance.now() - tU) / 1000) / 1e6;
+    $("#ru").textContent = up.toFixed(1);
+    setG(up, 1000, t("mbps") + " ↑");
+    $("#gs").textContent = "";
+    const q = up >= 8 ? "1080p 60" : up >= 5 ? "720p 60" : up >= 3 ? "720p 30" : up >= 1.8 ? "540p" : "";
+    $("#sv").innerHTML = `<div class="verdict ${up >= 5 && ping < 120 ? "" : up >= 1.8 ? "w" : "b"}">${q ? t(up >= 5 && ping < 120 ? "vGreat" : "vOk", { q }) : t("vBad")}</div>`;
+    b.disabled = false; b.innerHTML = ic("refresh") + " " + t("sAgain");
+    haptic("success");
+  };
+  $("#sgo").onclick = run;
+  run();
+  return () => { alive = false; };
 };
 
 /* ---------- home ---------- */
 VIEWS.home = (root) => {
-  let cat = "all", tab = "live", data = [];
+  let cat = "all", tab = "live", data = [], gameF = "";
   root.innerHTML = `<div class="view">
     <div class="top"><div class="brand"><div class="logo">${ic("live")}</div><b>${S.lang === "ar" ? "وهج" : "Wahj"}</b></div><div class="sp"></div>
       <button class="ibtn" id="hr">${ic("refresh")}</button></div>
     <div class="scroll" id="hs">
       <div class="seg" style="margin-top:4px" id="ht"><button class="on" data-t="live">${t("liveNow")}</button><button data-t="fol">${t("following")}</button></div>
+      <div id="hg"></div>
       <div class="chips" style="margin-top:12px" id="hc">${CATS.map((c) => `<button class="chip ${c === "all" ? "on" : ""}" data-c="${c}">${CAT_EMO[c]} ${t(c)}</button>`).join("")}</div>
       <div id="hl"><div style="height:200px;position:relative"><div class="spin"></div></div></div>
     </div></div>`;
   const card = (s, big) => {
     const thumb = `/api/thumb/${s.id}?b=${Math.floor(Date.now() / 20000)}`;
     const badges = `<div class="live"><span class="badge red">LIVE</span><span class="badge">${ic("eye")} ${fmtN(s.viewers)}</span>${s.guests ? `<span class="badge co">${ic("users")} ${s.guests + 1}</span>` : ""}</div>`;
-    const ph = `<div class="ph">${CAT_EMO[s.cat] || "🎮"}</div>`;
-    if (big) return `<div class="feat" data-id="${s.id}">${ph}<img src="${thumb}" onerror="this.remove()" alt="">${badges}<div class="ov"><div class="t">${esc(s.title)}</div>
-      <div class="who">${avatar(s.host)}<span style="font-weight:600">${esc(s.host && s.host.name)}</span><span class="mut small">· ${esc(s.game || t(s.cat || "all"))}</span></div></div></div>`;
-    return `<div class="card" data-id="${s.id}"><div class="th">${ph}<img src="${thumb}" onerror="this.remove()" alt="">${badges}</div>
-      <div class="meta"><div class="tt">${esc(s.title)}</div><div class="who">${avatar(s.host)}<span class="small" style="font-weight:600">${esc(s.host && s.host.name)}</span></div>
-      <div class="small mut" style="margin-top:3px">${esc(s.game || "")}</div></div></div>`;
+    const ph = s.gameIcon ? `<div class="thbg" style="background-image:url('${esc(s.gameIcon)}')"></div>${gIcon(s.gameIcon, "gi thic")}` : `<div class="ph">${CAT_EMO[s.cat] || "🎮"}</div>`;
+    const gb = s.game ? `<div class="gbadge">${gIcon(s.gameIcon)}<span>${esc(s.game)}</span></div>` : "";
+    if (big) return `<div class="feat" data-id="${s.id}">${ph}<img src="${thumb}" onerror="this.remove()" alt="" style="position:absolute;inset:0">${badges}<div class="ov"><div class="t">${esc(s.title)}</div>
+      <div class="who">${avatar(s.host)}<span style="font-weight:600">${esc(s.host && s.host.name)}</span></div>${s.game ? `<div class="row" style="gap:8px;margin-top:8px">${gIcon(s.gameIcon, "gi", 22)}<span class="small" style="color:#e6e1ff;font-weight:600">${esc(s.game)}</span></div>` : ""}</div></div>`;
+    return `<div class="card" data-id="${s.id}"><div class="th">${ph}<img src="${thumb}" onerror="this.remove()" alt="" style="position:absolute;inset:0">${badges}${gb}</div>
+      <div class="meta"><div class="tt">${esc(s.title)}</div><div class="who">${avatar(s.host)}<span class="small" style="font-weight:600">${esc(s.host && s.host.name)}</span></div></div></div>`;
   };
   const render = () => {
-    let list = data.filter((s) => cat === "all" || s.cat === cat);
+    // games being streamed right now
+    const gm = new Map();
+    data.forEach((s) => { if (!s.game) return; const k = s.game.toLowerCase(); const g = gm.get(k) || { name: s.game, icon: s.gameIcon, n: 0 }; g.n++; if (!g.icon) g.icon = s.gameIcon; gm.set(k, g); });
+    const games = [...gm.values()].sort((a, b) => b.n - a.n);
+    $("#hg").innerHTML = games.length ? `<div class="h2" style="margin-top:14px">${ic("game")} ${t("nowPlaying")}</div><div class="chips">${games.map((g) => `<button class="chip gchip ${gameF === g.name.toLowerCase() ? "on" : ""}" data-g="${esc(g.name.toLowerCase())}">${g.icon ? gIcon(g.icon) : "🎮"}<span>${esc(g.name)}</span><b>${g.n}</b></button>`).join("")}</div>` : "";
+    $$("#hg [data-g]").forEach((b) => (b.onclick = () => { gameF = gameF === b.dataset.g ? "" : b.dataset.g; haptic(); render(); }));
+    let list = data.filter((s) => (cat === "all" || s.cat === cat) && (!gameF || (s.game || "").toLowerCase() === gameF));
     if (tab === "fol") list = list.filter((s) => s.followed);
     const el = $("#hl");
     if (!list.length) {
@@ -589,7 +775,8 @@ VIEWS.watch = (root, id) => {
     <div class="stat lat hide" id="wlat" style="position:absolute;z-index:6;top:calc(var(--st) + 64px);inset-inline-start:14px">${ic("zap")}<span></span></div>
   </div>`;
   const stageEl = $("#ws");
-  const stage = new Stage(stageEl);
+  const stage = new Stage(stageEl, { muted: !P.autoSound });
+  if (!P.chatOnStream) setTimeout(() => $("#wc") && $("#wc").classList.add("hide"));
   let meta = null, me = {}, myVote = null, poll = null, isFollowing = false, hostInfo = null, sawPubs = false;
   stage.onBlocked = () => {
     if ($(".tapsound", root)) return;
@@ -631,7 +818,7 @@ VIEWS.watch = (root, id) => {
   ws.on((m) => {
     switch (m.t) {
       case "hello":
-        me = m.me; meta = m.meta;
+        me = m.me; meta = m.meta; root._rules = m.rules || {};
         if (!meta) return offline(t("offline"));
         if (meta.ended) return offline(t("endedT"));
         chatEl.innerHTML = "";
@@ -685,7 +872,7 @@ VIEWS.watch = (root, id) => {
     hostInfo = s.host;
     $("#wav").outerHTML = avatar(s.host, "md");
     $("#wn").textContent = s.host.name;
-    $("#wg").textContent = s.title;
+    $("#wg").innerHTML = (s.game ? gIcon(s.gameIcon) + esc(s.game) + " · " : "") + esc(s.title);
     if (S.user && S.user.id !== s.uid) {
       isFollowing = S.following.has(s.uid);
       const fb = $("#wf"); fb.classList.remove("hide");
@@ -700,7 +887,7 @@ VIEWS.watch = (root, id) => {
   const latEl = $("#wlat");
   const statT = setInterval(async () => {
     const s = await stage.sub.stats();
-    if (s && s.fps) { latEl.classList.remove("hide"); $("span", latEl).textContent = `${s.delay.toFixed(1)}s · ${Math.round(s.fps)}fps`; }
+    if (s && s.fps && P.showLat) { latEl.classList.remove("hide"); $("span", latEl).textContent = `${s.delay.toFixed(1)}s · ${Math.round(s.fps)}fps`; }
   }, 2000);
 
   // input
@@ -710,7 +897,7 @@ VIEWS.watch = (root, id) => {
     ws.send({ t: "chat", text: v }); i.value = ""; haptic();
   };
   $("#wsend").onclick = send;
-  $("#wi").onkeydown = (e) => e.key === "Enter" && send();
+  $("#wi").onkeydown = (e) => { if (e.key === "Enter") send(); };
   $("#wx").onclick = () => go("home");
   let lastR = 0;
   $("#wr").onclick = () => { const e = ["❤️", "🔥", "😂", "👏", "😮", "💯"][Math.random() * 6 | 0]; FX.floaty($("#wfx"), e); if (Date.now() - lastR > 250) { ws.send({ t: "react", e }); lastR = Date.now(); } haptic(); FX.audio(); };
@@ -763,7 +950,7 @@ function shareLink(url, text) {
 VIEWS.golive = (root, arg = {}) => {
   if (!S.token) { toast(terr("auth")); return go("auth"); }
   const joining = !!arg.joinRoom;
-  const cfg = Object.assign({ title: "", game: "", cat: "action", quality: "720", fps: 30, mic: true, privacy: { dnd: true, callGuard: true, bannerGuard: true } }, store.get("golive", {}));
+  const cfg = Object.assign({ title: "", game: "", gameIcon: "", cat: "action", quality: "720", fps: 30, mic: true, privacy: { dnd: true, callGuard: true, bannerGuard: true } }, store.get("golive", {}));
   cfg.privacy = Object.assign({ dnd: true, callGuard: true, bannerGuard: true }, cfg.privacy || {});
   const nat = Native.has();
   const webCap = !nat && navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia && !/iphone|ipad|android/i.test(navigator.userAgent);
@@ -772,8 +959,7 @@ VIEWS.golive = (root, arg = {}) => {
   <div class="scroll" style="padding-bottom:calc(30px + var(--sb))">
     ${joining ? `<div class="tile" style="text-align:center"><div style="font-size:40px">🤝</div><b>${esc(t("invited", { n: arg.hostName || "" }))}</b></div>` : `
     <div class="field"><label>${t("title")}</label><input class="inp" id="gt" maxlength="80" placeholder="${t("titlePh")}" value="${esc(cfg.title)}"></div>
-    <div class="field"><label>${t("game")}</label><input class="inp" id="gg" maxlength="40" placeholder="${t("gamePh")}" value="${esc(cfg.game)}"></div>
-    <div class="chips" id="ggs">${GAMES.map((g) => `<button class="chip" data-g="${esc(g)}">${esc(g)}</button>`).join("")}</div>
+    <div class="field"><label>${t("game")}</label><button class="gpick" id="gg"></button></div>
     <div class="field"><label>${t("cat")}</label><div class="chips" id="gc">${CATS.slice(1).map((c) => `<button class="chip ${cfg.cat === c ? "on" : ""}" data-c="${c}">${CAT_EMO[c]} ${t(c)}</button>`).join("")}</div></div>`}
     <div class="row" style="gap:12px;margin-top:6px">
       <div style="flex:1"><label class="small mut" style="display:block;margin:0 4px 7px">${t("quality")}</label><div class="seg" id="gq">${["540", "720", "1080"].map((q) => `<button class="${cfg.quality === q ? "on" : ""}" data-q="${q}">${q}p</button>`).join("")}</div></div>
@@ -790,12 +976,19 @@ VIEWS.golive = (root, arg = {}) => {
       ${isAndroid() ? `<div class="tg"><div class="ic">${ic("lock")}</div><div class="tx"><b>${t("appOnly")}</b><span>${t("appOnlyD")}</span></div></div>` : ""}
       ${isIOS() ? `<div class="tg" id="gfg"><div class="ic">${ic("bell")}</div><div class="tx"><b>${t("focusGuide")}</b></div><span class="mut">›</span></div>` : ""}
     </div>
-    <button class="btn p" id="gs" style="margin-top:18px">${ic("live")} ${nat ? t("start") : webCap ? t("browserLive") : t("start")}</button>
+    <button class="btn g" id="gspd" style="margin-top:14px">${ic("gauge")} ${t("speedTest")}</button>
+    <button class="btn p" id="gs" style="margin-top:10px">${ic("live")} ${nat ? t("start") : webCap ? t("browserLive") : t("start")}</button>
     ${!nat && !webCap ? `<p class="mut small" style="text-align:center;margin-top:10px">${t("needApp")}</p>` : ""}
   </div></div>`;
   $("#gb").onclick = () => go("home");
+  $("#gspd").onclick = () => go("speed");
   if (!joining) {
-    $$("#ggs .chip").forEach((b) => (b.onclick = () => { $("#gg").value = b.dataset.g; haptic(); }));
+    const showGame = () => {
+      $("#gg").innerHTML = (cfg.gameIcon || cfg.gameIconData ? gIcon(cfg.gameIcon || cfg.gameIconData) : `<div class="ph2">🎮</div>`) +
+        `<div style="flex:1;min-width:0"><b style="display:block;font-size:16px">${esc(cfg.game || t("pickGame"))}</b><span class="mut small">${cfg.game ? t("change") : t("searchGames")}</span></div><span class="mut">›</span>`;
+    };
+    showGame();
+    $("#gg").onclick = () => gamePicker((g) => { cfg.game = g.name || ""; cfg.gameIcon = g.icon || ""; cfg.gameIconData = g.iconData || ""; showGame(); });
     $$("#gc .chip").forEach((b) => (b.onclick = () => { cfg.cat = b.dataset.c; $$("#gc .chip").forEach((x) => x.classList.toggle("on", x === b)); }));
   }
   $$("#gq button").forEach((b) => (b.onclick = () => { cfg.quality = b.dataset.q; $$("#gq button").forEach((x) => x.classList.toggle("on", x === b)); }));
@@ -807,11 +1000,11 @@ VIEWS.golive = (root, arg = {}) => {
   }));
   const fg = $("#gfg"); if (fg) fg.onclick = focusGuide;
   $("#gs").onclick = async () => {
-    if (!joining) { cfg.title = $("#gt").value.trim(); cfg.game = $("#gg").value.trim(); }
-    store.set("golive", cfg);
+    if (!joining) cfg.title = $("#gt").value.trim();
+    store.set("golive", { ...cfg, gameIconData: "" });
     if (!nat && !webCap) return toast(t("needApp"));
     const b = $("#gs"); b.disabled = true;
-    const r = await api("/api/go-live", { ...cfg, joinRoom: arg.joinRoom, device: S.native && S.native.device });
+    const r = await api("/api/go-live", { ...cfg, gameIconData: cfg.gameIconData || undefined, joinRoom: arg.joinRoom, device: S.native && S.native.device });
     b.disabled = false;
     if (r.error) return toast(terr(r.error));
     S.live = { ...r.job, title: cfg.title, game: cfg.game, startedAt: Date.now() };
@@ -953,7 +1146,7 @@ VIEWS.studio = (root) => {
   if (nat && st.overlay) setTimeout(() => Native.post("overlay", { on: true, room: job.room, token: S.token, server: location.origin }), 1200);
   const timer = setInterval(() => ($("#sd").textContent = fmtDur(Date.now() - job.startedAt)), 1000);
   const send = () => { const i = $("#si"); const v = i.value.trim(); if (!v) return; ws.send({ t: "chat", text: v }); i.value = ""; };
-  $("#ssend").onclick = send; $("#si").onkeydown = (e) => e.key === "Enter" && send();
+  $("#ssend").onclick = send; $("#si").onkeydown = (e) => { if (e.key === "Enter") send(); };
   const askEnd = () => confirmBox(t("endQ"), endLive);
   $("#sx").onclick = askEnd; $("#aend").onclick = askEnd;
   $("#ssh").onclick = () => shareLink(location.origin + "/w/" + job.room, job.title);
@@ -1002,69 +1195,192 @@ VIEWS.studio = (root) => {
   return () => { off(); clearInterval(timer); ws.close(); previewStage && previewStage.destroy(); };
 };
 
-/* ---------- profile (me) ---------- */
+/* ---------- profiles ---------- */
+function profileHtml(r, self) {
+  const u = r.user;
+  const since = new Date(u.created || Date.now()).toLocaleDateString(S.lang === "ar" ? "ar" : "en", { year: "numeric", month: "long" });
+  const kp = (n, l) => `<div class="kpi" style="background:var(--card);border:1px solid var(--line)"><b>${n}</b><span class="mut">${l}</span></div>`;
+  return `<div style="text-align:center;margin-top:8px">
+    <div style="position:relative;width:96px;margin:0 auto">${avatar(u, "lg", "width:96px;height:96px;margin:0 auto")}
+      ${self ? `<button id="pcam" style="position:absolute;bottom:-2px;inset-inline-end:-4px;width:34px;height:34px;border-radius:50%;background:var(--grad);display:grid;place-items:center;border:3px solid var(--bg)">${ic("cam")}</button>` : ""}</div>
+    <div style="font-size:24px;font-weight:800;margin-top:14px">${esc(u.name)}</div>
+    <div class="mut" dir="ltr">@${esc(u.handle)}</div>
+    ${u.bio ? `<div style="margin-top:10px;color:#e6e1ff;line-height:1.6">${esc(u.bio)}</div>` : ""}
+    ${u.link ? `<a href="${esc(u.link)}" target="_blank" rel="noopener" class="chip" style="display:inline-flex;gap:6px;margin-top:10px;text-decoration:none;color:#b9a8ff">${ic("globe")} ${esc(u.link.replace(/^https?:\/\/(www\.)?/, "").slice(0, 40))}</a>` : ""}
+    <div class="small mut" style="margin-top:8px">${t("joined")} ${esc(since)}</div>
+  </div>
+  <div class="kpis" style="grid-template-columns:repeat(3,1fr);margin-top:16px">
+    ${kp(fmtN(r.followers), t("followers"))}${kp(fmtN(r.following), t("followingN"))}${kp(fmtN(r.streamsCount), t("streamsN"))}
+    ${kp(r.hours, t("hoursN"))}${kp(fmtN(r.bestPeak), t("bestPeak"))}${kp(r.games.length, t("gamesPlayed"))}
+  </div>
+  <div id="pact"></div>
+  ${r.games.length ? `<div class="h2">${ic("game")} ${t("gamesPlayed")}</div><div class="chips">${r.games.map((g) => `<span class="chip gchip">${g.icon ? gIcon(g.icon) : "🎮"}<span>${esc(g.name)}</span><b>${g.n}</b></span>`).join("")}</div>` : ""}
+  <div class="h2">${t("past")}</div>
+  <div class="sl">${r.streams.length ? r.streams.map((s) => `<div class="sm" data-id="${s.id}" style="align-items:center">${s.gameIcon ? gIcon(s.gameIcon, "gi", 40) : `<div class="ph2" style="width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--card2)">🎮</div>`}
+    <div class="tx"><b>${esc(s.title)}</b><br><span class="mut small">${esc(s.game || "")} · ${new Date(s.started).toLocaleDateString(S.lang)} · ${t("peak")} ${s.peak}</span></div>${s.live ? '<span class="badge red">LIVE</span>' : ""}</div>`).join("") : `<p class="mut small" style="text-align:center;padding:16px">${t("noPast")}</p>`}</div>`;
+}
+function pickPhoto(cb) {
+  const i = document.createElement("input"); i.type = "file"; i.accept = "image/*";
+  i.onchange = () => {
+    const f = i.files && i.files[0]; if (!f) return;
+    const img = new Image();
+    img.onload = () => {
+      const S2 = 320, c = document.createElement("canvas"); c.width = c.height = S2;
+      const m = Math.min(img.width, img.height);
+      c.getContext("2d").drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, S2, S2);
+      cb(c.toDataURL("image/jpeg", 0.82)); URL.revokeObjectURL(img.src);
+    };
+    img.onerror = () => toast(terr("bad_image"));
+    img.src = URL.createObjectURL(f);
+  };
+  i.click();
+}
+async function uploadPhoto(data) {
+  const r = await api("/api/avatar", { data });
+  if (r.error) return toast(terr(r.error));
+  S.user = r.user; store.set("user", r.user); toast(t("saved")); if (current === "me") go("me");
+}
 VIEWS.me = (root) => {
   if (!S.token) return go("auth");
-  const u = S.user;
   root.innerHTML = `<div class="view"><div class="top"><div class="h1">${t("profile")}</div><div class="sp"></div><button class="ibtn" id="mset">${ic("gear")}</button></div>
-  <div class="scroll"><div style="text-align:center;margin-top:8px">${avatar(u, "lg").replace('class="av lg"', 'class="av lg" style="margin:0 auto;background:' + esc(u.color) + '"')}
-    <div style="font-size:24px;font-weight:800;margin-top:14px">${esc(u.name)}</div><div class="mut" dir="ltr">@${esc(u.handle)}</div>
-    <div style="margin-top:8px;color:#cfcae6">${esc(u.bio || "")}</div>
-    <div class="row" style="justify-content:center;gap:28px;margin-top:16px"><div><b id="mf" style="font-size:20px">–</b><div class="small mut">${t("followers")}</div></div></div>
-    <button class="btn g" style="margin-top:18px" id="med">${t("edit")}</button></div>
-  <div class="h2">${t("past")}</div><div id="mp" class="sl"></div></div></div>`;
-  api("/api/user/" + u.handle).then((r) => {
+  <div class="scroll" id="ms"><div style="height:200px;position:relative"><div class="spin"></div></div></div></div>`;
+  $("#mset").onclick = () => go("settings");
+  api("/api/user/" + S.user.handle).then((r) => {
     if (!r.user) return;
-    $("#mf").textContent = fmtN(r.followers);
-    $("#mp").innerHTML = r.streams.length ? r.streams.map((s) => `<div class="sm" data-id="${s.id}"><div class="tx"><b>${esc(s.title)}</b><br><span class="mut small">${esc(s.game || "")} · ${new Date(s.started).toLocaleDateString(S.lang)} · ${t("peak")} ${s.peak}</span></div>${s.live ? '<span class="badge red">LIVE</span>' : ""}</div>`).join("") : `<p class="mut small" style="text-align:center;padding:16px">${t("noPast")}</p>`;
-    $$("#mp [data-id]").forEach((x) => (x.onclick = () => go("watch", x.dataset.id)));
+    r.user = { ...r.user, ...S.user };
+    $("#ms").innerHTML = profileHtml(r, true);
+    $("#pact").innerHTML = `<button class="btn g" style="margin-top:14px" id="med">${ic("user")} ${t("editProfile")}</button>`;
+    $("#med").onclick = editProfile;
+    $("#pcam").onclick = () => pickPhoto(uploadPhoto);
+    $$("#ms [data-id]").forEach((x) => (x.onclick = () => go("watch", x.dataset.id)));
   });
-  $("#med").onclick = () => {
-    const cols = ["#7C5CFF", "#FF4D8D", "#00D1FF", "#FFB800", "#2EE59D", "#FF6B3D", "#B26BFF", "#3DDCFF"];
-    let col = u.color;
-    sheet(`<h3>${t("edit")}</h3><div class="field"><label>${t("name")}</label><input class="inp" id="en" value="${esc(u.name)}" maxlength="32"></div>
-      <div class="field"><label>${t("bio")}</label><input class="inp" id="eb" value="${esc(u.bio || "")}" maxlength="140"></div>
-      <div class="field"><label>${t("color")}</label><div class="row" style="flex-wrap:wrap">${cols.map((c) => `<button data-c="${c}" style="width:40px;height:40px;border-radius:50%;background:${c};box-shadow:${c === col ? "0 0 0 3px #fff" : "none"}"></button>`).join("")}</div></div>
-      <button class="btn p" id="es">${t("save")}</button>`, (sh, close) => {
-      $$("[data-c]", sh).forEach((b) => (b.onclick = () => { col = b.dataset.c; $$("[data-c]", sh).forEach((x) => (x.style.boxShadow = x === b ? "0 0 0 3px #fff" : "none")); }));
-      $("#es", sh).onclick = async () => {
-        const r = await api("/api/profile", { name: $("#en", sh).value, bio: $("#eb", sh).value, color: col });
-        if (r.user) { S.user = r.user; store.set("user", r.user); close(); go("me"); }
-      };
-    });
-  };
-  $("#mset").onclick = settingsSheet;
 };
-function settingsSheet() {
-  sheet(`<h3>${t("settings")}</h3><div class="tile" style="padding:4px 14px">
-    <div class="tg" id="sl1"><div class="ic">${ic("globe")}</div><div class="tx"><b>${t("language")}</b><span>${S.lang === "ar" ? "العربية" : "English"}</span></div><span class="mut">⇄</span></div>
-    ${isIOS() ? `<div class="tg" id="sl2"><div class="ic">${ic("bell")}</div><div class="tx"><b>${t("focusGuide")}</b></div></div>` : ""}
-    ${isAndroid() ? `<div class="tg" id="sl3"><div class="ic">${ic("bell")}</div><div class="tx"><b>${t("dnd")}</b><span>${t("dndD")}</span></div></div>` : ""}
-    <div class="tg" id="sl4" style="color:#ff7b88"><div class="ic">${ic("out")}</div><div class="tx"><b>${t("logout")}</b></div></div></div>
-    <p class="mut small" style="text-align:center">Wahj Live · ${esc((S.native && S.native.version) || "web")}</p>`,
-    (sh, close) => {
-      $("#sl1", sh).onclick = () => { S.lang = S.lang === "ar" ? "en" : "ar"; store.set("lang", S.lang); applyLang(); Native.post("lang", { lang: S.lang }); close(); go(current === "auth" ? "auth" : current); };
-      if ($("#sl2", sh)) $("#sl2", sh).onclick = () => { close(); focusGuide(); };
-      if ($("#sl3", sh)) $("#sl3", sh).onclick = () => Native.post("perm", { kind: "dnd" });
-      $("#sl4", sh).onclick = () => { close(); S.token = ""; S.user = null; store.set("token", ""); store.set("user", null); store.set("guest", false); Native.post("auth", { token: "" }); go("auth"); };
-    });
+function editProfile() {
+  const u = S.user;
+  const cols = ["#7C5CFF", "#FF4D8D", "#00D1FF", "#FFB800", "#2EE59D", "#FF6B3D", "#B26BFF", "#3DDCFF"];
+  let col = u.color;
+  sheet(`<h3>${t("editProfile")}</h3>
+    <div class="row" style="gap:14px;margin-bottom:8px">${avatar(u, "lg", "width:72px;height:72px;font-size:28px")}
+      <div style="flex:1"><button class="mini p" id="eph">${t("changePhoto")}</button> ${u.avatar ? `<button class="mini" id="erm">${t("removePhoto")}</button>` : ""}</div></div>
+    <div class="field"><label>${t("handle")}</label><div class="inp row" style="opacity:.65;gap:8px" dir="ltr">${ic("lock")}<span>@${esc(u.handle)}</span></div>
+      <div class="small mut" style="margin:6px 4px 0">${t("usernameLocked")}</div></div>
+    <div class="field"><label>${t("name")}</label><input class="inp" id="en" value="${esc(u.name)}" maxlength="32"></div>
+    <div class="field"><label>${t("bio")}</label><textarea class="inp" id="eb" maxlength="140" rows="3" style="resize:none">${esc(u.bio || "")}</textarea></div>
+    <div class="field"><label>${t("link")}</label><input class="inp" id="el" value="${esc(u.link || "")}" maxlength="200" autocapitalize="none" autocorrect="off" dir="ltr" placeholder="youtube.com/@…"></div>
+    <div class="field"><label>${t("email")}</label><input class="inp" id="em" type="email" inputmode="email" value="${esc(u.email || "")}" autocapitalize="none" autocorrect="off" dir="ltr"></div>
+    <div class="field"><label>${t("color")}</label><div class="row" style="flex-wrap:wrap">${cols.map((c) => `<button data-c="${c}" style="width:40px;height:40px;border-radius:50%;background:${c};box-shadow:${c === col ? "0 0 0 3px #fff" : "none"}"></button>`).join("")}</div></div>
+    <button class="btn p" id="es" style="margin-top:8px">${t("save")}</button>`, (sh, close) => {
+    $("#eph", sh).onclick = () => { close(); pickPhoto(uploadPhoto); };
+    if ($("#erm", sh)) $("#erm", sh).onclick = () => { close(); uploadPhoto(""); };
+    $$("[data-c]", sh).forEach((b) => (b.onclick = () => { col = b.dataset.c; $$("[data-c]", sh).forEach((x) => (x.style.boxShadow = x === b ? "0 0 0 3px #fff" : "none")); }));
+    $("#es", sh).onclick = async () => {
+      const r = await api("/api/profile", { name: $("#en", sh).value, bio: $("#eb", sh).value, link: $("#el", sh).value, color: col, email: $("#em", sh).value.trim() });
+      if (r.error) return toast(terr(r.error));
+      S.user = r.user; store.set("user", r.user); close(); toast(t("saved")); if (current === "me") go("me");
+    };
+  });
 }
+
+/* ---------- settings ---------- */
+VIEWS.settings = (root) => {
+  const u = S.user;
+  const g = Object.assign({ quality: "720", fps: 30, mic: true, privacy: { dnd: true, callGuard: true, bannerGuard: true } }, store.get("golive", {}));
+  g.privacy = Object.assign({ dnd: true, callGuard: true, bannerGuard: true }, g.privacy || {});
+  const rp = Object.assign({ allowFx: true, allowCh: true, coStream: "all", slow: 0 }, (u && u.prefs) || {});
+  const sw = (id, on) => `<div class="sw ${on ? "on" : ""}" data-s="${id}"></div>`;
+  const row = (icn, title, sub, right, id = "") => `<div class="tg" ${id ? `id="${id}"` : ""}><div class="ic">${ic(icn)}</div><div class="tx"><b>${title}</b>${sub ? `<span>${sub}</span>` : ""}</div>${right || ""}</div>`;
+  const seg = (id, opts, val) => `<div class="seg" data-seg="${id}" style="margin:2px 0 12px">${opts.map(([v, l]) => `<button class="${String(v) === String(val) ? "on" : ""}" data-v="${v}">${l}</button>`).join("")}</div>`;
+  const sec = (title, body) => `<div class="h2">${title}</div><div class="tile" style="padding:4px 14px">${body}</div>`;
+  root.innerHTML = `<div class="view"><div class="top"><button class="ibtn" id="xb">${ic("back")}</button><div class="h1">${t("settingsT")}</div></div>
+  <div class="scroll" style="padding-bottom:calc(40px + var(--sb))">
+    ${u ? `<div class="sm" style="align-items:center;padding:14px;margin-top:4px" id="xme">${avatar(u, "md")}<div class="tx"><b>${esc(u.name)}</b><br><span class="mut small" dir="ltr">@${esc(u.handle)}</span></div><span class="mut">›</span></div>` : ""}
+    ${u ? sec(t("secAccount"),
+      row("user", t("editProfile"), "", `<span class="mut">›</span>`, "xedit") +
+      row("lock", t("changePass"), "", `<span class="mut">›</span>`, "xpw") +
+      row("out", t("logout"), "", "", "xout") +
+      `<div class="tg" id="xdel" style="color:#ff7b88"><div class="ic">${ic("x")}</div><div class="tx"><b>${t("deleteAcc")}</b></div></div>`) : ""}
+    ${sec(t("secStream"),
+      `<div style="padding-top:12px"><label class="small mut">${t("quality")}</label></div>${seg("quality", [["540", "540p"], ["720", "720p"], ["1080", "1080p"]], g.quality)}
+       <label class="small mut">${t("fps")}</label>${seg("fps", [[30, "30"], [60, "60"]], g.fps)}` +
+      row("mic", t("mic"), t("micD"), sw("mic", g.mic)) +
+      row("chat", t("chatOverlayDef"), "", sw("overlay", store.get("overlay", true))) +
+      row("phone", t("callG"), t("callGD"), sw("callGuard", g.privacy.callGuard)) +
+      (isAndroid() || !Native.has() ? row("bell", t("dnd"), t("dndD"), sw("dnd", g.privacy.dnd)) : "") +
+      (isIOS() || !Native.has() ? row("eye", t("bannerG"), t("bannerGD"), sw("bannerGuard", g.privacy.bannerGuard)) : "") +
+      (isIOS() ? row("bell", t("focusGuide"), "", `<span class="mut">›</span>`, "xfocus") : "") +
+      row("gauge", t("speedTest"), "", `<span class="mut">›</span>`, "xspeed"))}
+    ${u ? sec(t("secRoom"),
+      row("spark", t("allowFx"), t("allowFxD"), sw("allowFx", rp.allowFx)) +
+      row("trophy", t("allowCh"), "", sw("allowCh", rp.allowCh)) +
+      `<div style="padding-top:12px"><label class="small mut">${t("coStreamWho")}</label></div>${seg("coStream", [["all", t("everyone")], ["followers", t("followersOnly")], ["none", t("nobody")]], rp.coStream)}
+       <label class="small mut">${t("slowMode")}</label>${seg("slow", [[0, t("off")], [5, "5" + t("secs")], [15, "15" + t("secs")], [30, "30" + t("secs")]], rp.slow)}`) : ""}
+    ${sec(t("secWatch"),
+      row("chat", t("chatOnStream"), "", sw("p:chatOnStream", P.chatOnStream)) +
+      row("vol", t("autoSound"), "", sw("p:autoSound", P.autoSound)) +
+      row("spark", t("fxSound"), "", sw("p:fxSound", P.fxSound)) +
+      row("zap", t("reduceFx"), t("reduceFxD"), sw("p:reduceFx", P.reduceFx)) +
+      row("gauge", t("showLat"), "", sw("p:showLat", P.showLat)))}
+    ${u ? sec(t("secNotif"), row("mail", t("notifyMail"), t("notifyMailD"), sw("notify", u.notify !== false))) : ""}
+    ${sec(t("secApp"),
+      row("globe", t("language"), S.lang === "ar" ? "العربية" : "English", `<span class="mut">⇄</span>`, "xlang") +
+      (Native.has() ? row("zap", t("haptics"), "", sw("p:haptics", P.haptics)) : "") +
+      row("refresh", t("clearCache"), "", "", "xcache"))}
+    ${sec(t("secAbout"), row("live", "Wahj Live", t("version") + " " + esc((S.native && S.native.version) || "web"), ""))}
+  </div></div>`;
+  $("#xb").onclick = () => go(S.token ? "me" : "home");
+  const saveG = () => store.set("golive", g);
+  let rpT;
+  const saveRoom = () => { clearTimeout(rpT); rpT = setTimeout(async () => { const r = await api("/api/profile", { prefs: rp }); if (r.user) { S.user = r.user; store.set("user", r.user); } }, 400); };
+  $$("[data-s]", root).forEach((el) => (el.onclick = async () => {
+    const on = el.classList.toggle("on"); haptic();
+    const k = el.dataset.s;
+    if (k.startsWith("p:")) return setP(k.slice(2), on);
+    if (k === "mic") g.mic = on, saveG();
+    else if (k === "overlay") store.set("overlay", on);
+    else if (["callGuard", "dnd", "bannerGuard"].includes(k)) { g.privacy[k] = on; saveG(); if (k === "dnd" && on && isAndroid()) Native.post("perm", { kind: "dnd" }); }
+    else if (k === "allowFx" || k === "allowCh") { rp[k] = on; saveRoom(); }
+    else if (k === "notify") { const r = await api("/api/profile", { notify: on }); if (r.user) { S.user = r.user; store.set("user", r.user); } }
+  }));
+  $$("[data-seg]", root).forEach((sg) => $$("button", sg).forEach((b) => (b.onclick = () => {
+    $$("button", sg).forEach((x) => x.classList.toggle("on", x === b)); haptic();
+    const k = sg.dataset.seg, v = b.dataset.v;
+    if (k === "quality") g.quality = v, saveG();
+    else if (k === "fps") g.fps = +v, saveG();
+    else { rp[k] = k === "slow" ? +v : v; saveRoom(); }
+  })));
+  const on = (id, f) => { const e = $("#" + id); if (e) e.onclick = f; };
+  on("xme", () => go("me"));
+  on("xedit", editProfile);
+  on("xspeed", () => go("speed"));
+  on("xfocus", focusGuide);
+  on("xlang", () => { S.lang = S.lang === "ar" ? "en" : "ar"; store.set("lang", S.lang); applyLang(); Native.post("lang", { lang: S.lang }); go("settings"); });
+  on("xcache", () => { const keep = ["token", "user", "lang", "prefs", "golive", "overlay"]; Object.keys(localStorage).filter((k) => k.startsWith("wahj.") && !keep.includes(k.slice(5))).forEach((k) => localStorage.removeItem(k)); Games.top = null; Games.phone = null; toast(t("saved")); });
+  on("xout", () => confirmBox(t("logout") + "?", () => { S.token = ""; S.user = null; store.set("token", ""); store.set("user", null); store.set("guest", false); Native.post("auth", { token: "" }); go("auth"); }));
+  on("xpw", () => sheet(`<h3>${ic("lock")} ${t("changePass")}</h3><div class="field">${pwField("po", t("oldPass"))}</div><div class="field">${pwField("pn", t("newPass"))}</div><button class="btn p" id="ps">${t("save")}</button>`, (sh, close) => {
+    bindEyes(sh);
+    $("#ps", sh).onclick = async () => { const r = await api("/api/password", { old: $("#po", sh).value, password: $("#pn", sh).value }); if (r.error) return toast(terr(r.error)); close(); toast(t("saved")); };
+  }));
+  on("xdel", () => sheet(`<h3 style="color:#ff7b88">${t("deleteAcc")}</h3><p class="mut" style="margin-bottom:10px;line-height:1.7">${t("deleteQ")}</p><div class="field">${pwField("dp", t("password"))}</div><button class="btn d" id="dd">${t("deleteAcc")}</button>`, (sh, close) => {
+    bindEyes(sh);
+    $("#dd", sh).onclick = async () => { const r = await api("/api/delete-account", { password: $("#dp", sh).value }); if (r.error) return toast(terr(r.error)); close(); S.token = ""; S.user = null; store.set("token", ""); store.set("user", null); store.set("guest", false); toast(t("deleted")); go("auth"); };
+  }));
+};
+function settingsSheet() { go("settings"); }
 
 /* ---------- other user's profile ---------- */
 VIEWS.user = (root, handle) => {
+  if (S.user && handle === S.user.handle) return go("me");
   root.innerHTML = `<div class="view"><div class="top"><button class="ibtn" id="ub">${ic("back")}</button></div><div class="scroll" id="us"><div class="spin"></div></div></div>`;
   $("#ub").onclick = () => go("home");
   api("/api/user/" + encodeURIComponent(handle)).then((r) => {
     if (!r.user) return ($("#us").innerHTML = `<div class="empty">${t("offline")}</div>`);
     const u = r.user; let fol = S.following.has(u.id);
-    $("#us").innerHTML = `<div style="text-align:center">${avatar(u, "lg").replace('class="av lg"', 'class="av lg" style="margin:0 auto;background:' + esc(u.color) + '"')}
-      <div style="font-size:24px;font-weight:800;margin-top:14px">${esc(u.name)}</div><div class="mut" dir="ltr">@${esc(u.handle)}</div><div style="margin-top:8px;color:#cfcae6">${esc(u.bio)}</div>
-      <div style="margin-top:12px"><b>${fmtN(r.followers)}</b> <span class="mut small">${t("followers")}</span></div>
-      ${S.user && S.user.id !== u.id ? `<button class="btn ${fol ? "g" : "p"}" id="uf" style="margin-top:16px">${fol ? t("unfollow") : t("follow")}</button>` : ""}</div>
-      <div class="h2">${t("past")}</div><div class="sl">${r.streams.map((s) => `<div class="sm" data-id="${s.id}"><div class="tx"><b>${esc(s.title)}</b><br><span class="mut small">${esc(s.game || "")} · ${new Date(s.started).toLocaleDateString(S.lang)}</span></div>${s.live ? '<span class="badge red">LIVE</span>' : ""}</div>`).join("") || `<p class="mut small" style="text-align:center">${t("noPast")}</p>`}</div>`;
-    $$("[data-id]", $("#us")).forEach((x) => (x.onclick = () => go("watch", x.dataset.id)));
-    const fb = $("#uf");
-    if (fb) fb.onclick = async () => { fol = !fol; fb.className = "btn " + (fol ? "g" : "p"); fb.textContent = fol ? t("unfollow") : t("follow"); await api("/api/follow", { target: u.id, on: fol }); fol ? S.following.add(u.id) : S.following.delete(u.id); };
+    $("#us").innerHTML = profileHtml(r, false);
+    if (S.user) {
+      $("#pact").innerHTML = `<button class="btn ${fol ? "g" : "p"}" id="uf" style="margin-top:14px">${fol ? t("unfollow") : t("follow")}</button>`;
+      $("#uf").onclick = async () => { fol = !fol; const fb = $("#uf"); fb.className = "btn " + (fol ? "g" : "p"); fb.textContent = fol ? t("unfollow") : t("follow"); haptic(); await api("/api/follow", { target: u.id, on: fol }); fol ? S.following.add(u.id) : S.following.delete(u.id); };
+    }
+    $$("#us [data-id]").forEach((x) => (x.onclick = () => go("watch", x.dataset.id)));
   });
 };
 

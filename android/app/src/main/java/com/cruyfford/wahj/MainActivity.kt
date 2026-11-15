@@ -28,6 +28,13 @@ class MainActivity : AppCompatActivity() {
     private lateinit var web: WebView
     private var pendingJob: JSONObject? = null
     private var pendingAfterOverlay: (() -> Unit)? = null
+    private var fileCb: ValueCallback<Array<Uri>>? = null
+    private val pickFile = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { res ->
+        val cb = fileCb ?: return@registerForActivityResult
+        fileCb = null
+        val u = res.data?.data
+        cb.onReceiveValue(if (res.resultCode == RESULT_OK && u != null) arrayOf(u) else null)
+    }
     private val server: String get() = BuildConfig.SERVER_URL.trimEnd('/')
     private val ar get() = resources.configuration.locales[0].language == "ar"
 
@@ -72,6 +79,13 @@ class MainActivity : AppCompatActivity() {
         web.addJavascriptInterface(Bridge(), "WahjAndroid")
         web.webChromeClient = object : WebChromeClient() {
             override fun onPermissionRequest(request: PermissionRequest) { runOnUiThread { request.grant(request.resources) } }
+            override fun onShowFileChooser(view: WebView, cb: ValueCallback<Array<Uri>>, params: FileChooserParams): Boolean {
+                fileCb?.onReceiveValue(null)
+                fileCb = cb
+                return try {
+                    pickFile.launch(Intent(Intent.ACTION_GET_CONTENT).addCategory(Intent.CATEGORY_OPENABLE).setType("image/*")); true
+                } catch (e: Exception) { fileCb = null; false }
+            }
         }
         web.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, req: WebResourceRequest): Boolean {
@@ -191,6 +205,11 @@ class MainActivity : AppCompatActivity() {
                     else -> Toast.makeText(this, if (ar) "درع الخصوصية مفعّل بالكامل ✓" else "Privacy shield fully enabled ✓", Toast.LENGTH_SHORT).show()
                 }
             }
+            "games" -> Thread {
+                val list = org.json.JSONArray()
+                try { installedGames().forEach { list.put(it) } } catch (_: Exception) {}
+                emit(JSONObject().put("type", "games").put("list", list))
+            }.start()
             "share" -> {
                 val t = listOf(d.optString("text"), d.optString("url")).filter { it.isNotBlank() }.joinToString("\n")
                 startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, t), null))
@@ -202,6 +221,35 @@ class MainActivity : AppCompatActivity() {
                 if (Build.VERSION.SDK_INT >= 26) v.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE)) else @Suppress("DEPRECATION") v.vibrate(ms)
             }
         }
+    }
+
+    /** Games installed on this phone, with their real icons. */
+    private fun installedGames(): List<JSONObject> {
+        val pm = packageManager
+        val launch = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+        @Suppress("DEPRECATION")
+        val acts = pm.queryIntentActivities(launch, 0)
+        val out = mutableListOf<JSONObject>()
+        val seen = HashSet<String>()
+        for (ri in acts) {
+            val ai = ri.activityInfo.applicationInfo
+            if (ai.packageName == packageName || !seen.add(ai.packageName)) continue
+            @Suppress("DEPRECATION")
+            val isGame = (Build.VERSION.SDK_INT >= 26 && ai.category == android.content.pm.ApplicationInfo.CATEGORY_GAME) ||
+                (ai.flags and android.content.pm.ApplicationInfo.FLAG_IS_GAME) != 0
+            if (!isGame) continue
+            val name = ri.loadLabel(pm).toString()
+            val d = ri.loadIcon(pm)
+            val size = 144
+            val bmp = android.graphics.Bitmap.createBitmap(size, size, android.graphics.Bitmap.Config.ARGB_8888)
+            val c = android.graphics.Canvas(bmp)
+            d.setBounds(0, 0, size, size); d.draw(c)
+            val bos = java.io.ByteArrayOutputStream()
+            bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, bos)
+            val data = "data:image/png;base64," + android.util.Base64.encodeToString(bos.toByteArray(), android.util.Base64.NO_WRAP)
+            out += JSONObject().put("name", name).put("pkg", ai.packageName).put("iconData", data)
+        }
+        return out.sortedBy { it.optString("name").lowercase() }
     }
 
     inner class Bridge {

@@ -33,7 +33,7 @@ def post(path, body, token=None):
 def account(handle):
     r = post("/api/login", {"handle": handle, "password": "wahj-e2e-123"})
     if r.get("token"): return r["token"]
-    r = post("/api/register", {"handle": handle, "name": handle, "password": "wahj-e2e-123"})
+    r = post("/api/register", {"handle": handle, "name": handle, "email": handle + "@example.com", "password": "wahj-e2e-123"})
     return r["token"]
 
 PUBLISH = """async ([token]) => {
@@ -60,6 +60,14 @@ STATS = """async () => {
 
 async def main():
     wait_up()
+    def get(path):
+        return json.load(urllib.request.urlopen(urllib.request.Request(B + path, headers=UA), timeout=20))
+    top = get("/api/games/top")["items"]
+    print("games/top:", len(top), [g["name"] for g in top[:5]], top[0]["icon"] if top else "")
+    srch = get("/api/games/search?q=pubg")["items"]
+    print("games/search pubg:", [g["name"] for g in srch[:3]])
+    print("speed/ping:", get("/api/speed/ping"))
+    assert top or srch, "game catalog empty"
     host = account("wahje2ehost")
     async with async_playwright() as p:
         br = await p.chromium.launch(args=["--autoplay-policy=no-user-gesture-required", "--use-fake-ui-for-media-stream"])

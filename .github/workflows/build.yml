@@ -29,6 +29,8 @@ jobs:
           ACC: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           TURN_ID: ${{ secrets.TURN_KEY_ID }}
           TURN_TOKEN: ${{ secrets.TURN_KEY_TOKEN }}
+          RESEND: ${{ secrets.RESEND_API_KEY }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
         run: |
           T=$(printf '%s' "$RAW" | tr -d '[:space:]')
           if [ -z "$T" ]; then
@@ -83,6 +85,11 @@ jobs:
               printf '%s' "$KID" | $W secret put TURN_KEY_ID
               printf '%s' "$KEY" | $W secret put TURN_KEY_TOKEN
             fi
+          fi
+
+          if [ -n "$RESEND" ]; then
+            printf '%s' "$RESEND" | $W secret put RESEND_API_KEY
+            [ -n "$MAIL_FROM" ] && printf '%s' "$MAIL_FROM" | $W secret put MAIL_FROM
           fi
 
           URL=$(grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' deploy.log | head -1)

@@ -40,6 +40,29 @@ function bearer(req) {
   return a.startsWith("Bearer ") ? a.slice(7).trim() : new URL(req.url).searchParams.get("token") || "";
 }
 
+// ---------- email (Resend API, optional) ----------
+async function sendMail(env, to, subject, html) {
+  if (!env.RESEND_API_KEY || !to) return false;
+  try {
+    const r = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { authorization: "Bearer " + env.RESEND_API_KEY, "content-type": "application/json" },
+      body: JSON.stringify({ from: env.MAIL_FROM || "Wahj Live <onboarding@resend.dev>", to: [to], subject, html }),
+    });
+    return r.ok;
+  } catch (e) { return false; }
+}
+function mailBox(title, body, cta, url) {
+  return `<div dir="rtl" style="font-family:Tahoma,Arial,sans-serif;background:#0b0912;padding:28px;color:#f4f2ff">
+  <div style="max-width:460px;margin:auto;background:#15121f;border-radius:20px;padding:26px;border:1px solid #2a2438">
+  <div style="font-size:22px;font-weight:800;margin-bottom:6px"><span style="color:#ff4d8d">وهج</span> Live</div>
+  <div style="font-size:18px;font-weight:700;margin:14px 0 8px">${title}</div>
+  <div style="font-size:15px;line-height:1.8;color:#cfcae6">${body}</div>
+  ${cta ? `<a href="${url}" style="display:inline-block;margin-top:18px;background:linear-gradient(120deg,#7C5CFF,#FF4D8D);color:#fff;text-decoration:none;padding:12px 24px;border-radius:14px;font-weight:700">${cta}</a>` : ""}
+  </div></div>`;
+}
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
 // ---------- ICE servers (STUN + optional Cloudflare TURN) ----------
 async function iceServers(env) {
   const list = [{ urls: ["stun:stun.cloudflare.com:3478"] }];
@@ -87,19 +110,101 @@ export default {
     if (p === "/health") return J({ ok: true, v: VERSION, rev: env.NATIVE_REV || "" });
     if (!p.startsWith("/api/")) return new Response("Not found", { status: 404 });
 
+    let m0;
     try {
       // ---- config ----
       if (p === "/api/config") {
-        return J({ v: VERSION, rev: env.NATIVE_REV || "", ice: await iceServers(env), sfu: !!env.SFU_APP_ID });
+        return J({ v: VERSION, rev: env.NATIVE_REV || "", ice: await iceServers(env), sfu: !!env.SFU_APP_ID, mail: !!env.RESEND_API_KEY });
       }
       if (p === "/api/ice") return J({ iceServers: await iceServers(env) });
+
+      // ---- speed test ----
+      if (p === "/api/speed/ping") {
+        return J({ t: Date.now(), colo: (req.cf && req.cf.colo) || "", country: (req.cf && req.cf.country) || "" }, 200, { "cache-control": "no-store" });
+      }
+      if (p === "/api/speed/down") {
+        const n = Math.min(30e6, Math.max(1e5, +url.searchParams.get("bytes") || 5e6));
+        const chunk = new Uint8Array(65536);
+        crypto.getRandomValues(chunk);
+        let sent = 0;
+        const stream = new ReadableStream({
+          pull(c) {
+            if (sent >= n) return c.close();
+            const k = Math.min(chunk.length, n - sent);
+            c.enqueue(k === chunk.length ? chunk : chunk.slice(0, k));
+            sent += k;
+          },
+        });
+        return new Response(stream, { headers: { "content-type": "application/octet-stream", "content-length": String(n), "cache-control": "no-store", ...CORS } });
+      }
+      if (p === "/api/speed/up" && req.method === "POST") {
+        const r = req.body.getReader();
+        let n = 0;
+        for (;;) { const { done, value } = await r.read(); if (done) break; n += value.length; if (n > 40e6) break; }
+        return J({ bytes: n }, 200, { "cache-control": "no-store" });
+      }
+
+      // ---- game catalog (App Store icons) ----
+      if (p === "/api/games/search" || p === "/api/games/top") {
+        const cache = caches.default;
+        const key = new Request(url.toString().toLowerCase(), { method: "GET" });
+        const hit = await cache.match(key);
+        if (hit) return hit;
+        let items = [];
+        try {
+          if (p === "/api/games/search") {
+            const q = (url.searchParams.get("q") || "").trim().slice(0, 50);
+            if (q) {
+              const r = await fetch(`https://itunes.apple.com/search?entity=software&limit=24&country=${url.searchParams.get("c") || "us"}&term=${encodeURIComponent(q)}`, { headers: { "user-agent": "Mozilla/5.0" } });
+              const j = await r.json();
+              items = (j.results || []).filter((a) => (a.genreIds || []).includes("6014") || a.primaryGenreId === 6014)
+                .map((a) => ({ id: String(a.trackId), name: a.trackName, icon: a.artworkUrl512 || a.artworkUrl100 }));
+            }
+          } else {
+            const r = await fetch("https://itunes.apple.com/us/rss/topfreeapplications/limit=60/genre=6014/json", { headers: { "user-agent": "Mozilla/5.0" } });
+            const j = await r.json();
+            items = ((j.feed && j.feed.entry) || []).map((e) => {
+              const imgs = e["im:image"] || [];
+              const icon = (imgs[imgs.length - 1] || {}).label || "";
+              return { id: e.id && e.id.attributes ? e.id.attributes["im:id"] : "", name: (e["im:name"] || {}).label || "", icon: icon.replace(/\/\d+x\d+bb\./, "/512x512bb.") };
+            }).filter((x) => x.name && x.icon);
+          }
+        } catch (e) {}
+        const res = J({ items }, 200, { "cache-control": "public, max-age=" + (items.length ? 21600 : 60) });
+        if (items.length) ctx.waitUntil(cache.put(key, res.clone()));
+        return res;
+      }
+      m0 = p.match(/^\/api\/gameicon\/([a-z0-9]+)$/);
+      if (m0) {
+        const r = await roomStub(env, m0[1]).fetch("https://room/gameicon");
+        if (!r.ok) return new Response(null, { status: 404, headers: CORS });
+        return new Response(r.body, { headers: { "content-type": r.headers.get("content-type") || "image/png", "cache-control": "max-age=86400", ...CORS } });
+      }
 
       // ---- account ----
       if (p === "/api/register" || p === "/api/login") {
         const b = await req.json();
         b.ip = req.headers.get("cf-connecting-ip") || "";
+        b.origin = url.origin;
         const r = await hub(env, p.slice(4), b);
         return J(r, r.error ? 400 : 200);
+      }
+      if ((p === "/api/forgot" || p === "/api/reset") && req.method === "POST") {
+        const b = await req.json();
+        b.ip = req.headers.get("cf-connecting-ip") || "";
+        const r = await hub(env, p.slice(4), b);
+        return J(r, r.error ? 400 : 200);
+      }
+      if ((p === "/api/password" || p === "/api/delete-account" || p === "/api/avatar") && req.method === "POST") {
+        const b = await req.json();
+        const r = await hub(env, p.slice(4), { ...b, token: bearer(req) });
+        return J(r, r.error ? 400 : 200);
+      }
+      let ma = p.match(/^\/api\/avatar\/([a-z0-9]+)$/);
+      if (ma) {
+        const r = await hubStub(env).fetch("https://hub/avatar-get", { method: "POST", body: JSON.stringify({ uid: ma[1] }) });
+        if (!r.ok) return new Response(null, { status: 404, headers: CORS });
+        return new Response(r.body, { headers: { "content-type": "image/jpeg", "cache-control": "public, max-age=86400", ...CORS } });
       }
       if (p === "/api/me") return J(await hub(env, "/me", { token: bearer(req) }));
       if (p === "/api/profile" && req.method === "POST") {
@@ -119,7 +224,17 @@ export default {
       if (p.startsWith("/api/stream/")) return J(await hub(env, "/stream", { id: p.slice(12) }));
       if (p === "/api/go-live" && req.method === "POST") {
         const b = await req.json();
-        const r = await hub(env, "/go-live", { ...b, token: bearer(req) });
+        let iconData = null;
+        if (typeof b.gameIconData === "string" && b.gameIconData.startsWith("data:image/") && b.gameIconData.length < 120000) iconData = b.gameIconData;
+        delete b.gameIconData;
+        if (iconData) b.gameIcon = "local";
+        else if (!/^https:\/\/is\d+-ssl\.mzstatic\.com\//.test(b.gameIcon || "")) b.gameIcon = "";
+        const r = await hub(env, "/go-live", { ...b, origin: url.origin, token: bearer(req) });
+        if (iconData && r.job && r.job.role === "host") {
+          const [head, data] = iconData.split(",");
+          const bin = Uint8Array.from(atob(data), (c) => c.charCodeAt(0));
+          await roomStub(env, r.job.room).fetch("https://room/gameicon", { method: "PUT", headers: { "content-type": head.slice(5).split(";")[0] }, body: bin });
+        }
         return J(r, r.error ? 400 : 200);
       }
       if (p === "/api/pending") {
@@ -226,7 +341,17 @@ export class Hub {
       CREATE TABLE IF NOT EXISTS pending(device TEXT PRIMARY KEY, data TEXT, created INTEGER);
       CREATE TABLE IF NOT EXISTS follows(uid TEXT, target TEXT, PRIMARY KEY(uid, target));
       CREATE TABLE IF NOT EXISTS hits(k TEXT PRIMARY KEY, n INTEGER, t INTEGER);
+      CREATE TABLE IF NOT EXISTS resets(email TEXT PRIMARY KEY, code TEXT, until INTEGER, tries INTEGER DEFAULT 0);
     `);
+    for (const c of ["email TEXT", "notify INTEGER DEFAULT 1", "lastAlert INTEGER DEFAULT 0"]) {
+      try { this.sql.exec("ALTER TABLE users ADD COLUMN " + c); } catch (e) {}
+    }
+    try { this.sql.exec("ALTER TABLE streams ADD COLUMN gameIcon TEXT DEFAULT ''"); } catch (e) {}
+    for (const c of ["link TEXT DEFAULT ''", "prefs TEXT DEFAULT '{}'", "av INTEGER DEFAULT 0", "deleted INTEGER DEFAULT 0"]) {
+      try { this.sql.exec("ALTER TABLE users ADD COLUMN " + c); } catch (e) {}
+    }
+    this.sql.exec("CREATE TABLE IF NOT EXISTS avatars(uid TEXT PRIMARY KEY, data BLOB)");
+    try { this.sql.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_email ON users(email)"); } catch (e) {}
   }
   one(q, ...a) {
     const r = this.sql.exec(q, ...a).toArray();
@@ -237,10 +362,13 @@ export class Hub {
   }
   user(token) {
     if (!token) return null;
-    return this.one("SELECT u.* FROM tokens t JOIN users u ON u.id=t.uid WHERE t.token=?", token);
+    return this.one("SELECT u.* FROM tokens t JOIN users u ON u.id=t.uid WHERE t.token=? AND u.deleted=0", token);
   }
-  pubUser(u) {
-    return u && { id: u.id, handle: u.handle, name: u.name, color: u.color, bio: u.bio || "" };
+  prefsOf(u) { try { return JSON.parse(u.prefs || "{}") || {}; } catch (e) { return {}; } }
+  pubUser(u, self) {
+    return u && { id: u.id, handle: u.handle, name: u.name, color: u.color, bio: u.bio || "", link: u.link || "",
+      avatar: u.av ? "/api/avatar/" + u.id + "?v=" + u.av : "", created: u.created,
+      ...(self ? { email: u.email || "", notify: u.notify !== 0, prefs: this.prefsOf(u) } : {}) };
   }
   limited(k, max, win) {
     const r = this.one("SELECT * FROM hits WHERE k=?", k);
@@ -259,6 +387,7 @@ export class Hub {
     const live = !s.ended && now() - s.beat < 90000;
     return {
       id: s.id, title: s.title, game: s.game, cat: s.cat, started: s.started, live,
+      gameIcon: s.gameIcon === "local" ? "/api/gameicon/" + s.id : s.gameIcon || "",
       viewers: s.viewers, peak: s.peak, guests: s.guests, uid: s.uid, host: this.pubUser(u),
     };
   }
@@ -273,32 +402,67 @@ export class Hub {
       const handle = String(b.handle || "").trim().toLowerCase().replace(/^@/, "");
       const name = String(b.name || handle).trim().slice(0, 32);
       const pw = String(b.password || "");
+      const email = String(b.email || "").trim().toLowerCase();
       if (!/^[a-z0-9_.]{3,20}$/.test(handle)) return J2({ error: "bad_handle" });
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || email.length > 120) return J2({ error: "bad_email" });
+      if (this.one("SELECT id FROM users WHERE email=?", email)) return J2({ error: "email_taken" });
       if (pw.length < 6) return J2({ error: "weak_password" });
       if (this.limited("reg:" + b.ip, 8, 3600000)) return J2({ error: "rate" });
       if (this.one("SELECT id FROM users WHERE handle=?", handle)) return J2({ error: "taken" });
       const id = rid(12), salt = rid(16);
       const color = COLORS[Math.floor(Math.random() * COLORS.length)];
-      this.sql.exec("INSERT INTO users(id,handle,name,pw,salt,color,created) VALUES(?,?,?,?,?,?,?)",
-        id, handle, name, await hashPw(pw, salt), salt, color, t);
+      this.sql.exec("INSERT INTO users(id,handle,name,pw,salt,color,created,email,notify) VALUES(?,?,?,?,?,?,?,?,1)",
+        id, handle, name, await hashPw(pw, salt), salt, color, t, email);
       const token = rid(32);
       this.sql.exec("INSERT INTO tokens VALUES(?,?,?)", token, id, t);
-      return J2({ token, user: this.pubUser(this.one("SELECT * FROM users WHERE id=?", id)) });
+      this.state.waitUntil(sendMail(this.env, email, "أهلاً بك في وهج Live 🎮",
+        mailBox("أهلاً " + esc(name) + " 👋", "تم إنشاء حسابك <b dir=ltr>@" + esc(handle) + "</b> بنجاح.<br>ابدأ بثّك الأول الآن وشارك ألعابك مع أصدقائك.", "افتح وهج", b.origin || "")));
+      return J2({ token, user: this.pubUser(this.one("SELECT * FROM users WHERE id=?", id), true) });
     }
     if (p === "/login") {
       const handle = String(b.handle || "").trim().toLowerCase().replace(/^@/, "");
       if (this.limited("login:" + b.ip, 20, 600000)) return J2({ error: "rate" });
-      const u = this.one("SELECT * FROM users WHERE handle=?", handle);
-      if (!u || (await hashPw(String(b.password || ""), u.salt)) !== u.pw) return J2({ error: "bad_login" });
+      const u = handle.includes("@") ? this.one("SELECT * FROM users WHERE email=?", handle) : this.one("SELECT * FROM users WHERE handle=?", handle);
+      if (!u || u.deleted || (await hashPw(String(b.password || ""), u.salt)) !== u.pw) return J2({ error: "bad_login" });
       const token = rid(32);
       this.sql.exec("INSERT INTO tokens VALUES(?,?,?)", token, u.id, t);
-      return J2({ token, user: this.pubUser(u) });
+      return J2({ token, user: this.pubUser(u, true) });
+    }
+    if (p === "/forgot") {
+      const email = String(b.email || "").trim().toLowerCase();
+      if (this.limited("fg:" + b.ip, 10, 3600000) || this.limited("fge:" + email, 4, 3600000)) return J2({ error: "rate" });
+      if (!this.env.RESEND_API_KEY) return J2({ error: "mail_off" });
+      const u = this.one("SELECT * FROM users WHERE email=?", email);
+      if (u) {
+        const code = String(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000));
+        this.sql.exec("INSERT OR REPLACE INTO resets VALUES(?,?,?,0)", email, code, t + 15 * 60000);
+        await sendMail(this.env, email, "رمز استعادة كلمة المرور: " + code,
+          mailBox("استعادة كلمة المرور", "رمزك هو:<div dir=ltr style='font-size:34px;font-weight:800;letter-spacing:8px;color:#fff;margin:12px 0'>" + code + "</div>صالح لمدة ١٥ دقيقة. إذا لم تطلبه فتجاهل هذه الرسالة."));
+      }
+      return J2({ ok: true });
+    }
+    if (p === "/reset") {
+      const email = String(b.email || "").trim().toLowerCase();
+      const r = this.one("SELECT * FROM resets WHERE email=?", email);
+      if (!r || t > r.until || r.tries >= 5) return J2({ error: "bad_code" });
+      if (String(b.code || "").trim() !== r.code) { this.sql.exec("UPDATE resets SET tries=tries+1 WHERE email=?", email); return J2({ error: "bad_code" }); }
+      const pw = String(b.password || "");
+      if (pw.length < 6) return J2({ error: "weak_password" });
+      const u = this.one("SELECT * FROM users WHERE email=?", email);
+      if (!u) return J2({ error: "bad_code" });
+      const salt = rid(16);
+      this.sql.exec("UPDATE users SET pw=?, salt=? WHERE id=?", await hashPw(pw, salt), salt, u.id);
+      this.sql.exec("DELETE FROM tokens WHERE uid=?", u.id);
+      this.sql.exec("DELETE FROM resets WHERE email=?", email);
+      const token = rid(32);
+      this.sql.exec("INSERT INTO tokens VALUES(?,?,?)", token, u.id, t);
+      return J2({ token, user: this.pubUser(u, true) });
     }
     if (p === "/me") {
       const u = this.user(b.token);
       if (!u) return J2({ error: "auth" });
       const following = this.all("SELECT target FROM follows WHERE uid=?", u.id).map((r) => r.target);
-      return J2({ user: this.pubUser(u), following });
+      return J2({ user: this.pubUser(u, true), following });
     }
     if (p === "/profile") {
       const u = this.user(b.token);
@@ -306,15 +470,84 @@ export class Hub {
       const name = String(b.name ?? u.name).trim().slice(0, 32) || u.name;
       const color = /^#[0-9a-fA-F]{6}$/.test(b.color || "") ? b.color : u.color;
       const bio = String(b.bio ?? u.bio ?? "").slice(0, 140);
-      this.sql.exec("UPDATE users SET name=?, color=?, bio=? WHERE id=?", name, color, bio, u.id);
-      return J2({ user: this.pubUser(this.one("SELECT * FROM users WHERE id=?", u.id)) });
+      let email = u.email || "";
+      if (b.email !== undefined) {
+        const e = String(b.email).trim().toLowerCase();
+        if (e !== email) {
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e) || e.length > 120) return J2({ error: "bad_email" });
+          if (this.one("SELECT id FROM users WHERE email=? AND id<>?", e, u.id)) return J2({ error: "email_taken" });
+          email = e;
+        }
+      }
+      const notify = b.notify === undefined ? (u.notify !== 0 ? 1 : 0) : (b.notify ? 1 : 0);
+      let link = u.link || "";
+      if (b.link !== undefined) {
+        link = String(b.link).trim().slice(0, 200);
+        if (link && !/^https?:\/\//i.test(link)) link = "https://" + link;
+        if (link && !/^https?:\/\/[^\s<>"']+\.[^\s<>"']+$/i.test(link)) return J2({ error: "bad_link" });
+      }
+      let prefs = this.prefsOf(u);
+      if (b.prefs && typeof b.prefs === "object") {
+        const P = b.prefs;
+        if ("allowFx" in P) prefs.allowFx = !!P.allowFx;
+        if ("allowCh" in P) prefs.allowCh = !!P.allowCh;
+        if ("coStream" in P) prefs.coStream = ["all", "followers", "none"].includes(P.coStream) ? P.coStream : "all";
+        if ("slow" in P) prefs.slow = Math.min(60, Math.max(0, P.slow | 0));
+        if ("guestChat" in P) prefs.guestChat = !!P.guestChat;
+      }
+      this.sql.exec("UPDATE users SET name=?, color=?, bio=?, email=?, notify=?, link=?, prefs=? WHERE id=?", name, color, bio, email, notify, link, JSON.stringify(prefs), u.id);
+      return J2({ user: this.pubUser(this.one("SELECT * FROM users WHERE id=?", u.id), true) });
     }
     if (p === "/user") {
-      const u = this.one("SELECT * FROM users WHERE handle=?", String(b.handle || "").toLowerCase());
+      const u = this.one("SELECT * FROM users WHERE handle=? AND deleted=0", String(b.handle || "").toLowerCase());
       if (!u) return J2({ error: "not_found" });
       const followers = this.one("SELECT COUNT(*) n FROM follows WHERE target=?", u.id).n;
-      const past = this.all("SELECT * FROM streams WHERE uid=? ORDER BY started DESC LIMIT 12", u.id).map((s) => this.streamOut(s));
-      return J2({ user: this.pubUser(u), followers, streams: past });
+      const following = this.one("SELECT COUNT(*) n FROM follows WHERE uid=?", u.id).n;
+      const st = this.one("SELECT COUNT(*) n, MAX(peak) p, SUM(CASE WHEN ended>0 THEN ended-started ELSE 0 END) d FROM streams WHERE uid=?", u.id);
+      const past = this.all("SELECT * FROM streams WHERE uid=? ORDER BY started DESC LIMIT 20", u.id).map((s) => this.streamOut(s));
+      const games = this.all("SELECT game, MAX(gameIcon) icon, COUNT(*) n FROM streams WHERE uid=? AND game<>'' GROUP BY lower(game) ORDER BY n DESC LIMIT 8", u.id);
+      return J2({ user: this.pubUser(u), followers, following, streamsCount: st.n || 0, bestPeak: st.p || 0, hours: Math.round((st.d || 0) / 360000) / 10, games: games.map((g) => ({ name: g.game, icon: g.icon === "local" ? "" : g.icon, n: g.n })), streams: past });
+    }
+    if (p === "/password") {
+      const u = this.user(b.token);
+      if (!u) return J2({ error: "auth" });
+      if ((await hashPw(String(b.old || ""), u.salt)) !== u.pw) return J2({ error: "bad_old" });
+      const pw = String(b.password || "");
+      if (pw.length < 6) return J2({ error: "weak_password" });
+      const salt = rid(16);
+      this.sql.exec("UPDATE users SET pw=?, salt=? WHERE id=?", await hashPw(pw, salt), salt, u.id);
+      this.sql.exec("DELETE FROM tokens WHERE uid=? AND token<>?", u.id, b.token);
+      return J2({ ok: true });
+    }
+    if (p === "/avatar") {
+      const u = this.user(b.token);
+      if (!u) return J2({ error: "auth" });
+      if (!b.data) {
+        this.sql.exec("DELETE FROM avatars WHERE uid=?", u.id);
+        this.sql.exec("UPDATE users SET av=0 WHERE id=?", u.id);
+      } else {
+        const d = String(b.data);
+        if (!d.startsWith("data:image/jpeg;base64,") || d.length > 200000) return J2({ error: "bad_image" });
+        const bin = Uint8Array.from(atob(d.slice(23)), (c) => c.charCodeAt(0));
+        this.sql.exec("INSERT OR REPLACE INTO avatars VALUES(?,?)", u.id, bin);
+        this.sql.exec("UPDATE users SET av=? WHERE id=?", t, u.id);
+      }
+      return J2({ user: this.pubUser(this.one("SELECT * FROM users WHERE id=?", u.id), true) });
+    }
+    if (p === "/avatar-get") {
+      const r = this.one("SELECT data FROM avatars WHERE uid=?", String(b.uid));
+      return r ? new Response(r.data) : new Response(null, { status: 404 });
+    }
+    if (p === "/delete-account") {
+      const u = this.user(b.token);
+      if (!u) return J2({ error: "auth" });
+      if ((await hashPw(String(b.password || ""), u.salt)) !== u.pw) return J2({ error: "bad_old" });
+      this.sql.exec("UPDATE streams SET ended=? WHERE uid=? AND ended=0", t, u.id);
+      this.sql.exec("DELETE FROM tokens WHERE uid=?", u.id);
+      this.sql.exec("DELETE FROM follows WHERE uid=? OR target=?", u.id, u.id);
+      this.sql.exec("DELETE FROM avatars WHERE uid=?", u.id);
+      this.sql.exec("UPDATE users SET deleted=1, name=?, bio='', email=NULL, link='', av=0, pw='' WHERE id=?", "deleted", u.id);
+      return J2({ ok: true });
     }
     if (p === "/follow") {
       const u = this.user(b.token);
@@ -350,12 +583,20 @@ export class Hub {
         this.sql.exec("UPDATE streams SET ended=? WHERE uid=? AND ended=0", t, u.id);
         room = rid(8);
         const title = String(b.title || "").trim().slice(0, 80) || (u.name + " Live");
-        this.sql.exec("INSERT INTO streams(id,uid,title,game,cat,started,beat) VALUES(?,?,?,?,?,?,?)",
-          room, u.id, title, String(b.game || "").slice(0, 40), String(b.cat || "").slice(0, 20), t, t);
+        this.sql.exec("INSERT INTO streams(id,uid,title,game,cat,started,beat,gameIcon) VALUES(?,?,?,?,?,?,?,?)",
+          room, u.id, title, String(b.game || "").slice(0, 60), String(b.cat || "").slice(0, 20), t, t, String(b.gameIcon || "").slice(0, 300));
         await this.env.ROOM.get(this.env.ROOM.idFromName("r:" + room)).fetch("https://room/init", {
           method: "POST",
-          body: JSON.stringify({ room, host: u.id, hostName: u.name, title }),
+          body: JSON.stringify({ room, host: u.id, hostName: u.name, title, prefs: this.prefsOf(u),
+            followers: this.all("SELECT uid FROM follows WHERE target=?", u.id).map((r) => r.uid) }),
         });
+        if (this.env.RESEND_API_KEY && t - (u.lastAlert || 0) > 30 * 60000) {
+          this.sql.exec("UPDATE users SET lastAlert=? WHERE id=?", t, u.id);
+          const fans = this.all("SELECT u.email, u.name FROM follows f JOIN users u ON u.id=f.uid WHERE f.target=? AND u.notify<>0 AND u.email<>'' LIMIT 200", u.id);
+          const link = (b.origin || "") + "/w/" + room;
+          this.state.waitUntil(Promise.all(fans.map((f) => sendMail(this.env, f.email, "🔴 " + u.name + " يبث الآن على وهج",
+            mailBox("🔴 " + esc(u.name) + " بدأ بثاً مباشراً", "<b>" + esc(title) + "</b>" + (b.game ? "<br>🎮 " + esc(b.game) : ""), "شاهد الآن", link)))));
+        }
       }
       const pub = rid(32);
       this.sql.exec("INSERT INTO pubs(pub,uid,room,role,created,beat) VALUES(?,?,?,?,?,?)", pub, u.id, room, role, t, t);
@@ -502,6 +743,14 @@ export class Room {
     await this.loaded;
     const url = new URL(req.url);
     const p = url.pathname;
+    if (p === "/gameicon") {
+      if (req.method === "PUT") {
+        await this.state.storage.put("gameicon", { type: req.headers.get("content-type") || "image/png", data: await req.arrayBuffer() });
+        return new Response("ok");
+      }
+      const g = await this.state.storage.get("gameicon");
+      return g ? new Response(g.data, { headers: { "content-type": g.type } }) : new Response(null, { status: 404 });
+    }
     if (p === "/thumb") {
       if (req.method === "PUT") {
         await this.state.storage.put("thumb:" + url.searchParams.get("u"), await req.arrayBuffer());
@@ -515,14 +764,15 @@ export class Room {
     const R = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json" } });
 
     if (p === "/init") {
-      this.meta = { room: body.room, host: body.host, hostName: body.hostName, title: body.title, started: now(), ended: false };
+      this.meta = { room: body.room, host: body.host, hostName: body.hostName, title: body.title, started: now(), ended: false,
+        prefs: body.prefs || {}, followers: (body.followers || []).slice(0, 5000) };
       this.history = []; this.pubs = {}; this.guests = []; this.requests = []; this.poll = null; this.challenges = [];
       this.hype = { v: 0, t: now(), lvl: 1 }; this.pinned = null;
       await this.state.storage.put({ meta: this.meta, history: [], pubs: {}, guests: [], requests: [], poll: null, challenges: [], hype: this.hype, pinned: null });
       return R({ ok: true });
     }
     if (p === "/state") {
-      return R({ meta: this.meta, publishers: this.publishers(), viewers: this.counts() });
+      return R({ meta: this.meta && { room: this.meta.room, title: this.meta.title, ended: this.meta.ended }, publishers: this.publishers(), viewers: this.counts() });
     }
     if (p === "/is-guest") {
       const ok = this.guests.includes(body.uid);
@@ -588,11 +838,12 @@ export class Room {
       server.serializeAttachment(att);
       const h = this.hypeNow();
       this.send(server, {
-        t: "hello", me: att, meta: this.meta, history: this.history, publishers: this.publishers(),
+        t: "hello", me: att, meta: this.meta && { room: this.meta.room, host: this.meta.host, hostName: this.meta.hostName, title: this.meta.title, started: this.meta.started, ended: this.meta.ended }, history: this.history, publishers: this.publishers(),
         viewers: this.counts(), poll: this.pollOut(), hype: { v: Math.round(h.v), lvl: h.lvl },
         challenges: this.challenges, pinned: this.pinned, guests: this.guests,
         requests: this.isHost(uid) ? this.requests : undefined,
         host: this.isHost(uid),
+        rules: this.meta ? { allowFx: this.pref("allowFx") !== false, allowCh: this.pref("allowCh") !== false, coStream: this.pref("coStream") || "all", slow: this.pref("slow") | 0 } : null,
       });
       this.state.waitUntil(this.syncHub());
       return new Response(null, { status: 101, webSocket: client });
@@ -619,7 +870,9 @@ export class Room {
       case "chat": {
         if (me.anon) return this.send(ws, { t: "err", e: "login" });
         const text = String(m.text || "").trim().slice(0, 200);
-        if (!text || !this.allowed("c:" + me.uid, 700)) return;
+        const slow = host ? 0 : ((this.meta && this.meta.prefs && this.meta.prefs.slow) | 0) * 1000;
+        if (!text) return;
+        if (!this.allowed("c:" + me.uid, Math.max(700, slow))) return slow ? this.send(ws, { t: "err", e: "slow" }) : undefined;
         const msg = { t: "chat", id: rid(8), uid: me.uid, name: me.name, color: me.color, text, at: t, host, guest: this.guests.includes(me.uid) };
         this.pushHistory(msg);
         this.bcast(msg);
@@ -635,6 +888,7 @@ export class Room {
       }
       case "effect": {
         if (me.anon) return this.send(ws, { t: "err", e: "login" });
+        if (this.pref("allowFx") === false && !host) return this.send(ws, { t: "err", e: "fx_off" });
         if (!EFFECTS.has(m.id) || !this.allowed("e:" + me.uid, 4000)) return this.send(ws, { t: "err", e: "slow" });
         this.bcast({ t: "effect", id: m.id, name: me.name, color: me.color, at: t });
         this.addHype(6);
@@ -673,6 +927,7 @@ export class Room {
       }
       case "challenge": {
         if (me.anon) return this.send(ws, { t: "err", e: "login" });
+        if (this.pref("allowCh") === false) return this.send(ws, { t: "err", e: "ch_off" });
         const text = String(m.text || "").trim().slice(0, 90);
         if (!text || !this.allowed("ch:" + me.uid, 20000)) return this.send(ws, { t: "err", e: "slow" });
         const c = { id: rid(6), uid: me.uid, name: me.name, color: me.color, text, state: "new", at: t, up: 1, voters: [me.uid] };
@@ -710,6 +965,8 @@ export class Room {
       }
       case "guest-req": {
         if (me.anon || host) return;
+        const cs = this.pref("coStream") || "all";
+        if (cs === "none" || (cs === "followers" && !(this.meta.followers || []).includes(me.uid))) return this.send(ws, { t: "err", e: "co_off" });
         if (this.requests.find((r) => r.uid === me.uid) || this.guests.includes(me.uid)) return;
         this.requests.push({ uid: me.uid, name: me.name, color: me.color, handle: me.handle, at: t });
         this.requests = this.requests.slice(-20);
@@ -757,6 +1014,7 @@ export class Room {
       }
     }
   }
+  pref(k) { return this.meta && this.meta.prefs ? this.meta.prefs[k] : undefined; }
   chOut(c) {
     return { id: c.id, name: c.name, color: c.color, text: c.text, state: c.state, up: c.up, at: c.at };
   }
