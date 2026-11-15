@@ -3,7 +3,7 @@ main = "worker.js"
 compatibility_date = "2025-06-01"
 workers_dev = true
 
-rules = [{ type = "Text", globs = ["app.html"], fallthrough = true }]
+rules = [{ type = "Text", globs = ["app.html", "lib/*.txt"], fallthrough = true }]
 
 [[durable_objects.bindings]]
 name = "HUB"
@@ -16,3 +16,7 @@ class_name = "Room"
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Hub", "Room"]
+
+[[r2_buckets]]
+binding = "REC"
+bucket_name = "wahj-recordings"

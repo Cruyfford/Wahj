@@ -24,6 +24,8 @@ final class ReplayAudio: NSObject, RTCAudioDevice {
     var outputLatency: TimeInterval { 0 }
 
     var micEnabled = true
+    /// Receives every mixed 10 ms chunk (used by the server recorder).
+    var onMixed: (([Int16]) -> Void)?
     var muted = false
     var appGain: Float = 1.0
     var micGain: Float = 1.25
@@ -126,6 +128,7 @@ final class ReplayAudio: NSObject, RTCAudioDevice {
     }
 
     private func deliver(_ samples: [Int16]) {
+        onMixed?(samples)
         guard let d = delegate else { return }
         var pcm = samples
         var flags = AudioUnitRenderActionFlags()

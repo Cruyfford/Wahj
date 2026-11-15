@@ -7,6 +7,7 @@ import WebRTC
 
 class SampleHandler: RPBroadcastSampleHandler, CXCallObserverDelegate {
     private var pub: Publisher?
+    private var recorder: SegmentRecorder?
     private var job: WahjJob?
     private let guardian = PrivacyGuard()
     private let callObserver = CXCallObserver()
@@ -37,6 +38,11 @@ class SampleHandler: RPBroadcastSampleHandler, CXCallObserverDelegate {
         let p = Publisher(job: job)
         p.onFatal = { [weak self] m in self?.finish(m) }
         do {
+            if job.rec == true {
+                let r = SegmentRecorder(job: job)
+                recorder = r
+                p.audio.onMixed = { [weak r] s in r?.pushAudio(s) }
+            }
             try await p.start()
             pub = p
             DarwinCenter.post(WahjNames.live)
@@ -56,11 +62,12 @@ class SampleHandler: RPBroadcastSampleHandler, CXCallObserverDelegate {
             let (rotation, edge, cgo) = Self.orientation(sb)
             let time = CMSampleBufferGetPresentationTimeStamp(sb)
             if guardian.hideAll {
-                if let b = blankBuffer(like: pb) { p.push(b, rotation: rotation, time: time) }
+                if let b = blankBuffer(like: pb) { p.push(b, rotation: rotation, time: time); recorder?.push(b, orientation: .up, time: time) }
                 return
             }
             guardian.process(pb, edge: edge)
             p.push(pb, rotation: rotation, time: time)
+            recorder?.push(pb, orientation: cgo, time: time)
             if wantThumb {
                 wantThumb = false
                 makeThumb(pb, cgo)
@@ -85,6 +92,7 @@ class SampleHandler: RPBroadcastSampleHandler, CXCallObserverDelegate {
         guard !finished else { return }
         finished = true
         thumbTimer?.cancel()
+        recorder?.finish()
         pub?.stop()
         if let job = job {
             let sem = DispatchSemaphore(value: 0)

@@ -98,8 +98,24 @@ async def main():
         audio = await b.evaluate("[...document.querySelectorAll('#ws audio')].map(a=>!!a.srcObject && a.srcObject.getAudioTracks().length)")
         print("audio elements:", audio)
         await b.screenshot(path="e2e-viewer.png")
+        # recordings: upload fake init + 2 segments, check playlist, delete
+        cfg = json.load(urllib.request.urlopen(urllib.request.Request(B + "/api/config", headers=UA)))
+        print("recordings enabled:", cfg.get("rec"))
+        if cfg.get("rec"):
+            pubkey = await a.evaluate("window.__pub.job.pub")
+            def up(path, data):
+                r = urllib.request.Request(B + f"/api/rec/{room}/{path}", data=data, headers={"x-pub": pubkey, **UA}, method="POST")
+                try: return json.load(urllib.request.urlopen(r))
+                except urllib.error.HTTPError as e: return {"http": e.code, "body": e.read()[:200].decode()}
+            print("rec init:", up("init?w=640&h=360", b"\0" * 1000), "seg0:", up("seg?n=0&dur=6.0", b"\1" * 5000), "seg1:", up("seg?n=1&dur=4.5", b"\2" * 4000))
+            m3u = urllib.request.urlopen(urllib.request.Request(B + f"/api/rec/{room}/index.m3u8", headers=UA)).read().decode()
+            print(m3u)
+            assert "1.m4s" in m3u, "playlist missing segments"
+            assert urllib.request.urlopen(urllib.request.Request(B + f"/api/rec/{room}/0.m4s", headers=UA)).read() == b"\1" * 5000
         await a.evaluate("window.__pub && window.__pub.stop()")
         post("/api/end", {"room": room}, host)
+        if cfg.get("rec"):
+            print("delete rec:", post(f"/api/rec/{room}/delete", {}, host))
         for l in logs[-30:]: print(l)
         await br.close()
         if not ok: raise SystemExit("viewer never received video")

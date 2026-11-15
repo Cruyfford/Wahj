@@ -82,6 +82,8 @@ class StreamService : Service() {
     private var blank: JavaI420Buffer? = null
     private var overlays: Overlays? = null
     private var voice: VoicePull? = null
+    @Volatile private var recorder: SegmentRecorder? = null
+    private var videoTrack: VideoTrack? = null
     private val tick = object : Runnable {
         override fun run() { checkPrivacy(); main.postDelayed(this, 400) }
     }
@@ -168,7 +170,11 @@ class StreamService : Service() {
             .setUseHardwareNoiseSuppressor(true)
             .setSampleRate(48000)
             .setUseStereoInput(false)
-            .setAudioBufferCallback { buffer, _, channels, rate, bytesRead, ts -> mixGame(buffer, channels, rate, bytesRead); ts }
+            .setAudioBufferCallback { buffer, _, channels, rate, bytesRead, ts ->
+                mixGame(buffer, channels, rate, bytesRead)
+                if (rate == 48000) recorder?.pushAudio(buffer, bytesRead, channels)
+                ts
+            }
             .createAudioDeviceModule()
         adm = a
         val f = PeerConnectionFactory.builder()
@@ -213,6 +219,11 @@ class StreamService : Service() {
         }) ?: throw RuntimeException("peer connection")
         pc = p
         val vTrack = f.createVideoTrack("screen", videoSource)
+        videoTrack = vTrack
+        if (job.optBoolean("rec", false)) {
+            val r = recorder ?: SegmentRecorder(server, job.optString("room"), job.optString("pub")).also { recorder = it }
+            vTrack.addSink(r)
+        }
         val enc = RtpParameters.Encoding(null, true, null).apply {
             maxBitrateBps = bitrate(); maxFramerate = fps
         }
@@ -435,6 +446,7 @@ class StreamService : Service() {
         overlays?.destroy(); overlays = null
         val j = if (::job.isInitialized) job else null
         exec.execute {
+            try { recorder?.let { r -> videoTrack?.removeSink(r); r.stop() } } catch (_: Exception) {}
             try { voice?.close() } catch (_: Exception) {}
             try { capturer?.stopCapture() } catch (_: Exception) {}
             try { capturer?.dispose() } catch (_: Exception) {}

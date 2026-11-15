@@ -2,6 +2,7 @@
 // Accounts, stream directory, Cloudflare Realtime SFU proxy, realtime rooms.
 import APP_HTML from "./app.html";
 import GAMES from "./games.json";
+import HLS_JS from "./lib/hls.txt";
 
 const SFU = "https://rtc.live.cloudflare.com/v1";
 const VERSION = "1.0.0";
@@ -108,6 +109,7 @@ export default {
         headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" },
       });
     }
+    if (p === "/hls.js") return new Response(HLS_JS, { headers: { "content-type": "application/javascript", "cache-control": "public, max-age=604800" } });
     if (p === "/health") return J({ ok: true, v: VERSION, rev: env.NATIVE_REV || "" });
     if (!p.startsWith("/api/")) return new Response("Not found", { status: 404 });
 
@@ -115,9 +117,60 @@ export default {
     try {
       // ---- config ----
       if (p === "/api/config") {
-        return J({ v: VERSION, rev: env.NATIVE_REV || "", ice: await iceServers(env), sfu: !!env.SFU_APP_ID, mail: !!env.RESEND_API_KEY });
+        return J({ v: VERSION, rev: env.NATIVE_REV || "", ice: await iceServers(env), sfu: !!env.SFU_APP_ID, mail: !!env.RESEND_API_KEY, rec: !!env.REC });
       }
       if (p === "/api/ice") return J({ iceServers: await iceServers(env) });
+
+      // ---- recordings (R2, HLS fMP4) ----
+      let mr = p.match(/^\/api\/rec\/([a-z0-9]+)\/(init|seg)$/);
+      if (mr && req.method === "POST") {
+        if (!env.REC) return J({ error: "rec_off" }, 503);
+        const pub = req.headers.get("x-pub") || "";
+        const buf = await req.arrayBuffer();
+        if (buf.byteLength < 8 || buf.byteLength > 25e6) return J({ error: "size" }, 400);
+        const n = mr[2] === "init" ? -1 : Math.max(0, +url.searchParams.get("n") | 0);
+        const dur = Math.min(30, Math.max(0, +url.searchParams.get("dur") || 0));
+        const r = await hub(env, "/rec-seg", { pub, room: mr[1], n, dur, bytes: buf.byteLength,
+          w: +url.searchParams.get("w") || 0, h: +url.searchParams.get("h") || 0 });
+        if (!r.ok) return J(r, r.error === "auth" ? 401 : 409);
+        await env.REC.put(`rec/${mr[1]}/${n < 0 ? "init.mp4" : n + ".m4s"}`, buf, { httpMetadata: { contentType: n < 0 ? "video/mp4" : "video/iso.segment" } });
+        return J({ ok: true });
+      }
+      mr = p.match(/^\/api\/rec\/([a-z0-9]+)\/(index\.m3u8|init\.mp4|\d+\.m4s)$/);
+      if (mr) {
+        if (!env.REC) return new Response(null, { status: 404, headers: CORS });
+        if (mr[2] === "index.m3u8") {
+          const r = await hub(env, "/rec-get", { id: mr[1] });
+          if (!r.rec || !r.rec.init) return new Response("not found", { status: 404, headers: CORS });
+          const td = Math.ceil(Math.max(6, ...r.segs.map((x) => x.dur)));
+          let m = `#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-TARGETDURATION:${td}\n#EXT-X-MEDIA-SEQUENCE:0\n#EXT-X-PLAYLIST-TYPE:${r.rec.ended ? "VOD" : "EVENT"}\n#EXT-X-INDEPENDENT-SEGMENTS\n#EXT-X-MAP:URI="init.mp4"\n`;
+          for (const sg of r.segs) m += `#EXTINF:${sg.dur.toFixed(3)},\n${sg.n}.m4s\n`;
+          if (r.rec.ended) m += "#EXT-X-ENDLIST\n";
+          return new Response(m, { headers: { "content-type": "application/vnd.apple.mpegurl", "cache-control": r.rec.ended ? "max-age=60" : "no-cache", ...CORS } });
+        }
+        const obj = await env.REC.get(`rec/${mr[1]}/${mr[2]}`);
+        if (!obj) return new Response(null, { status: 404, headers: CORS });
+        return new Response(obj.body, { headers: { "content-type": mr[2].endsWith(".mp4") ? "video/mp4" : "video/iso.segment", "cache-control": "public, max-age=31536000, immutable", "content-length": String(obj.size), ...CORS } });
+      }
+      if (p === "/api/recs") {
+        return J(await hub(env, "/recs", { handle: url.searchParams.get("u") || "", token: bearer(req) }));
+      }
+      mr = p.match(/^\/api\/rec\/([a-z0-9]+|all)\/delete$/);
+      if (mr && req.method === "POST") {
+        const r = await hub(env, "/rec-del", { id: mr[1], token: bearer(req) });
+        if (!r.ok) return J(r, 400);
+        if (env.REC) ctx.waitUntil((async () => {
+          for (const id of r.ids) {
+            let cursor;
+            do {
+              const l = await env.REC.list({ prefix: `rec/${id}/`, cursor });
+              if (l.objects.length) await env.REC.delete(l.objects.map((o) => o.key));
+              cursor = l.truncated ? l.cursor : undefined;
+            } while (cursor);
+          }
+        })());
+        return J({ ok: true, ids: r.ids });
+      }
 
       // ---- speed test ----
       if (p === "/api/speed/ping") {
@@ -294,6 +347,7 @@ export default {
 // ======================================================================
 // Hub — accounts, streams, publish tokens (single SQLite Durable Object)
 // ======================================================================
+const REC_LIMIT = 9.5e9; // keep under the R2 free tier (10 GB)
 const COLORS = ["#7C5CFF", "#FF4D8D", "#00D1FF", "#FFB800", "#2EE59D", "#FF6B3D", "#B26BFF", "#3DDCFF"];
 
 async function hashPw(pw, salt) {
@@ -331,6 +385,9 @@ export class Hub {
       try { this.sql.exec("ALTER TABLE users ADD COLUMN " + c); } catch (e) {}
     }
     this.sql.exec("CREATE TABLE IF NOT EXISTS avatars(uid TEXT PRIMARY KEY, data BLOB)");
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS recs(id TEXT PRIMARY KEY, uid TEXT, title TEXT, game TEXT, gameIcon TEXT, started INTEGER,
+      ended INTEGER DEFAULT 0, dur REAL DEFAULT 0, bytes INTEGER DEFAULT 0, segs INTEGER DEFAULT 0, init INTEGER DEFAULT 0, deleted INTEGER DEFAULT 0, w INTEGER DEFAULT 0, h INTEGER DEFAULT 0)`);
+    this.sql.exec("CREATE TABLE IF NOT EXISTS recsegs(rec TEXT, n INTEGER, dur REAL, bytes INTEGER, PRIMARY KEY(rec, n))");
     try { this.sql.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_email ON users(email)"); } catch (e) {}
   }
   one(q, ...a) {
@@ -344,6 +401,7 @@ export class Hub {
     if (!token) return null;
     return this.one("SELECT u.* FROM tokens t JOIN users u ON u.id=t.uid WHERE t.token=? AND u.deleted=0", token);
   }
+  recTotal() { return (this.one("SELECT SUM(bytes) b FROM recs WHERE deleted=0") || {}).b || 0; }
   prefsOf(u) { try { return JSON.parse(u.prefs || "{}") || {}; } catch (e) { return {}; } }
   pubUser(u, self) {
     return u && { id: u.id, handle: u.handle, name: u.name, color: u.color, bio: u.bio || "", link: u.link || "",
@@ -474,6 +532,7 @@ export class Hub {
         if ("coStream" in P) prefs.coStream = ["all", "followers", "none"].includes(P.coStream) ? P.coStream : "all";
         if ("slow" in P) prefs.slow = Math.min(60, Math.max(0, P.slow | 0));
         if ("guestChat" in P) prefs.guestChat = !!P.guestChat;
+        if ("rec" in P) prefs.rec = !!P.rec;
       }
       this.sql.exec("UPDATE users SET name=?, color=?, bio=?, email=?, notify=?, link=?, prefs=? WHERE id=?", name, color, bio, email, notify, link, JSON.stringify(prefs), u.id);
       return J2({ user: this.pubUser(this.one("SELECT * FROM users WHERE id=?", u.id), true) });
@@ -484,7 +543,12 @@ export class Hub {
       const followers = this.one("SELECT COUNT(*) n FROM follows WHERE target=?", u.id).n;
       const following = this.one("SELECT COUNT(*) n FROM follows WHERE uid=?", u.id).n;
       const st = this.one("SELECT COUNT(*) n, MAX(peak) p, SUM(CASE WHEN ended>0 THEN ended-started ELSE 0 END) d FROM streams WHERE uid=?", u.id);
-      const past = this.all("SELECT * FROM streams WHERE uid=? ORDER BY started DESC LIMIT 20", u.id).map((s) => this.streamOut(s));
+      const past = this.all("SELECT * FROM streams WHERE uid=? ORDER BY started DESC LIMIT 30", u.id).map((s) => {
+        const o = this.streamOut(s);
+        const r = this.one("SELECT dur, segs, init FROM recs WHERE id=? AND deleted=0", s.id);
+        if (r && r.init && r.segs > 0) o.rec = { dur: Math.round(r.dur) };
+        return o;
+      });
       const games = this.all("SELECT game, MAX(gameIcon) icon, COUNT(*) n FROM streams WHERE uid=? AND game<>'' GROUP BY lower(game) ORDER BY n DESC LIMIT 8", u.id);
       return J2({ user: this.pubUser(u), followers, following, streamsCount: st.n || 0, bestPeak: st.p || 0, hours: Math.round((st.d || 0) / 360000) / 10, games: games.map((g) => ({ name: g.game, icon: g.icon === "local" ? "" : g.icon, n: g.n })), streams: past });
     }
@@ -584,6 +648,7 @@ export class Hub {
         room, pub, role, uid: u.id, name: u.name,
         quality: b.quality || "720", fps: +b.fps || 30, mic: b.mic !== false,
         privacy: b.privacy || {}, at: t,
+        rec: role === "host" && !!this.env.REC && this.prefsOf(u).rec !== false && this.recTotal() < REC_LIMIT,
       };
       if (b.device) this.sql.exec("INSERT OR REPLACE INTO pending VALUES(?,?,?)", String(b.device), JSON.stringify(job), t);
       this.sql.exec("DELETE FROM pending WHERE created<?", t - 3600000);
@@ -606,6 +671,57 @@ export class Hub {
       const u = this.one("SELECT * FROM users WHERE id=?", r.uid);
       return J2({ ok: true, uid: r.uid, role: r.role, name: u.name, color: u.color });
     }
+    if (p === "/rec-seg") {
+      const r = this.one("SELECT * FROM pubs WHERE pub=? AND room=?", String(b.pub), String(b.room));
+      if (!r || r.role !== "host") return J2({ ok: false, error: "auth" });
+      const u = this.one("SELECT * FROM users WHERE id=?", r.uid);
+      if (this.prefsOf(u).rec === false) return J2({ ok: false, error: "rec_disabled" });
+      let rec = this.one("SELECT * FROM recs WHERE id=?", r.room);
+      if (rec && rec.deleted) return J2({ ok: false, error: "deleted" });
+      if (this.recTotal() + (b.bytes | 0) > REC_LIMIT) return J2({ ok: false, error: "rec_full" });
+      if (!rec) {
+        const s = this.one("SELECT * FROM streams WHERE id=?", r.room) || {};
+        this.sql.exec("INSERT INTO recs(id,uid,title,game,gameIcon,started) VALUES(?,?,?,?,?,?)", r.room, r.uid, s.title || "", s.game || "", s.gameIcon === "local" ? "/api/gameicon/" + r.room : s.gameIcon || "", s.started || t);
+      }
+      if (b.n < 0) {
+        this.sql.exec("UPDATE recs SET init=1, w=?, h=?, bytes=bytes+? WHERE id=?", b.w | 0, b.h | 0, b.bytes | 0, r.room);
+      } else {
+        const ex = this.one("SELECT * FROM recsegs WHERE rec=? AND n=?", r.room, b.n);
+        this.sql.exec("INSERT OR REPLACE INTO recsegs VALUES(?,?,?,?)", r.room, b.n, +b.dur || 0, b.bytes | 0);
+        this.sql.exec("UPDATE recs SET segs=segs+?, dur=dur+?, bytes=bytes+? WHERE id=?", ex ? 0 : 1, (+b.dur || 0) - (ex ? ex.dur : 0), (b.bytes | 0) - (ex ? ex.bytes : 0), r.room);
+      }
+      this.sql.exec("UPDATE pubs SET beat=? WHERE pub=?", t, r.pub);
+      return J2({ ok: true });
+    }
+    if (p === "/rec-get") {
+      const rec = this.one("SELECT * FROM recs WHERE id=? AND deleted=0", String(b.id));
+      if (!rec) return J2({ rec: null, segs: [] });
+      // a stream that stopped without a clean end: treat as finished after 2 minutes of silence
+      if (!rec.ended) { const s = this.one("SELECT * FROM streams WHERE id=?", rec.id); if (!s || s.ended || t - s.beat > 120000) { rec.ended = 1; } }
+      return J2({ rec, segs: this.all("SELECT n, dur FROM recsegs WHERE rec=? ORDER BY n", rec.id) });
+    }
+    if (p === "/recs") {
+      const me = this.user(b.token);
+      const u = b.handle ? this.one("SELECT * FROM users WHERE handle=?", String(b.handle).toLowerCase()) : me;
+      if (!u) return J2({ recs: [] });
+      const own = me && me.id === u.id;
+      const recs = this.all("SELECT * FROM recs WHERE uid=? AND deleted=0 AND init=1 AND segs>0 ORDER BY started DESC LIMIT 100", u.id)
+        .map((r) => ({ id: r.id, title: r.title, game: r.game, gameIcon: r.gameIcon, started: r.started, dur: Math.round(r.dur), bytes: own ? r.bytes : undefined, ended: !!r.ended }));
+      const out = { recs };
+      if (own) { out.myBytes = recs.reduce((a, r) => a + r.bytes, 0); out.totalBytes = this.recTotal(); out.limit = REC_LIMIT; }
+      return J2(out);
+    }
+    if (p === "/rec-del") {
+      const u = this.user(b.token);
+      if (!u) return J2({ ok: false, error: "auth" });
+      const rows = b.id === "all" ? this.all("SELECT id FROM recs WHERE uid=? AND deleted=0", u.id) : this.all("SELECT id FROM recs WHERE id=? AND uid=? AND deleted=0", String(b.id), u.id);
+      if (!rows.length) return J2({ ok: false, error: "not_found" });
+      for (const r of rows) {
+        this.sql.exec("UPDATE recs SET deleted=1, bytes=0 WHERE id=?", r.id);
+        this.sql.exec("DELETE FROM recsegs WHERE rec=?", r.id);
+      }
+      return J2({ ok: true, ids: rows.map((r) => r.id) });
+    }
     if (p === "/viewers") {
       this.sql.exec("UPDATE streams SET viewers=?, peak=MAX(peak,?), guests=? WHERE id=?", b.n | 0, b.n | 0, b.guests | 0, String(b.room));
       return J2({ ok: true });
@@ -622,6 +738,7 @@ export class Hub {
       if (role === "host" && s.uid === u.id) {
         this.sql.exec("UPDATE streams SET ended=? WHERE id=?", t, room);
         this.sql.exec("DELETE FROM pubs WHERE room=?", room);
+        this.sql.exec("UPDATE recs SET ended=? WHERE id=? AND ended=0", t, room);
         return J2({ ok: true, room, uid: u.id, all: true });
       }
       this.sql.exec("DELETE FROM pubs WHERE room=? AND uid=?", room, u.id);

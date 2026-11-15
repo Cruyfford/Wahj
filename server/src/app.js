@@ -57,6 +57,8 @@ const T = {
     focusSteps: "١. افتح تطبيق «الاختصارات» ← «الأتمتة» ← «أتمتة جديدة»<br>٢. اختر «تطبيق» ← وهج ← «عند الفتح»<br>٣. اختر «تشغيل فوري»<br>٤. أضف إجراء «تعيين التركيز» ← «عدم الإزعاج» ← تشغيل<br><br>الآن كل مرة تفتح وهج يتفعّل عدم الإزعاج تلقائياً ✓",
     openShortcuts: "فتح الاختصارات", errs: { bad_handle: "اسم المستخدم: ٣–٢٠ حرفاً إنجليزياً أو أرقام", weak_password: "كلمة المرور ٦ أحرف على الأقل", taken: "الاسم محجوز", bad_login: "بيانات الدخول غير صحيحة", rate: "محاولات كثيرة، انتظر قليلاً", net: "تعذّر الاتصال", auth: "سجّل الدخول أولاً", not_invited: "لم تتم دعوتك", login: "سجّل الدخول للمشاركة", slow: "انتظر لحظة", guests_full: "اكتمل عدد الضيوف (٣)", bad_email: "البريد الإلكتروني غير صحيح", email_taken: "هذا البريد مسجّل مسبقاً", bad_code: "الرمز غير صحيح أو منتهي", mail_off: "إرسال البريد غير مفعّل في السيرفر بعد", bad_link: "الرابط غير صحيح", bad_old: "كلمة المرور الحالية غير صحيحة", bad_image: "الصورة غير مدعومة", fx_off: "البثّاث أوقف المؤثرات", ch_off: "البثّاث أوقف التحديات", co_off: "البثّاث لا يقبل طلبات البث المشترك" },
     sentFx: "أرسل", hypeTrain: "قطار الحماس 🚀", latency: "تأخير", guestsN: "ضيوف", layoutSplit: "شاشة مقسومة", layoutFocus: "تركيز",
+    recSave: "حفظ البث على السيرفر", recSaveD: "يُسجَّل بثك ويمكن إعادة مشاهدته من ملفك", recordings: "التسجيلات", noRecs: "لا توجد تسجيلات", replay: "إعادة مشاهدة", delRec: "حذف التسجيل", delRecQ: "حذف هذا التسجيل نهائياً؟",
+    delAllRecs: "حذف كل التسجيلات", delAllQ: "حذف كل تسجيلاتك نهائياً؟", storage: "المساحة المستخدمة", recOff: "حفظ البثوث غير مفعّل في السيرفر", recording: "يتم التسجيل", recFull: "مساحة التسجيلات ممتلئة",
     settingsT: "الإعدادات", secAccount: "الحساب", secStream: "إعدادات البث الافتراضية", secRoom: "قواعد غرفتي", secWatch: "المشاهدة", secNotif: "الإشعارات", secApp: "التطبيق", secAbout: "حول",
     editProfile: "تعديل الملف الشخصي", changePass: "تغيير كلمة المرور", oldPass: "كلمة المرور الحالية", deleteAcc: "حذف الحساب", deleteQ: "سيُحذف حسابك نهائياً. اكتب كلمة المرور للتأكيد", deleted: "تم حذف الحساب",
     usernameLocked: "اسم المستخدم لا يمكن تغييره", photo: "الصورة", changePhoto: "تغيير الصورة", removePhoto: "حذف الصورة", link: "رابط (يوتيوب، تيك توك…)", saved: "تم الحفظ ✓",
@@ -102,6 +104,8 @@ const T = {
     focusSteps: "1. Open Shortcuts → Automation → New Automation<br>2. Choose App → Wahj → Is Opened<br>3. Choose Run Immediately<br>4. Add action Set Focus → Do Not Disturb → On<br><br>Now Do Not Disturb turns on automatically every time you open Wahj ✓",
     openShortcuts: "Open Shortcuts", errs: { bad_handle: "Username: 3–20 latin letters/digits", weak_password: "Password needs 6+ characters", taken: "Username taken", bad_login: "Wrong username or password", rate: "Too many attempts, wait a bit", net: "Connection failed", auth: "Sign in first", not_invited: "You were not invited", login: "Sign in to take part", slow: "Slow down a moment", guests_full: "Guest slots are full (3)", bad_email: "Invalid email address", email_taken: "Email already registered", bad_code: "Wrong or expired code", mail_off: "Email sending isn't enabled on the server yet", bad_link: "Invalid link", bad_old: "Current password is wrong", bad_image: "Unsupported image", fx_off: "The streamer turned effects off", ch_off: "The streamer turned challenges off", co_off: "The streamer isn't accepting co-stream requests" },
     sentFx: "sent", hypeTrain: "HYPE TRAIN 🚀", latency: "Delay", guestsN: "guests", layoutSplit: "Split screen", layoutFocus: "Focus",
+    recSave: "Save streams on the server", recSaveD: "Your stream is recorded and can be replayed from your profile", recordings: "Recordings", noRecs: "No recordings", replay: "Replay", delRec: "Delete recording", delRecQ: "Delete this recording permanently?",
+    delAllRecs: "Delete all recordings", delAllQ: "Delete all your recordings permanently?", storage: "Storage used", recOff: "Stream saving isn't enabled on the server", recording: "Recording", recFull: "Recording storage is full",
     settingsT: "Settings", secAccount: "Account", secStream: "Default stream settings", secRoom: "My room rules", secWatch: "Watching", secNotif: "Notifications", secApp: "App", secAbout: "About",
     editProfile: "Edit profile", changePass: "Change password", oldPass: "Current password", deleteAcc: "Delete account", deleteQ: "Your account will be permanently deleted. Enter your password to confirm", deleted: "Account deleted",
     usernameLocked: "Username can't be changed", photo: "Photo", changePhoto: "Change photo", removePhoto: "Remove photo", link: "Link (YouTube, TikTok…)", saved: "Saved ✓",
@@ -841,6 +845,47 @@ function gamePicker(onPick) {
   });
 }
 
+const fmtBytes = (b) => (b >= 1e9 ? (b / 1e9).toFixed(2) + " GB" : (b / 1e6).toFixed(b >= 1e8 ? 0 : 1) + " MB");
+async function deleteRec(id, after) {
+  confirmBox(id === "all" ? t("delAllQ") : t("delRecQ"), async () => {
+    const r = await api(`/api/rec/${id}/delete`, {});
+    if (r.error) return toast(terr(r.error));
+    toast(t("saved")); after && after();
+  });
+}
+let hlsLoading;
+function loadHls() {
+  if (window.Hls) return Promise.resolve(window.Hls);
+  return (hlsLoading = hlsLoading || new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = "/hls.js"; sc.onload = () => res(window.Hls); sc.onerror = rej; document.head.appendChild(sc); }));
+}
+
+/* ---------- replay (recorded stream) ---------- */
+VIEWS.replay = (root, arg) => {
+  const id = typeof arg === "string" ? arg : arg.id;
+  const info = typeof arg === "object" ? arg : {};
+  root.innerHTML = `<div class="view" style="background:#000">
+    <div class="wtop"><button class="ibtn" id="rx" style="background:rgba(0,0,0,.4)">${ic("x")}</button>
+      <div class="pill"><div><div class="n" id="rt">${esc(info.title || t("replay"))}</div><div class="s" id="rg">${info.game ? gIcon(info.gameIcon) + esc(info.game) : ""}</div></div></div><div class="sp"></div>
+      ${info.own ? `<button class="ibtn" id="rdel" style="background:rgba(0,0,0,.4);color:#ff7b88">${ic("x")}</button>` : ""}</div>
+    <video id="rv" playsinline controls autoplay style="position:absolute;inset:0;width:100%;height:100%;background:#000"></video>
+    <div class="spin" id="rspin"></div></div>`;
+  $("#rx").onclick = () => history.length > 1 && info.back ? go(info.back.view, info.back.arg) : go("home");
+  if ($("#rdel")) $("#rdel").onclick = () => deleteRec(id, () => go("me"));
+  const v = $("#rv"), src = `/api/rec/${id}/index.m3u8`;
+  let hls;
+  v.addEventListener("playing", () => $("#rspin") && $("#rspin").remove());
+  const fail = () => { $("#rspin") && $("#rspin").remove(); toast(t("offline")); };
+  if (v.canPlayType("application/vnd.apple.mpegurl")) { v.src = src; v.onerror = fail; }
+  else loadHls().then((Hls) => {
+    if (!Hls.isSupported()) return fail();
+    hls = new Hls({ maxBufferLength: 30 });
+    hls.on(Hls.Events.ERROR, (e, d) => { if (d.fatal) fail(); });
+    hls.loadSource(src); hls.attachMedia(v);
+  }).catch(fail);
+  v.play().catch(() => {});
+  return () => { try { hls && hls.destroy(); } catch (e) {} v.pause(); v.removeAttribute("src"); v.load(); };
+};
+
 function countryName(cc) {
   if (!cc || cc.length !== 2) return "–";
   const flag = String.fromCodePoint(...[...cc.toUpperCase()].map((c) => 127397 + c.charCodeAt(0)));
@@ -1271,7 +1316,7 @@ VIEWS.studio = (root) => {
     <button class="ibtn" id="ssh">${ic("share")}</button><button class="ibtn" id="sx" style="color:#ff7b88">${ic("stop")}</button></div>
   <div class="scroll" style="padding-bottom:calc(30px + var(--sb))">
     <div class="lvcard"><div class="row"><div><div class="small" style="color:#d6d1ee">${t("liveFor")}</div><div class="big" id="sd">0:00</div></div><div class="sp"></div>
-      <div style="text-align:end"><div class="small" style="color:#d6d1ee" id="sst">${t("starting")}</div><div style="font-weight:700;margin-top:4px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(job.title || "")}</div></div></div>
+      <div style="text-align:end"><div class="small" style="color:#d6d1ee" id="sst">${t("starting")}</div>${job.rec ? `<div class="small" style="color:#ff7b88;margin-top:3px">● ${t("recording")}</div>` : ""}<div style="font-weight:700;margin-top:4px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(job.title || "")}</div></div></div>
       <div class="kpis"><div class="kpi"><b id="kv">0</b><span>${t("viewers")}</span></div><div class="kpi"><b id="kp">0</b><span>${t("peak")}</span></div><div class="kpi"><b id="kh">x1</b><span>${t("hypeLvl")}</span></div></div>
     </div>
     <div id="shint"></div>
@@ -1433,8 +1478,8 @@ function profileHtml(r, self) {
   <div id="pact"></div>
   ${r.games.length ? `<div class="h2">${ic("game")} ${t("gamesPlayed")}</div><div class="chips">${r.games.map((g) => `<span class="chip gchip">${g.icon ? gIcon(g.icon) : "🎮"}<span>${esc(g.name)}</span><b>${g.n}</b></span>`).join("")}</div>` : ""}
   <div class="h2">${t("past")}</div>
-  <div class="sl">${r.streams.length ? r.streams.map((s) => `<div class="sm" data-id="${s.id}" style="align-items:center">${s.gameIcon ? gIcon(s.gameIcon, "gi", 40) : `<div class="ph2" style="width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--card2)">🎮</div>`}
-    <div class="tx"><b>${esc(s.title)}</b><br><span class="mut small">${esc(s.game || "")} · ${new Date(s.started).toLocaleDateString(S.lang)} · ${t("peak")} ${s.peak}</span></div>${s.live ? '<span class="badge red">LIVE</span>' : ""}</div>`).join("") : `<p class="mut small" style="text-align:center;padding:16px">${t("noPast")}</p>`}</div>`;
+  <div class="sl">${r.streams.length ? r.streams.map((s) => `<div class="sm" data-id="${s.id}" data-rec="${s.rec && !s.live ? 1 : ""}" style="align-items:center">${s.gameIcon ? gIcon(s.gameIcon, "gi", 40) : `<div class="ph2" style="width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--card2)">🎮</div>`}
+    <div class="tx"><b>${esc(s.title)}</b><br><span class="mut small">${esc(s.game || "")} · ${new Date(s.started).toLocaleDateString(S.lang)} · ${t("peak")} ${s.peak}</span></div>${s.live ? '<span class="badge red">LIVE</span>' : s.rec ? `<span class="badge" style="background:var(--grad)">▶ ${fmtDur(s.rec.dur * 1000)}</span>${self ? `<button class="mini" data-del="${s.id}" style="color:#ff7b88">${ic("x")}</button>` : ""}` : ""}</div>`).join("") : `<p class="mut small" style="text-align:center;padding:16px">${t("noPast")}</p>`}</div>`;
 }
 function pickPhoto(cb) {
   const i = document.createElement("input"); i.type = "file"; i.accept = "image/*";
@@ -1469,7 +1514,7 @@ VIEWS.me = (root) => {
     $("#pact").innerHTML = `<button class="btn g" style="margin-top:14px" id="med">${ic("user")} ${t("editProfile")}</button>`;
     $("#med").onclick = editProfile;
     $("#pcam").onclick = () => pickPhoto(uploadPhoto);
-    $$("#ms [data-id]").forEach((x) => (x.onclick = () => go("watch", x.dataset.id)));
+    bindStreams($("#ms"), r, true);
   });
 };
 function editProfile() {
@@ -1498,12 +1543,21 @@ function editProfile() {
   });
 }
 
+function bindStreams(el, r, own) {
+  $$("[data-del]", el).forEach((b) => (b.onclick = (e) => { e.stopPropagation(); deleteRec(b.dataset.del, () => go(current === "me" ? "me" : "home")); }));
+  $$("[data-id]", el).forEach((x) => (x.onclick = () => {
+    const s = r.streams.find((q) => q.id === x.dataset.id) || {};
+    if (x.dataset.rec) go("replay", { id: s.id, title: s.title, game: s.game, gameIcon: s.gameIcon, own, back: own ? { view: "me" } : { view: "user", arg: r.user.handle } });
+    else go("watch", x.dataset.id);
+  }));
+}
+
 /* ---------- settings ---------- */
 VIEWS.settings = (root) => {
   const u = S.user;
   const g = Object.assign({ quality: "720", fps: 30, mic: true, privacy: { dnd: true, callGuard: true, bannerGuard: true } }, store.get("golive", {}));
   g.privacy = Object.assign({ dnd: true, callGuard: true, bannerGuard: true }, g.privacy || {});
-  const rp = Object.assign({ allowFx: true, allowCh: true, coStream: "all", slow: 0 }, (u && u.prefs) || {});
+  const rp = Object.assign({ allowFx: true, allowCh: true, coStream: "all", slow: 0, rec: true }, (u && u.prefs) || {});
   const sw = (id, on) => `<div class="sw ${on ? "on" : ""}" data-s="${id}"></div>`;
   const row = (icn, title, sub, right, id = "") => `<div class="tg" ${id ? `id="${id}"` : ""}><div class="ic">${ic(icn)}</div><div class="tx"><b>${title}</b>${sub ? `<span>${sub}</span>` : ""}</div>${right || ""}</div>`;
   const seg = (id, opts, val) => `<div class="seg" data-seg="${id}" style="margin:2px 0 12px">${opts.map(([v, l]) => `<button class="${String(v) === String(val) ? "on" : ""}" data-v="${v}">${l}</button>`).join("")}</div>`;
@@ -1526,6 +1580,10 @@ VIEWS.settings = (root) => {
       (isIOS() || !Native.has() ? row("eye", t("bannerG"), t("bannerGD"), sw("bannerGuard", g.privacy.bannerGuard)) : "") +
       (isIOS() ? row("bell", t("focusGuide"), "", `<span class="mut">›</span>`, "xfocus") : "") +
       row("gauge", t("speedTest"), "", `<span class="mut">›</span>`, "xspeed"))}
+    ${u ? sec(t("recordings"),
+      row("live", t("recSave"), t("recSaveD"), sw("rec", rp.rec)) +
+      row("layers", t("storage"), `<span id="xstor">…</span>`, "") +
+      `<div class="tg" id="xdelall" style="color:#ff7b88"><div class="ic">${ic("x")}</div><div class="tx"><b>${t("delAllRecs")}</b></div></div>`) : ""}
     ${u ? sec(t("secRoom"),
       row("spark", t("allowFx"), t("allowFxD"), sw("allowFx", rp.allowFx)) +
       row("trophy", t("allowCh"), "", sw("allowCh", rp.allowCh)) +
@@ -1555,7 +1613,7 @@ VIEWS.settings = (root) => {
     if (k === "mic") g.mic = on, saveG();
     else if (k === "overlay") store.set("overlay", on);
     else if (["callGuard", "dnd", "bannerGuard"].includes(k)) { g.privacy[k] = on; saveG(); if (k === "dnd" && on && isAndroid()) Native.post("perm", { kind: "dnd" }); }
-    else if (k === "allowFx" || k === "allowCh") { rp[k] = on; saveRoom(); }
+    else if (k === "allowFx" || k === "allowCh" || k === "rec") { rp[k] = on; saveRoom(); }
     else if (k === "notify") { const r = await api("/api/profile", { notify: on }); if (r.user) { S.user = r.user; store.set("user", r.user); } }
   }));
   $$("[data-seg]", root).forEach((sg) => $$("button", sg).forEach((b) => (b.onclick = () => {
@@ -1567,6 +1625,9 @@ VIEWS.settings = (root) => {
   })));
   const on = (id, f) => { const e = $("#" + id); if (e) e.onclick = f; };
   on("xme", () => go("me"));
+  on("xdelall", () => deleteRec("all", () => go("settings")));
+  if (u) api("/api/recs").then((r) => { const el = $("#xstor"); if (el) el.textContent = r.myBytes !== undefined ? `${fmtBytes(r.myBytes)} · ${r.recs.length} ${t("recordings")}` : "–"; });
+  if (u && !(S.cfg && S.cfg.rec)) api("/api/config").then((c) => { if (!c.rec && $("#xstor")) $("#xstor").textContent = t("recOff"); });
   on("xedit", editProfile);
   on("xspeed", () => go("speed"));
   on("xfocus", focusGuide);
@@ -1597,7 +1658,7 @@ VIEWS.user = (root, handle) => {
       $("#pact").innerHTML = `<button class="btn ${fol ? "g" : "p"}" id="uf" style="margin-top:14px">${fol ? t("unfollow") : t("follow")}</button>`;
       $("#uf").onclick = async () => { fol = !fol; const fb = $("#uf"); fb.className = "btn " + (fol ? "g" : "p"); fb.textContent = fol ? t("unfollow") : t("follow"); haptic(); await api("/api/follow", { target: u.id, on: fol }); fol ? S.following.add(u.id) : S.following.delete(u.id); };
     }
-    $$("#us [data-id]").forEach((x) => (x.onclick = () => go("watch", x.dataset.id)));
+    bindStreams($("#us"), r, false);
   });
 };
 
@@ -1614,7 +1675,7 @@ async function boot() {
   // wait briefly for native info
   for (let i = 0; i < 10 && Native.has() && !S.native; i++) await sleep(60);
   if (S.native && S.native.lang && !store.get("langSet", false)) { /* keep user choice */ }
-  api("/api/config").then((c) => { if (c.ice) S.ice = c.ice; });
+  api("/api/config").then((c) => { S.cfg = c; if (c.ice) S.ice = c.ice; });
   // restore an ongoing broadcast after app reload
   const resume = store.get("live", null);
   if (resume && S.native && S.native.broadcasting && Date.now() - resume.startedAt < 12 * 3600e3) { S.live = resume; S.bstate = "live"; }

@@ -46,8 +46,8 @@ object Net {
         }
     }
 
-    fun bytes(url: String, data: ByteArray, headers: Map<String, String>): Int {
-        val b = Request.Builder().url(url).post(data.toRequestBody("image/jpeg".toMediaType()))
+    fun bytes(url: String, data: ByteArray, headers: Map<String, String>, type: String = "image/jpeg"): Int {
+        val b = Request.Builder().url(url).post(data.toRequestBody(type.toMediaType()))
         headers.forEach { (k, v) -> b.header(k, v) }
         return try { http.newCall(b.build()).execute().use { it.code } } catch (e: Exception) { 0 }
     }

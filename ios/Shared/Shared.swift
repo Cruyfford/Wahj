@@ -26,6 +26,7 @@ struct WahjJob: Codable {
     var server: String?
     var token: String?
     var title: String?
+    var rec: Bool?
 
     var serverURL: String {
         if let s = server, !s.isEmpty { return s }
