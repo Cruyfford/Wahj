@@ -596,7 +596,23 @@ function forgotSheet() {
 const Games = {
   top: null, phone: null,
   async loadTop() { if (this.top) return this.top; const r = await api("/api/games/top"); this.top = (r.items || []).slice(0, 40); return this.top; },
-  async search(q) { const r = await api("/api/games/search?q=" + encodeURIComponent(q) + "&c=" + (S.lang === "ar" ? "sa" : "us")); return r.items || []; },
+  async search(q) {
+    const [loc, store] = await Promise.all([api("/api/games/search?q=" + encodeURIComponent(q)).then((r) => r.items || []), this.appStore(q)]);
+    const seen = new Set(); return [...loc, ...store].filter((g) => !seen.has(g.id) && seen.add(g.id));
+  },
+  // App Store search straight from the phone (JSONP — avoids the shared-IP rate limit on the server)
+  appStore(q) {
+    return new Promise((res) => {
+      const cb = "__it" + Math.random().toString(36).slice(2);
+      const sc = document.createElement("script");
+      const done = (list) => { delete window[cb]; sc.remove(); clearTimeout(to); res(list); };
+      const to = setTimeout(() => done([]), 6000);
+      window[cb] = (j) => done((j.results || []).filter((a) => (a.genreIds || []).includes("6014")).map((a) => ({ id: String(a.trackId), name: a.trackName, icon: a.artworkUrl512 || a.artworkUrl100 })));
+      sc.onerror = () => done([]);
+      sc.src = `https://itunes.apple.com/search?entity=software&limit=25&country=${S.lang === "ar" ? "sa" : "us"}&term=${encodeURIComponent(q)}&callback=${cb}`;
+      document.head.appendChild(sc);
+    });
+  },
   phoneList() {
     if (!isAndroid()) return Promise.resolve([]);
     if (this.phone) return Promise.resolve(this.phone);

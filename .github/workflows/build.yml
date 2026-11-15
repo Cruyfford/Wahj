@@ -18,8 +18,10 @@ jobs:
         id: rev
         run: echo "rev=$(git rev-parse HEAD:ios HEAD:android | sha1sum | cut -c1-10)" >> "$GITHUB_OUTPUT"
 
-      - name: Build web app
-        run: python3 server/build.py
+      - name: Build web app + game catalog
+        run: |
+          python3 tools/games.py || true
+          python3 server/build.py
 
       - name: Deploy worker (+ Realtime SFU app, TURN key)
         id: deploy

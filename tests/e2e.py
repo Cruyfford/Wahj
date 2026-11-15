@@ -1,7 +1,7 @@
 """End-to-end check against a deployed Wahj server:
 a headless browser publishes an animated canvas + tone through Cloudflare Realtime SFU,
 a second browser watches the stream and must decode video and audio."""
-import asyncio, json, os, random, sys, urllib.request
+import asyncio, json, os, random, sys, urllib.request, urllib.parse
 from playwright.async_api import async_playwright
 
 B = sys.argv[1].rstrip("/") if len(sys.argv) > 1 else os.environ["SERVER"].rstrip("/")
@@ -64,10 +64,9 @@ async def main():
         return json.load(urllib.request.urlopen(urllib.request.Request(B + path, headers=UA), timeout=20))
     top = get("/api/games/top")["items"]
     print("games/top:", len(top), [g["name"] for g in top[:5]], top[0]["icon"] if top else "")
-    srch = get("/api/games/search?q=pubg")["items"]
+    srch = get("/api/games/search?q=" + urllib.parse.quote((top[0]["name"][:4] if top else "pubg")))["items"]
     print("games/search pubg:", [g["name"] for g in srch[:3]])
     print("speed/ping:", get("/api/speed/ping"))
-    if not (top or srch): print("DEBUG", json.dumps(get("/api/games/debug"), ensure_ascii=False)[:1500])
     assert top or srch, "game catalog empty"
     host = account("wahje2ehost")
     async with async_playwright() as p:

@@ -1,6 +1,7 @@
 // Wahj Live — Cloudflare Worker backend
 // Accounts, stream directory, Cloudflare Realtime SFU proxy, realtime rooms.
 import APP_HTML from "./app.html";
+import GAMES from "./games.json";
 
 const SFU = "https://rtc.live.cloudflare.com/v1";
 const VERSION = "1.0.0";
@@ -145,42 +146,13 @@ export default {
       }
 
       // ---- game catalog (App Store icons) ----
-      if (p === "/api/games/debug") {
-        const out = {};
-        for (const [k, u] of [["search", "https://itunes.apple.com/search?entity=software&limit=3&country=us&term=pubg"], ["rss", "https://itunes.apple.com/us/rss/topfreeapplications/limit=3/genre=6014/json"], ["rss2", "https://rss.marketingtools.apple.com/api/v2/us/apps/top-free/10/apps.json"]]) {
-          try { const r = await fetch(u, { headers: { "user-agent": "Mozilla/5.0", accept: "application/json" } }); out[k] = { status: r.status, ct: r.headers.get("content-type"), body: (await r.text()).slice(0, 300) }; }
-          catch (e) { out[k] = { err: String(e) }; }
-        }
-        return J(out);
+      if (p === "/api/games/top") {
+        return J({ items: GAMES.slice(0, 48) }, 200, { "cache-control": "public, max-age=3600" });
       }
-      if (p === "/api/games/search" || p === "/api/games/top") {
-        const cache = caches.default;
-        const key = new Request(url.toString().toLowerCase(), { method: "GET" });
-        const hit = await cache.match(key);
-        if (hit) return hit;
-        let items = [];
-        try {
-          if (p === "/api/games/search") {
-            const q = (url.searchParams.get("q") || "").trim().slice(0, 50);
-            if (q) {
-              const r = await fetch(`https://itunes.apple.com/search?entity=software&limit=24&country=${url.searchParams.get("c") || "us"}&term=${encodeURIComponent(q)}`, { headers: { "user-agent": "Mozilla/5.0" } });
-              const j = await r.json();
-              items = (j.results || []).filter((a) => (a.genreIds || []).includes("6014") || a.primaryGenreId === 6014)
-                .map((a) => ({ id: String(a.trackId), name: a.trackName, icon: a.artworkUrl512 || a.artworkUrl100 }));
-            }
-          } else {
-            const r = await fetch("https://itunes.apple.com/us/rss/topfreeapplications/limit=60/genre=6014/json", { headers: { "user-agent": "Mozilla/5.0" } });
-            const j = await r.json();
-            items = ((j.feed && j.feed.entry) || []).map((e) => {
-              const imgs = e["im:image"] || [];
-              const icon = (imgs[imgs.length - 1] || {}).label || "";
-              return { id: e.id && e.id.attributes ? e.id.attributes["im:id"] : "", name: (e["im:name"] || {}).label || "", icon: icon.replace(/\/\d+x\d+bb\./, "/512x512bb.") };
-            }).filter((x) => x.name && x.icon);
-          }
-        } catch (e) {}
-        const res = J({ items }, 200, { "cache-control": "public, max-age=" + (items.length ? 21600 : 60) });
-        if (items.length) ctx.waitUntil(cache.put(key, res.clone()));
-        return res;
+      if (p === "/api/games/search") {
+        const q = (url.searchParams.get("q") || "").trim().toLowerCase();
+        const items = q ? GAMES.filter((g) => g.name.toLowerCase().includes(q)).slice(0, 24) : [];
+        return J({ items });
       }
       m0 = p.match(/^\/api\/gameicon\/([a-z0-9]+)$/);
       if (m0) {
