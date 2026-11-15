@@ -124,7 +124,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun offlineHtml() = """<html><body style="background:#06050A;color:#fff;font-family:sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;margin:0">
-        <div style="font-size:48px">📡</div><p style="font-size:18px;font-weight:bold">${if (ar) "تعذّر الاتصال بالإنترنت" else "No connection"}</p>
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#FF4D8D" stroke-width="1.8" stroke-linecap="round"><path d="M2 2l20 20M8.5 16.5a5 5 0 0 1 7 0M5 12.9a10 10 0 0 1 5.2-2.8M19 12.9a10 10 0 0 0-2.4-1.6M1.5 9a15 15 0 0 1 4.5-2.7M22.5 9A15 15 0 0 0 11 5.2M12 20h.01"/></svg><p style="font-size:18px;font-weight:bold">${if (ar) "تعذّر الاتصال بالإنترنت" else "No connection"}</p>
         <button onclick="location.href='$server'" style="background:#7C5CFF;color:#fff;border:0;border-radius:16px;padding:14px 32px;font-size:16px;font-weight:bold">${if (ar) "إعادة المحاولة" else "Retry"}</button></body></html>"""
 
     private fun emit(o: JSONObject) {

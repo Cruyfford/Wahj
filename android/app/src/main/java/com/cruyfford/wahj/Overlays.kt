@@ -21,6 +21,7 @@ import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 import android.text.style.StyleSpan
+import android.text.style.ImageSpan
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.Surface
@@ -85,8 +86,20 @@ class Overlays(private val ctx: Context) {
 
     fun privacy(on: Boolean) { priv = on; main.post { updateHeader() } }
 
+    // vector icon inline in text (no emoji)
+    private fun ico(sb: SpannableStringBuilder, res: Int, color: String, sizeDp: Float = 13f) {
+        val d = ctx.getDrawable(res)?.mutate() ?: return
+        d.setTint(Color.parseColor(color)); val px = (sizeDp * dp).toInt(); d.setBounds(0, 0, px, px)
+        val st = sb.length; sb.append("\u00A0"); sb.setSpan(ImageSpan(d, ImageSpan.ALIGN_BASELINE), st, st + 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+    }
+    private fun iconLine(res: Int, color: String, text: String): CharSequence { val sb = SpannableStringBuilder(); ico(sb, res, color); sb.append("  ").append(text); return sb }
+
     private fun updateHeader() {
-        header?.text = (if (priv) "🔒 " else "● LIVE  ") + "👁 $viewers   🔥 x$level"
+        val sb = SpannableStringBuilder()
+        if (priv) { ico(sb, R.drawable.ic_lock, "#FFB800"); sb.append("  ") } else sb.append("● LIVE   ")
+        ico(sb, R.drawable.ic_eye, "#FFFFFF"); sb.append(" $viewers    ")
+        ico(sb, R.drawable.ic_flame, "#FF7A00"); sb.append(" x$level")
+        header?.text = sb
         header?.setTextColor(if (priv) Color.parseColor("#FFB800") else Color.WHITE)
     }
 
@@ -99,18 +112,18 @@ class Overlays(private val ctx: Context) {
             }
             "chat" -> addLine(m)
             "viewers" -> viewers = m.optInt("n")
-            "hype" -> { level = m.optInt("lvl", level); if (m.optBoolean("train")) flash(if (ar) "🚀 قطار الحماس x$level" else "🚀 HYPE TRAIN x$level") }
+            "hype" -> { level = m.optInt("lvl", level); if (m.optBoolean("train")) flash(iconLine(R.drawable.ic_rocket, "#FFFFFF", if (ar) "قطار الحماس x$level" else "HYPE TRAIN x$level")) }
             "effect" -> {
-                val e = mapOf("confetti" to "🎉", "hearts" to "💖", "fire" to "🔥", "shake" to "💥", "lightning" to "⚡", "airhorn" to "📯", "boo" to "👻", "wave" to "🌊")[m.optString("id")] ?: "✨"
-                flash("$e ${m.optString("name")} ${if (ar) "أرسل" else "sent"} $e")
+                val e = mapOf("confetti" to R.drawable.ic_party, "hearts" to R.drawable.ic_heart, "fire" to R.drawable.ic_flame, "shake" to R.drawable.ic_burst, "lightning" to R.drawable.ic_bolt, "airhorn" to R.drawable.ic_horn, "boo" to R.drawable.ic_ghost, "wave" to R.drawable.ic_wave)[m.optString("id")] ?: R.drawable.ic_spark
+                flash(iconLine(e, "#FFFFFF", "${m.optString("name")} ${if (ar) "أرسل مؤثراً" else "sent an effect"}"))
             }
             "challenges" -> {
                 val c = m.optJSONArray("list")?.optJSONObject(0)
-                if (c != null && c.optString("state") == "new" && !m.has("changed")) flash("🏆 ${c.optString("name")}: ${c.optString("text")}", 6000)
+                if (c != null && c.optString("state") == "new" && !m.has("changed")) flash(iconLine(R.drawable.ic_trophy, "#FFFFFF", "${c.optString("name")}: ${c.optString("text")}"), 6000)
             }
             "requests" -> {
                 val a = m.optJSONArray("list"); val r = a?.optJSONObject(a.length() - 1)
-                if (r != null) flash("🤝 ${r.optString("name")} ${if (ar) "يطلب البث معك" else "wants to co-stream"}", 6000)
+                if (r != null) flash(iconLine(R.drawable.ic_users, "#FFFFFF", "${r.optString("name")} ${if (ar) "يطلب البث معك" else "wants to co-stream"}"), 6000)
             }
         }
         updateHeader()
@@ -118,7 +131,9 @@ class Overlays(private val ctx: Context) {
 
     private fun addLine(m: JSONObject) {
         val l = list ?: return
-        val name = m.optString("name"); val text = m.optString("text")
+        val name = m.optString("name"); var text = m.optString("text")
+        val gn = mapOf("rose" to ("وردة" to "Rose"), "heart" to ("قلب" to "Heart"), "controller" to ("يد تحكم" to "Controller"), "car" to ("سيارة" to "Supercar"), "lion" to ("أسد" to "Lion"), "crown" to ("تاج" to "Crown"), "rocket" to ("صاروخ" to "Rocket"))[m.optString("giftId")]
+        if (gn != null) text = (if (ar) "أرسل ${gn.first}" else "sent ${gn.second}") + " " + text
         val color = try { Color.parseColor(m.optString("color", "#7C5CFF")) } catch (_: Exception) { Color.parseColor("#7C5CFF") }
         val s = SpannableStringBuilder("$name  $text")
         s.setSpan(ForegroundColorSpan(color), 0, name.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
@@ -129,7 +144,7 @@ class Overlays(private val ctx: Context) {
         main.postDelayed({ runCatching { l.removeView(tv) } }, 25000)
     }
 
-    private fun flash(t: String, ms: Long = 3500) {
+    private fun flash(t: CharSequence, ms: Long = 3500) {
         val b = banner ?: return
         b.text = t; b.visibility = View.VISIBLE
         main.removeCallbacksAndMessages("flash")

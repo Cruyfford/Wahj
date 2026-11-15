@@ -19,7 +19,7 @@ final class ChatPiP: NSObject, AVPictureInPictureControllerDelegate, AVPictureIn
     private var viewers = 0
     private var hype: CGFloat = 0
     private var level = 1
-    private var banner: (String, Date)?
+    private var banner: (String, Date, String)?   // text, until, SF Symbol
     private var privacy = false
     private let size = CGSize(width: 540, height: 720)
     private(set) var active = false
@@ -89,24 +89,24 @@ final class ChatPiP: NSObject, AVPictureInPictureControllerDelegate, AVPictureIn
         case "viewers": viewers = m["n"] as? Int ?? viewers
         case "hype":
             hype = CGFloat(m["v"] as? Double ?? Double(hype)); level = m["lvl"] as? Int ?? level
-            if m["train"] as? Bool == true { banner = ((ar ? "🚀 قطار الحماس x" : "🚀 HYPE TRAIN x") + "\(level)", Date().addingTimeInterval(4)) }
+            if m["train"] as? Bool == true { banner = ((ar ? "قطار الحماس x" : "HYPE TRAIN x") + "\(level)", Date().addingTimeInterval(4), "bolt.fill") }
         case "effect":
-            let emo = ["confetti": "🎉", "hearts": "💖", "fire": "🔥", "shake": "💥", "lightning": "⚡", "airhorn": "📯", "boo": "👻", "wave": "🌊"][m["id"] as? String ?? ""] ?? "✨"
+            let sym = ["confetti": "sparkles", "hearts": "heart.fill", "fire": "flame.fill", "shake": "burst.fill", "lightning": "bolt.fill", "airhorn": "speaker.wave.3.fill", "boo": "moon.stars.fill", "wave": "water.waves", "fireworks": "sparkles", "meteor": "sparkles"][m["id"] as? String ?? ""] ?? "sparkles"
             let who = m["name"] as? String ?? ""
-            banner = ("\(emo) \(who) \(ar ? "أرسل" : "sent") \(emo)", Date().addingTimeInterval(3.5))
+            banner = ("\(who) \(ar ? "أرسل مؤثراً" : "sent an effect")", Date().addingTimeInterval(3.5), sym)
             UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
         case "challenges":
             if let list = m["list"] as? [[String: Any]], let c = list.first, c["state"] as? String == "new", m["changed"] == nil {
-                banner = ("🏆 \(c["name"] as? String ?? ""): \(c["text"] as? String ?? "")", Date().addingTimeInterval(6))
+                banner = ("\(c["name"] as? String ?? ""): \(c["text"] as? String ?? "")", Date().addingTimeInterval(6), "trophy.fill")
             }
         case "requests":
             if let list = m["list"] as? [[String: Any]], let r = list.last {
-                banner = ("🤝 \(r["name"] as? String ?? "") \(ar ? "يطلب البث معك" : "wants to co-stream")", Date().addingTimeInterval(6))
+                banner = ("\(r["name"] as? String ?? "") \(ar ? "يطلب البث معك" : "wants to co-stream")", Date().addingTimeInterval(6), "person.2.fill")
             }
         case "poll":
             if let p = m["poll"] as? [String: Any], let opts = p["opts"] as? [String], let votes = p["votes"] as? [Int] {
                 let s = zip(opts, votes).map { "\($0.0): \($0.1)" }.joined(separator: "  ·  ")
-                banner = ("📊 " + s, Date().addingTimeInterval(4))
+                banner = (s, Date().addingTimeInterval(4), "chart.bar.fill")
             }
         default: return
         }
@@ -115,7 +115,12 @@ final class ChatPiP: NSObject, AVPictureInPictureControllerDelegate, AVPictureIn
     }
 
     private func chatLine(_ m: [String: Any]) -> Line {
-        Line(name: m["name"] as? String ?? "", color: UIColor(hex: m["color"] as? String ?? "") ?? .systemPurple, text: m["text"] as? String ?? "", kind: 0)
+        var text = m["text"] as? String ?? ""
+        if let g = m["giftId"] as? String {
+            let n: [String: (String, String)] = ["rose": ("وردة", "Rose"), "heart": ("قلب", "Heart"), "controller": ("يد تحكم", "Controller"), "car": ("سيارة", "Supercar"), "lion": ("أسد", "Lion"), "crown": ("تاج", "Crown"), "rocket": ("صاروخ", "Rocket")]
+            if let x = n[g] { text = (L10n.ar ? "أرسل " + x.0 : "sent " + x.1) + " " + text }
+        }
+        return Line(name: m["name"] as? String ?? "", color: UIColor(hex: m["color"] as? String ?? "") ?? .systemPurple, text: text, kind: 0)
     }
 
     // MARK: render
@@ -152,6 +157,15 @@ final class ChatPiP: NSObject, AVPictureInPictureControllerDelegate, AVPictureIn
         display.enqueue(s)
     }
 
+    /// SF Symbol inline in text (replaces emoji)
+    private func sym(_ name: String, _ color: UIColor, _ pt: CGFloat) -> NSAttributedString {
+        let cfg = UIImage.SymbolConfiguration(pointSize: pt, weight: .bold)
+        guard let img = (UIImage(systemName: name, withConfiguration: cfg) ?? UIImage(systemName: "sparkles", withConfiguration: cfg))?.withTintColor(color, renderingMode: .alwaysOriginal) else { return NSAttributedString() }
+        let a = NSTextAttachment(); a.image = img
+        a.bounds = CGRect(x: 0, y: -pt * 0.18, width: img.size.width, height: img.size.height)
+        return NSAttributedString(attachment: a)
+    }
+
     private func draw(_ r: CGRect) {
         let bg = UIColor(red: 0.05, green: 0.04, blue: 0.09, alpha: 1)
         bg.setFill(); UIRectFill(r)
@@ -163,7 +177,10 @@ final class ChatPiP: NSObject, AVPictureInPictureControllerDelegate, AVPictureIn
         let pad: CGFloat = 26
         // header
         let head = NSMutableAttributedString(string: "● LIVE", attributes: [.font: UIFont.systemFont(ofSize: 26, weight: .heavy), .foregroundColor: UIColor(red: 1, green: 0.18, blue: 0.33, alpha: 1)])
-        head.append(NSAttributedString(string: "   👁 \(viewers)    🔥 x\(level)", attributes: [.font: UIFont.systemFont(ofSize: 26, weight: .bold), .foregroundColor: UIColor.white]))
+        let hf: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 26, weight: .bold), .foregroundColor: UIColor.white]
+        head.append(NSAttributedString(string: "    ", attributes: hf)); head.append(sym("eye.fill", .white, 22))
+        head.append(NSAttributedString(string: " \(viewers)     ", attributes: hf)); head.append(sym("flame.fill", UIColor(red: 1, green: 0.48, blue: 0, alpha: 1), 22))
+        head.append(NSAttributedString(string: " x\(level)", attributes: hf))
         head.draw(in: CGRect(x: pad, y: 26, width: r.width - pad * 2, height: 40))
         // hype bar
         UIColor(white: 1, alpha: 0.12).setFill()
@@ -172,7 +189,9 @@ final class ChatPiP: NSObject, AVPictureInPictureControllerDelegate, AVPictureIn
         UIBezierPath(roundedRect: CGRect(x: pad, y: 78, width: (r.width - pad * 2) * min(1, hype / 100), height: 10), cornerRadius: 5).fill()
 
         if privacy {
-            let s = NSAttributedString(string: ar ? "🔒 البث محجوب للخصوصية" : "🔒 Stream hidden for privacy", attributes: [.font: UIFont.systemFont(ofSize: 30, weight: .bold), .foregroundColor: UIColor.systemYellow, .paragraphStyle: para])
+            let s = NSMutableAttributedString(attributedString: sym("lock.shield.fill", .systemYellow, 26))
+            s.append(NSAttributedString(string: ar ? "  البث محجوب للخصوصية" : "  Stream hidden for privacy", attributes: [.font: UIFont.systemFont(ofSize: 30, weight: .bold), .foregroundColor: UIColor.systemYellow]))
+            s.addAttribute(.paragraphStyle, value: para, range: NSRange(location: 0, length: s.length))
             s.draw(in: CGRect(x: pad, y: 110, width: r.width - pad * 2, height: 80))
         }
         // messages, newest at the bottom
@@ -188,8 +207,17 @@ final class ChatPiP: NSObject, AVPictureInPictureControllerDelegate, AVPictureIn
             s.draw(with: CGRect(x: pad + 4, y: y, width: r.width - pad * 2 - 8, height: h), options: [.usesLineFragmentOrigin], context: nil)
         }
         if lines.isEmpty {
-            let s = NSAttributedString(string: ar ? "الدردشة هادئة… 👋" : "Chat is quiet… 👋", attributes: [.font: UIFont.systemFont(ofSize: 28, weight: .semibold), .foregroundColor: UIColor(white: 1, alpha: 0.5), .paragraphStyle: para])
-            s.draw(in: CGRect(x: pad, y: r.height / 2 - 20, width: r.width - pad * 2, height: 50))
+            // empty state: glowing chat bubble symbol + centered text
+            let cfg = UIImage.SymbolConfiguration(pointSize: 64, weight: .semibold)
+            if let img = UIImage(systemName: "bubble.left.and.bubble.right.fill", withConfiguration: cfg)?.withTintColor(UIColor(red: 0.62, green: 0.5, blue: 1, alpha: 0.9), renderingMode: .alwaysOriginal) {
+                let c = UIGraphicsGetCurrentContext()!
+                c.saveGState(); c.setShadow(offset: .zero, blur: 28, color: UIColor(red: 1, green: 0.3, blue: 0.55, alpha: 0.9).cgColor)
+                img.draw(in: CGRect(x: (r.width - img.size.width) / 2, y: r.height / 2 - img.size.height - 18, width: img.size.width, height: img.size.height))
+                c.restoreGState()
+            }
+            let pc = NSMutableParagraphStyle(); pc.alignment = .center
+            let s = NSAttributedString(string: ar ? "الدردشة هادئة… كن أول من يكتب" : "Chat is quiet… say hi", attributes: [.font: UIFont.systemFont(ofSize: 27, weight: .semibold), .foregroundColor: UIColor(white: 1, alpha: 0.6), .paragraphStyle: pc])
+            s.draw(in: CGRect(x: pad, y: r.height / 2 + 4, width: r.width - pad * 2, height: 80))
         }
         if let b = banner {
             let rect = CGRect(x: pad - 8, y: r.height - 120, width: r.width - pad * 2 + 16, height: 96)
@@ -198,8 +226,10 @@ final class ChatPiP: NSObject, AVPictureInPictureControllerDelegate, AVPictureIn
             ctx.saveGState(); UIBezierPath(roundedRect: rect, cornerRadius: 22).addClip()
             ctx.drawLinearGradient(g, start: rect.origin, end: CGPoint(x: rect.maxX, y: rect.maxY), options: []); ctx.restoreGState()
             let p2 = NSMutableParagraphStyle(); p2.alignment = .center; p2.lineBreakMode = .byTruncatingTail
-            NSAttributedString(string: b.0, attributes: [.font: UIFont.systemFont(ofSize: 28, weight: .heavy), .foregroundColor: UIColor.white, .paragraphStyle: p2])
-                .draw(with: rect.insetBy(dx: 16, dy: 14), options: [.usesLineFragmentOrigin], context: nil)
+            let bs = NSMutableAttributedString(attributedString: sym(b.2, .white, 26))
+            bs.append(NSAttributedString(string: "  " + b.0, attributes: [.font: UIFont.systemFont(ofSize: 28, weight: .heavy), .foregroundColor: UIColor.white]))
+            bs.addAttribute(.paragraphStyle, value: p2, range: NSRange(location: 0, length: bs.length))
+            bs.draw(with: rect.insetBy(dx: 16, dy: 14), options: [.usesLineFragmentOrigin], context: nil)
         }
     }
 
