@@ -475,6 +475,7 @@ const STREAMER_SHARE = 0.7;
 // +250 per subscription received, +1 per 2 coins of gifts received.
 const sLevelOf = (xp) => Math.floor(Math.sqrt(Math.max(0, xp) / 200)) + 1;   // L2=200, L5=3200, L10=16200, L20=72200, L50=480200
 const sXpFor = (l) => 200 * (l - 1) * (l - 1);
+const MAX_LEVEL = 100;
 const TOP_SHARE = { 1: 0.85, 2: 0.8, 3: 0.75 };  // top-3 of the month keep more of every gift/sub
 const monthKey = (t) => new Date(t + 3 * 3600000).toISOString().slice(0, 7);
 // ---------------- channel loyalty (per streamer): XP, levels, points ----------------
@@ -582,7 +583,12 @@ export class Hub {
   chanRow(uid, host) {
     uid = String(uid); host = String(host);
     let c = this.one("SELECT * FROM chan WHERE uid=? AND host=?", uid, host);
-    if (!c) { this.sql.exec("INSERT OR IGNORE INTO chan(uid, host) VALUES(?,?)", uid, host); c = this.one("SELECT * FROM chan WHERE uid=? AND host=?", uid, host); }
+    if (!c) {
+      this.sql.exec("INSERT OR IGNORE INTO chan(uid, host) VALUES(?,?)", uid, host);
+      const a = this.one("SELECT * FROM users WHERE id=?", uid);
+      if (this.isAdmin(a)) this.sql.exec("UPDATE chan SET xp=?, points=999999 WHERE uid=? AND host=?", xpFor(MAX_LEVEL), uid, host);
+      c = this.one("SELECT * FROM chan WHERE uid=? AND host=?", uid, host);
+    }
     return c;
   }
   loyOut(c) {
@@ -618,7 +624,18 @@ export class Hub {
   recTotal() { return (this.one("SELECT SUM(bytes) b FROM recs WHERE deleted=0") || {}).b || 0; }
   prefsOf(u) { try { return JSON.parse(u.prefs || "{}") || {}; } catch (e) { return {}; } }
   isAdmin(u) { return !!u && String(this.env.ADMIN_HANDLES || "cruyfford").split(",").map((x) => x.trim().toLowerCase()).includes(u.handle); }
-  isVip(u) { return !!u && (u.vipUntil || 0) > now(); }
+  isVip(u) { return !!u && ((u.vipUntil || 0) > now() || this.isAdmin(u)); }
+  /** Founder account: every item, permanent VIP, max coins, max streamer + viewer level. */
+  maxAdmin(u) {
+    if (!u || !this.isAdmin(u)) return u;
+    const MAXC = 999999999, SX = sXpFor(MAX_LEVEL), VX = xpFor(MAX_LEVEL), mk = monthKey(now());
+    if ((u.coins | 0) < MAXC) this.sql.exec("UPDATE users SET coins=? WHERE id=?", MAXC, u.id);
+    const own = Object.keys(SHOP).filter((k) => !SHOP[k].vip && !SHOP[k].admin);
+    this.sql.exec("UPDATE users SET owned=?, vipUntil=?, sxp=MAX(sxp,?) WHERE id=?", JSON.stringify(own), now() + 100 * 365 * 86400000, SX, u.id);
+    if (u.mkey !== mk || (u.mxp | 0) < SX) { this.sql.exec("UPDATE users SET mkey=?, mxp=MAX(CASE WHEN mkey=? THEN mxp ELSE 0 END, ?) WHERE id=?", mk, mk, SX, u.id); this.topC = null; }
+    this.sql.exec("UPDATE chan SET xp=MAX(xp,?), points=MAX(points,999999) WHERE uid=?", VX, u.id);
+    return this.one("SELECT * FROM users WHERE id=?", u.id);
+  }
   jarr(s) { try { return JSON.parse(s || "[]") || []; } catch (e) { return []; } }
   jobj(s) { try { return JSON.parse(s || "{}") || {}; } catch (e) { return {}; } }
   ownsItem(u, id) {
@@ -736,7 +753,7 @@ export class Hub {
       return J2({ token, user: this.pubUser(u, true) });
     }
     if (p === "/me") {
-      const u = this.user(b.token);
+      const u = this.maxAdmin(this.user(b.token));
       if (!u) return J2({ error: "auth" });
       const following = this.all("SELECT target FROM follows WHERE uid=?", u.id).map((r) => r.target);
       return J2({ user: this.pubUser(u, true), following });
