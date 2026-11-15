@@ -22,6 +22,16 @@ def add(i, name, icon):
     if not name or not icon or i in seen: return
     seen.add(i); items.append({"id": str(i), "name": name, "icon": icon})
 
+for name in CURATED:
+    try:
+        j = get("https://itunes.apple.com/search?entity=software&limit=1&country=us&term=" + urllib.parse.quote(name))
+        for a in j.get("results", []):
+            if "6014" in a.get("genreIds", []):
+                add(a["trackId"], a["trackName"], a.get("artworkUrl512") or a.get("artworkUrl100"))
+        time.sleep(0.4)
+    except Exception as ex:
+        print("search", name, ex, file=sys.stderr)
+
 for country in ("us", "sa"):
     for feed in ("topfreeapplications", "topgrossingapplications"):
         try:
@@ -32,16 +42,6 @@ for country in ("us", "sa"):
                 add(e["id"]["attributes"]["im:id"], e["im:name"]["label"], icon)
         except Exception as ex:
             print("rss", country, feed, ex, file=sys.stderr)
-
-for name in CURATED:
-    try:
-        j = get("https://itunes.apple.com/search?entity=software&limit=1&country=us&term=" + urllib.parse.quote(name))
-        for a in j.get("results", []):
-            if "6014" in a.get("genreIds", []):
-                add(a["trackId"], a["trackName"], a.get("artworkUrl512") or a.get("artworkUrl100"))
-        time.sleep(0.4)
-    except Exception as ex:
-        print("search", name, ex, file=sys.stderr)
 
 if len(items) < 10 and OUT.exists():
     print("catalog fetch failed; keeping existing", file=sys.stderr); sys.exit(0)
