@@ -1,0 +1,202 @@
+name: Build Wahj Live
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  server:
+    name: Deploy Cloudflare server
+    runs-on: ubuntu-latest
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+      rev: ${{ steps.rev.outputs.rev }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Native revision
+        id: rev
+        run: echo "rev=$(git rev-parse HEAD:ios HEAD:android | sha1sum | cut -c1-10)" >> "$GITHUB_OUTPUT"
+
+      - name: Build web app
+        run: python3 server/build.py
+
+      - name: Deploy worker (+ Realtime SFU app, TURN key)
+        id: deploy
+        working-directory: server
+        env:
+          RAW: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACC: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          TURN_ID: ${{ secrets.TURN_KEY_ID }}
+          TURN_TOKEN: ${{ secrets.TURN_KEY_TOKEN }}
+        run: |
+          T=$(printf '%s' "$RAW" | tr -d '[:space:]')
+          if [ -z "$T" ]; then
+            echo "::error::أضف CLOUDFLARE_API_TOKEN في Settings → Secrets → Actions"
+            exit 1
+          fi
+          echo "::add-mask::$T"
+          if [ -z "$ACC" ]; then
+            ACC=$(curl -s -H "Authorization: Bearer $T" "https://api.cloudflare.com/client/v4/accounts?per_page=5" | jq -r '.result[0].id // empty')
+          fi
+          export CLOUDFLARE_API_TOKEN="$T" CLOUDFLARE_ACCOUNT_ID="$ACC"
+          W="npx --yes wrangler@4"
+          $W deploy --var NATIVE_REV:${{ steps.rev.outputs.rev }} 2>&1 | tee deploy.log
+          SECRETS=$($W secret list 2>/dev/null || echo '[]')
+
+          if ! echo "$SECRETS" | grep -q '"SFU_APP_SECRET"'; then
+            echo "Creating Cloudflare Realtime SFU app…"
+            R=$(curl -s -X POST -H "Authorization: Bearer $T" -H "content-type: application/json" \
+              "https://api.cloudflare.com/client/v4/accounts/$ACC/calls/apps" -d '{"name":"wahj-live-sfu"}')
+            SID=$(echo "$R" | jq -r '.result.uid // empty'); SSEC=$(echo "$R" | jq -r '.result.secret // empty')
+            if [ -n "$SID" ] && [ -n "$SSEC" ]; then
+              echo "::add-mask::$SSEC"
+              printf '%s' "$SID"  | $W secret put SFU_APP_ID
+              printf '%s' "$SSEC" | $W secret put SFU_APP_SECRET
+            else
+              echo "$R" | jq -c '.errors' || true
+              echo "::error::تعذّر إنشاء تطبيق SFU — أضف صلاحية «Calls: Edit» إلى CLOUDFLARE_API_TOKEN"
+              exit 1
+            fi
+          fi
+
+          if [ -n "$TURN_ID" ] && [ -n "$TURN_TOKEN" ]; then
+            printf '%s' "$TURN_ID"    | $W secret put TURN_KEY_ID
+            printf '%s' "$TURN_TOKEN" | $W secret put TURN_KEY_TOKEN
+          elif ! echo "$SECRETS" | grep -q '"TURN_KEY_TOKEN"'; then
+            R=$(curl -s -X POST -H "Authorization: Bearer $T" -H "content-type: application/json" \
+              "https://api.cloudflare.com/client/v4/accounts/$ACC/calls/turn_keys" -d '{"name":"wahj-live-turn"}')
+            KID=$(echo "$R" | jq -r '.result.uid // empty'); KEY=$(echo "$R" | jq -r '.result.key // empty')
+            if [ -n "$KID" ] && [ -n "$KEY" ]; then
+              echo "::add-mask::$KEY"
+              printf '%s' "$KID" | $W secret put TURN_KEY_ID
+              printf '%s' "$KEY" | $W secret put TURN_KEY_TOKEN
+            fi
+          fi
+
+          URL=$(grep -oE 'https://[a-zA-Z0-9.-]+\.workers\.dev' deploy.log | head -1)
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "### رابط السيرفر: $URL" >> "$GITHUB_STEP_SUMMARY"
+
+  e2e:
+    name: Live streaming test (publish → SFU → viewer)
+    needs: server
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Playwright
+        run: pip install playwright==1.48.0 && python -m playwright install --with-deps chromium
+      - name: Run
+        run: python tests/e2e.py "${{ needs.server.outputs.url }}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-screenshot
+          path: e2e-viewer.png
+          if-no-files-found: ignore
+
+  ios:
+    name: iOS (unsigned IPA)
+    needs: server
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set server URL
+        run: |
+          URL="${{ needs.server.outputs.url }}"
+          echo "Server: $URL"
+          for P in ios/WahjLive/Info.plist ios/WahjBroadcast/Info.plist; do
+            /usr/libexec/PlistBuddy -c "Set :WahjServerURL $URL" "$P"
+          done
+          /usr/libexec/PlistBuddy -c "Set :WahjRev ${{ needs.server.outputs.rev }}" ios/WahjLive/Info.plist
+
+      - name: Generate Xcode project
+        run: |
+          brew install xcodegen
+          cd ios && xcodegen generate
+
+      - name: Build app
+        run: |
+          cd ios
+          set -o pipefail
+          xcodebuild -project WahjLive.xcodeproj -scheme WahjLive -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build 2>&1 | tee build.log | grep -E "error:|warning: unre|BUILD" || true
+          test -d build/Build/Products/Release-iphoneos/WahjLive.app || { grep -E "error:" build.log | head -60; exit 1; }
+
+      - name: Package IPA
+        run: |
+          cd ios
+          rm -rf Payload && mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/WahjLive.app Payload/
+          ls Payload/WahjLive.app/PlugIns Payload/WahjLive.app/Frameworks
+          zip -qry WahjLive.ipa Payload
+          ls -la WahjLive.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WahjLive-IPA
+          path: ios/WahjLive.ipa
+
+  android:
+    name: Android (APK)
+    needs: server
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+      - name: Build APK
+        working-directory: android
+        run: |
+          gradle assembleRelease --no-daemon -PserverUrl="${{ needs.server.outputs.url }}" -PnativeRev="${{ needs.server.outputs.rev }}"
+          cp app/build/outputs/apk/release/app-release.apk ../WahjLive.apk
+          ls -la ../WahjLive.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WahjLive-APK
+          path: WahjLive.apk
+
+  release:
+    name: Publish
+    needs: [ios, android]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: art
+      - name: Collect
+        run: mkdir dist && cp art/WahjLive-IPA/WahjLive.ipa art/WahjLive-APK/WahjLive.apk dist/ && ls -la dist
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: وهج Live — آخر نسخة
+          body: |
+            **WahjLive.ipa** — آيفون، غير موقّع (AltStore / Sideloadly / TrollStore)
+            **WahjLive.apk** — أندرويد
+            Commit: ${{ github.sha }}
+          make_latest: true
+          files: |
+            dist/WahjLive.ipa
+            dist/WahjLive.apk
+
+      - name: Push builds branch
+        run: |
+          mkdir pub && cp dist/WahjLive.ipa dist/WahjLive.apk pub/ && cd pub
+          git init -q -b builds
+          git config user.name github-actions
+          git config user.email github-actions@users.noreply.github.com
+          git add . && git commit -qm "Build ${GITHUB_SHA::7}"
+          git push -qf "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" builds

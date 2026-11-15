@@ -1,0 +1,1101 @@
+"use strict";
+/* ================= Wahj Live — app ================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const ic = (n, cls = "") => `<svg class="${cls}"><use href="#i-${n}"/></svg>`;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem("wahj." + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem("wahj." + k, JSON.stringify(v)); } catch (e) {} },
+};
+
+/* ---------------- state ---------------- */
+const S = {
+  token: store.get("token", ""),
+  user: store.get("user", null),
+  lang: store.get("lang", (navigator.language || "ar").startsWith("ar") ? "ar" : "en"),
+  following: new Set(),
+  native: null, // {platform, device, version, features}
+  ice: [{ urls: ["stun:stun.cloudflare.com:3478"] }],
+  live: null, // current broadcast job {room, pub, role, ...}
+  bstate: "idle",
+};
+
+/* ---------------- i18n ---------------- */
+const T = {
+  ar: {
+    tag: "بثّ ألعابك مباشرة — بتأخير أقل من ثانية", login: "تسجيل الدخول", register: "حساب جديد", handle: "اسم المستخدم",
+    name: "الاسم الظاهر", password: "كلمة المرور", go: "متابعة", guest: "تصفّح كزائر", liveNow: "مباشر الآن", following: "متابَعون",
+    all: "الكل", action: "أكشن", sports: "رياضة", br: "باتل رويال", racing: "سباقات", strategy: "استراتيجية", retro: "ريترو", chill: "دردشة",
+    noLive: "لا يوجد بث مباشر حالياً", beFirst: "كن أول من يبث الآن ✨", viewers: "مشاهد", goLive: "ابدأ البث", title: "عنوان البث",
+    titlePh: "مثال: تحدي الفوز بدون خسارة 🔥", game: "اللعبة", gamePh: "اسم اللعبة", cat: "التصنيف", quality: "الجودة", fps: "الإطارات",
+    mic: "الميكروفون", micD: "صوتك يُدمج مع صوت اللعبة", privacy: "درع الخصوصية", dnd: "عدم الإزعاج التلقائي",
+    dndD: "يُخفي الإشعارات والاتصالات طوال البث ثم يرجع كما كان", callG: "حماية الاتصالات", callGD: "تُحجب الصورة فوراً عند أي اتصال",
+    bannerG: "إخفاء الإشعارات الذكي", bannerGD: "يكشف شريط الإشعارات أعلى الشاشة ويغطّيه", appOnly: "بث اللعبة فقط",
+    appOnlyD: "اختر «تطبيق واحد» في نافذة أندرويد — لن يظهر أي شيء غير اللعبة",
+    start: "ابدأ البث المباشر", needApp: "البث من الهاتف يحتاج تطبيق وهج", browserLive: "بث من المتصفح",
+    chatPh: "اكتب تعليقاً…", loginToChat: "سجّل الدخول للمشاركة", effects: "مؤثرات", react: "تفاعل", challenge: "تحدٍّ",
+    challengePh: "تحدَّ البثّاث… مثال: اربح بالمسدس فقط", send: "إرسال", challenges: "التحديات", noCh: "لا توجد تحديات بعد",
+    accept: "قبول", done: "نجح ✓", failed: "فشل", reject: "رفض", poll: "تصويت", newPoll: "تصويت جديد", question: "السؤال",
+    option: "خيار", duration: "المدة", startPoll: "إطلاق التصويت", endPoll: "إنهاء", votes: "صوت", ended: "انتهى",
+    costream: "بث مشترك", reqJoin: "اطلب الانضمام للبث", reqSent: "تم إرسال طلبك للبثّاث", requests: "طلبات الانضمام",
+    noReq: "لا توجد طلبات", approve: "قبول", deny: "رفض", invited: "دعاك {n} للبث المشترك!", joinNow: "انضم الآن",
+    later: "لاحقاً", invite: "دعوة للبث", kick: "إزالة", pin: "تثبيت", unpin: "إلغاء التثبيت", share: "مشاركة",
+    copied: "تم نسخ الرابط", end: "إنهاء البث", endQ: "إنهاء البث المباشر؟", yes: "نعم", no: "لا", liveFor: "مدة البث",
+    peak: "الذروة", hypeLvl: "مستوى الحماس", overlay: "الشات فوق اللعبة", camBubble: "كاميرا الوجه", preview: "معاينة",
+    chatTitle: "الدردشة", noChat: "الدردشة هادئة… قل مرحباً 👋", starting: "جارٍ التجهيز…", tapStart: "اضغط «بدء البث» في نافذة النظام",
+    reopen: "فتح نافذة البث", onAir: "على الهواء", stopped: "توقف البث", shieldOn: "درع الخصوصية يعمل", shieldOff: "الدرع غير مفعّل",
+    shieldPaused: "الصورة محجوبة الآن للخصوصية", privTitle: "لحظة خصوصية", privSub: "سيعود البث خلال ثوانٍ",
+    offline: "البث غير متاح الآن", endedT: "انتهى البث", back: "رجوع", tapSound: "اضغط لتشغيل الصوت", follow: "متابعة",
+    unfollow: "متابَع", followers: "متابِع", past: "بثوث سابقة", edit: "تعديل الملف", save: "حفظ", bio: "نبذة", color: "لون الحساب",
+    settings: "الإعدادات", language: "اللغة", logout: "تسجيل الخروج", focusGuide: "دليل إخفاء الإشعارات في آيفون",
+    focusSteps: "١. افتح تطبيق «الاختصارات» ← «الأتمتة» ← «أتمتة جديدة»<br>٢. اختر «تطبيق» ← وهج ← «عند الفتح»<br>٣. اختر «تشغيل فوري»<br>٤. أضف إجراء «تعيين التركيز» ← «عدم الإزعاج» ← تشغيل<br><br>الآن كل مرة تفتح وهج يتفعّل عدم الإزعاج تلقائياً ✓",
+    openShortcuts: "فتح الاختصارات", errs: { bad_handle: "اسم المستخدم: ٣–٢٠ حرفاً إنجليزياً أو أرقام", weak_password: "كلمة المرور ٦ أحرف على الأقل", taken: "الاسم محجوز", bad_login: "بيانات الدخول غير صحيحة", rate: "محاولات كثيرة، انتظر قليلاً", net: "تعذّر الاتصال", auth: "سجّل الدخول أولاً", not_invited: "لم تتم دعوتك", login: "سجّل الدخول للمشاركة", slow: "انتظر لحظة", guests_full: "اكتمل عدد الضيوف (٣)" },
+    sentFx: "أرسل", hypeTrain: "قطار الحماس 🚀", latency: "تأخير", guestsN: "ضيوف", layoutSplit: "شاشة مقسومة", layoutFocus: "تركيز",
+    sound: "الصوت", voiceLink: "صوت الضيوف", you: "أنت", hostTag: "البثّاث", guestTag: "ضيف", chAccepted: "قَبِل التحدي!", chDone: "نجح في التحدي! 🎉",
+    chFailed: "فشل التحدي 😅", secs: "ث", profile: "حسابي", noPast: "لا توجد بثوث سابقة", pendingLive: "البث لم يبدأ بعد…", camNA: "الكاميرا أثناء اللعب غير مدعومة في آيفون",
+  },
+  en: {
+    tag: "Stream your games live — under a second of delay", login: "Sign in", register: "Create account", handle: "Username",
+    name: "Display name", password: "Password", go: "Continue", guest: "Browse as guest", liveNow: "Live now", following: "Following",
+    all: "All", action: "Action", sports: "Sports", br: "Battle Royale", racing: "Racing", strategy: "Strategy", retro: "Retro", chill: "Just chatting",
+    noLive: "Nobody is live right now", beFirst: "Be the first to go live ✨", viewers: "viewers", goLive: "Go live", title: "Stream title",
+    titlePh: "e.g. No-loss challenge 🔥", game: "Game", gamePh: "Game name", cat: "Category", quality: "Quality", fps: "Frame rate",
+    mic: "Microphone", micD: "Your voice is mixed with game audio", privacy: "Privacy shield", dnd: "Auto Do Not Disturb",
+    dndD: "Hides notifications and calls during the stream, then restores", callG: "Call guard", callGD: "Video is blocked instantly on any call",
+    bannerG: "Smart notification hiding", bannerGD: "Detects the top notification banner and covers it", appOnly: "Stream the game only",
+    appOnlyD: "Pick “A single app” in Android's dialog — nothing but the game is shown",
+    start: "Start live stream", needApp: "Phone streaming needs the Wahj app", browserLive: "Stream from browser",
+    chatPh: "Say something…", loginToChat: "Sign in to chat", effects: "Effects", react: "React", challenge: "Challenge",
+    challengePh: "Challenge the streamer… e.g. win with pistol only", send: "Send", challenges: "Challenges", noCh: "No challenges yet",
+    accept: "Accept", done: "Done ✓", failed: "Failed", reject: "Reject", poll: "Poll", newPoll: "New poll", question: "Question",
+    option: "Option", duration: "Duration", startPoll: "Launch poll", endPoll: "End", votes: "votes", ended: "Ended",
+    costream: "Co-stream", reqJoin: "Ask to join the stream", reqSent: "Request sent to the streamer", requests: "Join requests",
+    noReq: "No requests", approve: "Approve", deny: "Deny", invited: "{n} invited you to co-stream!", joinNow: "Join now",
+    later: "Later", invite: "Invite to stream", kick: "Remove", pin: "Pin", unpin: "Unpin", share: "Share",
+    copied: "Link copied", end: "End stream", endQ: "End the live stream?", yes: "Yes", no: "No", liveFor: "Live for",
+    peak: "Peak", hypeLvl: "Hype level", overlay: "Chat over game", camBubble: "Face cam", preview: "Preview",
+    chatTitle: "Chat", noChat: "Chat is quiet… say hi 👋", starting: "Getting ready…", tapStart: "Tap “Start Broadcast” in the system sheet",
+    reopen: "Open broadcast sheet", onAir: "On air", stopped: "Broadcast stopped", shieldOn: "Privacy shield active", shieldOff: "Shield is off",
+    shieldPaused: "Video is hidden for privacy right now", privTitle: "Privacy moment", privSub: "The stream is back in a few seconds",
+    offline: "This stream is not available", endedT: "Stream ended", back: "Back", tapSound: "Tap for sound", follow: "Follow",
+    unfollow: "Following", followers: "followers", past: "Past streams", edit: "Edit profile", save: "Save", bio: "Bio", color: "Accent color",
+    settings: "Settings", language: "Language", logout: "Sign out", focusGuide: "Hide notifications on iPhone",
+    focusSteps: "1. Open Shortcuts → Automation → New Automation<br>2. Choose App → Wahj → Is Opened<br>3. Choose Run Immediately<br>4. Add action Set Focus → Do Not Disturb → On<br><br>Now Do Not Disturb turns on automatically every time you open Wahj ✓",
+    openShortcuts: "Open Shortcuts", errs: { bad_handle: "Username: 3–20 latin letters/digits", weak_password: "Password needs 6+ characters", taken: "Username taken", bad_login: "Wrong username or password", rate: "Too many attempts, wait a bit", net: "Connection failed", auth: "Sign in first", not_invited: "You were not invited", login: "Sign in to take part", slow: "Slow down a moment", guests_full: "Guest slots are full (3)" },
+    sentFx: "sent", hypeTrain: "HYPE TRAIN 🚀", latency: "Delay", guestsN: "guests", layoutSplit: "Split screen", layoutFocus: "Focus",
+    sound: "Sound", voiceLink: "Guest voice", you: "You", hostTag: "HOST", guestTag: "GUEST", chAccepted: "accepted the challenge!", chDone: "completed the challenge! 🎉",
+    chFailed: "failed the challenge 😅", secs: "s", profile: "Profile", noPast: "No past streams", pendingLive: "Stream hasn't started yet…", camNA: "Face cam while gaming isn't supported on iPhone",
+  },
+};
+const t = (k, v) => { let s = (T[S.lang] && T[S.lang][k]) ?? T.en[k] ?? k; if (v) for (const x in v) s = s.replace("{" + x + "}", v[x]); return s; };
+const terr = (e) => (T[S.lang].errs[e] || T.en.errs[e] || e || T[S.lang].errs.net);
+function applyLang() {
+  document.documentElement.lang = S.lang;
+  document.documentElement.dir = S.lang === "ar" ? "rtl" : "ltr";
+}
+
+/* ---------------- native bridge ---------------- */
+const Native = {
+  has() { return !!((window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.wahj) || window.WahjAndroid); },
+  post(cmd, data = {}) {
+    const msg = { cmd, data };
+    try {
+      if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.wahj) window.webkit.messageHandlers.wahj.postMessage(msg);
+      else if (window.WahjAndroid) window.WahjAndroid.post(JSON.stringify(msg));
+    } catch (e) { console.warn(e); }
+  },
+  subs: new Set(),
+  on(fn) { this.subs.add(fn); return () => this.subs.delete(fn); },
+};
+window.__native = (e) => {
+  if (typeof e === "string") try { e = JSON.parse(e); } catch (x) { return; }
+  if (e.type === "info") S.native = e;
+  if (e.type === "broadcast") {
+    S.bstate = e.state;
+    if (e.state === "stopped" && S.live) { /* keep S.live so studio can show summary */ }
+  }
+  Native.subs.forEach((f) => { try { f(e); } catch (x) { console.warn(x); } });
+};
+const plat = () => (S.native && S.native.platform) || (/iphone|ipad/i.test(navigator.userAgent) ? "ios-web" : /android/i.test(navigator.userAgent) ? "android-web" : "web");
+const isIOS = () => plat() === "ios";
+const isAndroid = () => plat() === "android";
+const haptic = (k = "light") => Native.has() && Native.post("haptic", { k });
+
+/* ---------------- api ---------------- */
+async function api(path, body, method) {
+  try {
+    const r = await fetch(path, {
+      method: method || (body ? "POST" : "GET"),
+      headers: { "content-type": "application/json", ...(S.token ? { authorization: "Bearer " + S.token } : {}) },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    return await r.json();
+  } catch (e) { return { error: "net" }; }
+}
+
+/* ---------------- ui helpers ---------------- */
+let toastT;
+function toast(msg, ms = 2600) {
+  const el = $("#toast");
+  el.innerHTML = msg;
+  el.classList.add("on");
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.classList.remove("on"), ms);
+}
+let sheetClose = null;
+function sheet(html, onMount) {
+  const sc = $("#scrim"), sh = $("#sheet");
+  sh.innerHTML = `<div class="grab"></div>` + html;
+  sc.style.display = "block";
+  requestAnimationFrame(() => { sc.classList.add("on"); sh.classList.add("on"); });
+  const close = () => {
+    sc.classList.remove("on"); sh.classList.remove("on");
+    setTimeout(() => { if (!sh.classList.contains("on")) sc.style.display = "none"; }, 300);
+    sheetClose = null;
+  };
+  sheetClose = close;
+  sc.onclick = close;
+  onMount && onMount(sh, close);
+  return close;
+}
+function confirmBox(q, yes) {
+  sheet(`<h3>${esc(q)}</h3><div class="row" style="margin-top:8px"><button class="btn g" data-n>${t("no")}</button><button class="btn d" data-y>${t("yes")}</button></div>`,
+    (sh, close) => { $("[data-n]", sh).onclick = close; $("[data-y]", sh).onclick = () => { close(); yes(); }; });
+}
+const avatar = (u, cls = "") => `<div class="av ${cls}" style="background:${esc((u && u.color) || "#7C5CFF")}">${esc(((u && (u.name || u.handle)) || "?").trim().charAt(0).toUpperCase())}</div>`;
+const fmtN = (n) => (n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + "K" : String(n | 0));
+const fmtDur = (ms) => { const s = Math.max(0, ms / 1000 | 0); const h = s / 3600 | 0, m = (s % 3600) / 60 | 0, x = s % 60; return (h ? h + ":" : "") + String(m).padStart(h ? 2 : 1, "0") + ":" + String(x).padStart(2, "0"); };
+const CATS = ["all", "action", "sports", "br", "racing", "strategy", "retro", "chill"];
+const CAT_EMO = { action: "⚔️", sports: "⚽", br: "🪂", racing: "🏎️", strategy: "♟️", retro: "👾", chill: "💬", all: "🎮" };
+const GAMES = ["PUBG Mobile", "Free Fire", "eFootball", "EA FC Mobile", "Call of Duty Mobile", "Minecraft", "Roblox", "Clash Royale", "Genshin Impact", "Brawl Stars", "Asphalt Legends", "Emulator"];
+
+/* ---------------- router ---------------- */
+let cleanup = null;
+let current = "";
+function go(view, arg) {
+  if (sheetClose) sheetClose();
+  if (cleanup) { try { cleanup(); } catch (e) {} cleanup = null; }
+  current = view;
+  const app = $("#app");
+  app.innerHTML = "";
+  const navViews = ["home", "me"];
+  $("#nav").classList.toggle("hide", !navViews.includes(view));
+  $$("#nav button").forEach((b) => b.classList.toggle("on", b.dataset.go === view));
+  $("#aurora").style.display = view === "watch" ? "none" : "";
+  const fn = VIEWS[view];
+  cleanup = fn(app, arg) || null;
+  if (view !== "watch") history.replaceState(null, "", "/");
+}
+$$("#nav button").forEach((b) => (b.onclick = () => { haptic(); go(b.dataset.go); }));
+
+/* ================= WebRTC: Cloudflare Realtime SFU ================= */
+function waitIce(pc, ms = 1800) {
+  if (pc.iceGatheringState === "complete") return Promise.resolve();
+  return new Promise((res) => {
+    const done = () => { pc.removeEventListener("icegatheringstatechange", chk); res(); };
+    const chk = () => pc.iceGatheringState === "complete" && done();
+    pc.addEventListener("icegatheringstatechange", chk);
+    setTimeout(done, ms);
+  });
+}
+class Sub {
+  constructor() {
+    this.pc = new RTCPeerConnection({ iceServers: S.ice, bundlePolicy: "max-bundle" });
+    this.q = Promise.resolve();
+    this.sid = null;
+    this.byMid = {};
+    this.have = new Set();
+    this.early = {};
+    this.onTrack = () => {};
+    this.pc.ontrack = (e) => {
+      const mid = e.transceiver && e.transceiver.mid;
+      const info = this.byMid[mid];
+      if (info) this.onTrack(info, e.track);
+      else this.early[mid] = e.track;
+    };
+  }
+  pull(list) {
+    this.q = this.q.then(() => this._pull(list)).catch((e) => console.warn("pull", e));
+    return this.q;
+  }
+  async _pull(list) {
+    list = list.filter((x) => !this.have.has(x.sessionId + "/" + x.trackName));
+    if (!list.length) return;
+    if (!this.sid) {
+      const r = await api("/api/sfu/new", {});
+      if (!r.sessionId) throw r;
+      this.sid = r.sessionId;
+    }
+    const r = await api(`/api/sfu/${this.sid}/tracks`, { tracks: list.map((x) => ({ location: "remote", sessionId: x.sessionId, trackName: x.trackName })) });
+    if (!r.tracks) throw r;
+    r.tracks.forEach((tr) => {
+      if (tr.error || !tr.mid) return;
+      const info = list.find((x) => x.trackName === tr.trackName && (!tr.sessionId || x.sessionId === tr.sessionId));
+      if (!info) return;
+      this.byMid[tr.mid] = info;
+      this.have.add(info.sessionId + "/" + info.trackName);
+      if (this.early[tr.mid]) { this.onTrack(info, this.early[tr.mid]); delete this.early[tr.mid]; }
+    });
+    if (r.requiresImmediateRenegotiation && r.sessionDescription) {
+      await this.pc.setRemoteDescription(r.sessionDescription);
+      const ans = await this.pc.createAnswer();
+      await this.pc.setLocalDescription(ans);
+      await waitIce(this.pc, 1200);
+      const rr = await api(`/api/sfu/${this.sid}/renegotiate`, { sessionDescription: { type: "answer", sdp: this.pc.localDescription.sdp } }, "PUT");
+      if (rr && rr.errorCode) throw rr;
+    }
+    // tracks that arrived during setRemoteDescription
+    for (const mid in this.early) if (this.byMid[mid]) { this.onTrack(this.byMid[mid], this.early[mid]); delete this.early[mid]; }
+  }
+  async stats() {
+    try {
+      const st = await this.pc.getStats();
+      let rtt = 0, jb = 0, jbn = 0, fps = 0, kbps = 0;
+      st.forEach((r) => {
+        if (r.type === "candidate-pair" && r.state === "succeeded" && r.currentRoundTripTime) rtt = r.currentRoundTripTime;
+        if (r.type === "inbound-rtp" && r.kind === "video") {
+          jb += r.jitterBufferDelay || 0; jbn += r.jitterBufferEmittedCount || 0; fps = Math.max(fps, r.framesPerSecond || 0);
+          if (this._lb && r.id in this._lb) kbps += ((r.bytesReceived - this._lb[r.id].b) * 8) / (r.timestamp - this._lb[r.id].t);
+          (this._lb = this._lb || {})[r.id] = { b: r.bytesReceived, t: r.timestamp };
+        }
+      });
+      const buf = jbn ? jb / jbn : 0;
+      return { delay: rtt / 2 + buf + 0.05, fps, kbps };
+    } catch (e) { return null; }
+  }
+  close() { try { this.pc.close(); } catch (e) {} if (this.sid) api(`/api/sfu/${this.sid}/close`, { tracks: [], force: true }, "PUT"); }
+}
+
+// Browser publisher (desktop streaming + automated tests)
+class Pub {
+  async start(tracks, job) {
+    this.job = job;
+    this.pc = new RTCPeerConnection({ iceServers: S.ice, bundlePolicy: "max-bundle" });
+    const r0 = await api("/api/sfu/new", {});
+    if (!r0.sessionId) throw r0;
+    this.sid = r0.sessionId;
+    const tx = tracks.map((x) => ({ ...x, tr: this.pc.addTransceiver(x.track, { direction: "sendonly" }) }));
+    await this.pc.setLocalDescription(await this.pc.createOffer());
+    await waitIce(this.pc);
+    const names = tx.map((x) => x.role + "-" + Math.random().toString(36).slice(2, 8));
+    const r = await api(`/api/sfu/${this.sid}/tracks`, {
+      sessionDescription: { type: "offer", sdp: this.pc.localDescription.sdp },
+      tracks: tx.map((x, i) => ({ location: "local", mid: x.tr.mid, trackName: names[i] })),
+    });
+    if (!r.sessionDescription) throw r;
+    await this.pc.setRemoteDescription(r.sessionDescription);
+    await fetch(`/api/room/${job.room}/publish`, {
+      method: "POST", headers: { "content-type": "application/json", "x-pub": job.pub },
+      body: JSON.stringify({ sessionId: this.sid, tracks: tx.map((x, i) => ({ trackName: names[i], kind: x.track.kind, role: x.role })) }),
+    });
+    this.beat = setInterval(() => this.thumb(), 20000);
+    setTimeout(() => this.thumb(), 2500);
+    this.tracks = tracks;
+  }
+  async thumb() {
+    const v = this.tracks.find((x) => x.role === "screen");
+    if (!v) return;
+    try {
+      const vid = document.createElement("video");
+      vid.muted = true; vid.srcObject = new MediaStream([v.track]); await vid.play();
+      const c = document.createElement("canvas"); const w = 360; c.width = w; c.height = Math.round(w * (vid.videoHeight || 9) / (vid.videoWidth || 16));
+      c.getContext("2d").drawImage(vid, 0, 0, c.width, c.height);
+      const blob = await new Promise((r) => c.toBlob(r, "image/jpeg", 0.7));
+      const res = await fetch(`/api/thumb/${this.job.room}`, { method: "POST", headers: { "x-pub": this.job.pub }, body: blob });
+      if (res.status === 401) this.onEnded && this.onEnded();
+    } catch (e) {}
+  }
+  stop() { clearInterval(this.beat); try { this.tracks.forEach((x) => x.track.stop()); this.pc.close(); } catch (e) {} }
+}
+
+/* ================= Room websocket ================= */
+class RoomWS {
+  constructor(room, opts = {}) {
+    this.room = room; this.opts = opts; this.handlers = new Set(); this.closed = false; this.tries = 0;
+    this.open();
+  }
+  open() {
+    const u = (location.protocol === "https:" ? "wss://" : "ws://") + location.host + `/api/room/${this.room}/ws?token=${encodeURIComponent(S.token || "")}` + (this.opts.pub ? "&pub=1" : "");
+    const ws = (this.ws = new WebSocket(u));
+    ws.onopen = () => { this.tries = 0; this.ping = setInterval(() => this.send({ t: "ping", at: Date.now() }), 20000); };
+    ws.onmessage = (e) => { let m; try { m = JSON.parse(e.data); } catch (x) { return; } this.handlers.forEach((f) => f(m)); };
+    ws.onclose = () => {
+      clearInterval(this.ping);
+      if (this.closed) return;
+      setTimeout(() => !this.closed && this.open(), Math.min(8000, 600 * 2 ** this.tries++));
+    };
+  }
+  on(f) { this.handlers.add(f); }
+  send(o) { if (this.ws && this.ws.readyState === 1) this.ws.send(JSON.stringify(o)); }
+  close() { this.closed = true; clearInterval(this.ping); try { this.ws.close(); } catch (e) {} }
+}
+
+/* ================= Effects engine ================= */
+const FX = {
+  list: [
+    { id: "confetti", e: "🎉", ar: "احتفال", en: "Confetti" },
+    { id: "hearts", e: "💖", ar: "قلوب", en: "Hearts" },
+    { id: "fire", e: "🔥", ar: "نار", en: "Fire" },
+    { id: "shake", e: "💥", ar: "زلزال", en: "Shake" },
+    { id: "lightning", e: "⚡", ar: "صاعقة", en: "Lightning" },
+    { id: "airhorn", e: "📯", ar: "بوق", en: "Airhorn" },
+    { id: "boo", e: "👻", ar: "بووو", en: "Boo" },
+    { id: "wave", e: "🌊", ar: "موجة", en: "Wave" },
+  ],
+  ac: null,
+  audio() { try { this.ac = this.ac || new (window.AudioContext || window.webkitAudioContext)(); if (this.ac.state === "suspended") this.ac.resume(); return this.ac; } catch (e) { return null; } },
+  tone(freqs, dur, type = "sawtooth", vol = 0.12) {
+    const ac = this.audio(); if (!ac) return;
+    const g = ac.createGain(); g.connect(ac.destination);
+    g.gain.setValueAtTime(0.0001, ac.currentTime); g.gain.exponentialRampToValueAtTime(vol, ac.currentTime + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur);
+    freqs.forEach((f) => { const o = ac.createOscillator(); o.type = type; o.frequency.value = f; o.connect(g); o.start(); o.stop(ac.currentTime + dur); });
+  },
+  floaty(root, e, n = 1, opts = {}) {
+    for (let i = 0; i < n; i++) setTimeout(() => {
+      const d = document.createElement("div");
+      d.className = "floaty"; d.textContent = e;
+      d.style.setProperty("--dx", (Math.random() * 120 - 60) + "px");
+      if (opts.spread) { d.style.insetInlineEnd = (Math.random() * 80 + 5) + "%"; d.style.bottom = (Math.random() * 20 + 5) + "%"; }
+      if (opts.size) d.style.fontSize = opts.size + "px";
+      root.appendChild(d); setTimeout(() => d.remove(), 2500);
+    }, i * (opts.gap || 70));
+  },
+  confetti(canvas) {
+    const ctx = canvas.getContext("2d");
+    const W = (canvas.width = canvas.clientWidth * devicePixelRatio), H = (canvas.height = canvas.clientHeight * devicePixelRatio);
+    const cols = ["#7C5CFF", "#FF4D8D", "#00D1FF", "#FFB800", "#2EE59D", "#fff"];
+    const ps = Array.from({ length: 180 }, () => ({ x: W / 2 + (Math.random() - .5) * W * .3, y: H * .35, vx: (Math.random() - .5) * 26, vy: -Math.random() * 26 - 6, s: (Math.random() * 7 + 4) * devicePixelRatio, r: Math.random() * 6, vr: (Math.random() - .5) * .4, c: cols[Math.random() * cols.length | 0] }));
+    let f = 0;
+    const tick = () => {
+      ctx.clearRect(0, 0, W, H);
+      ps.forEach((p) => { p.vy += 0.75; p.vx *= .985; p.x += p.vx; p.y += p.vy; p.r += p.vr; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore(); });
+      if (++f < 150) requestAnimationFrame(tick); else ctx.clearRect(0, 0, W, H);
+    };
+    tick();
+  },
+  play(id, root, stage, canvas, sound = true) {
+    switch (id) {
+      case "confetti": this.confetti(canvas); sound && this.tone([523, 659, 784], 0.5, "triangle", 0.08); break;
+      case "hearts": this.floaty(root, "💖", 18, { spread: true }); break;
+      case "fire": this.floaty(root, "🔥", 22, { spread: true, gap: 45 }); sound && this.tone([90, 120], 0.8, "sawtooth", 0.05); break;
+      case "shake": stage.classList.remove("shake"); void stage.offsetWidth; stage.classList.add("shake"); sound && this.tone([55, 70], 0.6, "square", 0.1); break;
+      case "lightning": { const f = document.createElement("div"); f.className = "flash"; root.appendChild(f); setTimeout(() => f.remove(), 700); this.floaty(root, "⚡", 6, { spread: true, size: 54 }); sound && this.tone([1800, 60], 0.35, "sawtooth", 0.08); break; }
+      case "airhorn": this.floaty(root, "📯", 4, { size: 60, gap: 200 }); sound && [0, 280, 560].forEach((d) => setTimeout(() => this.tone([466, 470, 932], 0.24, "sawtooth", 0.1), d)); break;
+      case "boo": this.floaty(root, "👻", 10, { spread: true, size: 44 }); sound && this.tone([150, 110], 1, "triangle", 0.12); break;
+      case "wave": this.floaty(root, "🌊", 14, { spread: true, gap: 60 }); sound && this.tone([200, 300], 0.9, "sine", 0.08); break;
+    }
+  },
+};
+
+/* ================= Stage (renders publishers' tracks) ================= */
+class Stage {
+  constructor(el, { muted = false } = {}) {
+    this.el = el; this.sub = new Sub(); this.pubs = []; this.tiles = new Map(); this.cams = new Map(); this.audios = new Map();
+    this.mode = "focus"; this.focus = null; this.muted = muted; this.tracks = new Map();
+    this.sub.onTrack = (info, track) => { this.tracks.set(info.uid + ":" + info.role, track); this.attach(info, track); };
+    this.ro = new ResizeObserver(() => this.layout()); this.ro.observe(el);
+  }
+  setPubs(list) {
+    this.pubs = list || [];
+    const want = [];
+    for (const p of this.pubs) for (const tr of p.tracks || []) want.push({ uid: p.uid, role: tr.role, kind: tr.kind, sessionId: tr.sessionId, trackName: tr.trackName });
+    const live = new Set(this.pubs.map((p) => p.uid));
+    // remove gone publishers
+    for (const [k, el] of this.tiles) if (!live.has(k)) { el.remove(); this.tiles.delete(k); }
+    for (const [k, el] of this.cams) if (!live.has(k) || !want.find((w) => w.uid === k && w.role === "cam")) { el.remove(); this.cams.delete(k); }
+    for (const [k, a] of this.audios) { const [uid, role] = k.split(":"); if (!want.find((w) => w.uid === uid && w.role === role)) { a.remove(); this.audios.delete(k); } }
+    for (const p of this.pubs) this.ensureTile(p);
+    this.sub.pull(want);
+    this.layout();
+  }
+  ensureTile(p) {
+    let el = this.tiles.get(p.uid);
+    if (!el) {
+      el = document.createElement("div");
+      el.className = "vt";
+      el.innerHTML = `<video playsinline autoplay muted></video><div class="spin"></div><div class="nm badge"></div>`;
+      el.onclick = () => { if (this.pubs.length > 1) { this.focus = p.uid; this.layout(); } };
+      this.el.appendChild(el);
+      this.tiles.set(p.uid, el);
+      const t = this.tracks.get(p.uid + ":screen"); if (t) this.attach({ uid: p.uid, role: "screen" }, t);
+    }
+    $(".nm", el).innerHTML = `${esc(p.name)}${p.role === "guest" ? " · " + t("guestTag") : ""}`;
+    this.setPrivacy(p.uid, !!p.privacy);
+  }
+  attach(info, track) {
+    if (info.role === "screen") {
+      const el = this.tiles.get(info.uid); if (!el) return;
+      const v = $("video", el); v.srcObject = new MediaStream([track]); v.play().catch(() => {});
+      v.onloadeddata = () => { const s = $(".spin", el); s && s.remove(); };
+    } else if (info.role === "cam") {
+      let c = this.cams.get(info.uid);
+      if (!c) {
+        c = document.createElement("div"); c.className = "cam"; c.innerHTML = `<video playsinline autoplay muted></video>`;
+        this.el.appendChild(c); this.cams.set(info.uid, c); this.drag(c);
+      }
+      const v = $("video", c); v.srcObject = new MediaStream([track]); v.play().catch(() => {});
+      this.layout();
+    } else if (track.kind === "audio") {
+      const k = info.uid + ":" + info.role;
+      let a = this.audios.get(k);
+      if (!a) { a = document.createElement("audio"); a.autoplay = true; a.setAttribute("playsinline", ""); this.el.appendChild(a); this.audios.set(k, a); }
+      a.srcObject = new MediaStream([track]); a.muted = this.muted;
+      a.play().catch(() => this.onBlocked && this.onBlocked());
+    }
+  }
+  unmute() { this.muted = false; for (const a of this.audios.values()) { a.muted = false; a.play().catch(() => {}); } }
+  setPrivacy(uid, on) {
+    const el = this.tiles.get(uid); if (!el) return;
+    let o = $(".priv", el);
+    if (on && !o) {
+      o = document.createElement("div"); o.className = "priv";
+      o.innerHTML = `<div class="lk">${ic("lock")}</div><b>${t("privTitle")}</b><span>${t("privSub")}</span>`;
+      el.appendChild(o);
+    } else if (!on && o) o.remove();
+  }
+  drag(el) {
+    let sx, sy, ox, oy;
+    el.addEventListener("pointerdown", (e) => { sx = e.clientX; sy = e.clientY; ox = el.offsetLeft; oy = el.offsetTop; el.setPointerCapture(e.pointerId); el.dataset.moved = "1"; });
+    el.addEventListener("pointermove", (e) => { if (sx == null) return; el.style.left = ox + e.clientX - sx + "px"; el.style.top = oy + e.clientY - sy + "px"; });
+    el.addEventListener("pointerup", () => (sx = null));
+  }
+  layout() {
+    const W = this.el.clientWidth, H = this.el.clientHeight;
+    const order = this.pubs.map((p) => p.uid);
+    const n = order.length;
+    if (!n) return;
+    const host = (this.pubs.find((p) => p.role === "host") || this.pubs[0]).uid;
+    const main = this.focus && order.includes(this.focus) ? this.focus : host;
+    const set = (el, x, y, w, h, mini) => { Object.assign(el.style, { left: x + "px", top: y + "px", width: w + "px", height: h + "px" }); el.classList.toggle("mini", !!mini); };
+    if (this.mode === "split" && n > 1) {
+      const land = W > H;
+      const cols = land ? Math.min(n, n > 2 ? 2 : 2) : n > 2 ? 2 : 1;
+      const rows = Math.ceil(n / cols);
+      const w = W / cols, h = H / rows;
+      order.forEach((uid, i) => { const el = this.tiles.get(uid); el && set(el, (i % cols) * w, Math.floor(i / cols) * h, w, h, false); });
+    } else {
+      const others = order.filter((u) => u !== main);
+      const mel = this.tiles.get(main); mel && set(mel, 0, 0, W, H, false);
+      const mw = Math.min(150, W * 0.3), mh = mw * 1.4;
+      others.forEach((uid, i) => { const el = this.tiles.get(uid); el && set(el, W - mw - 12, (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--st")) || 0) + 70 + i * (mh + 10), mw, mh, true); });
+    }
+    // camera bubbles: default bottom corner unless dragged
+    let i = 0;
+    for (const [, c] of this.cams) { if (!c.dataset.moved) { c.style.left = (document.dir === "rtl" ? W - 124 - i * 120 : 12 + i * 120) + "px"; c.style.top = H * 0.52 + "px"; } i++; }
+  }
+  destroy() { this.ro.disconnect(); this.sub.close(); this.el.innerHTML = ""; }
+}
+
+/* ================= Views ================= */
+const VIEWS = {};
+
+/* ---------- auth ---------- */
+VIEWS.auth = (root) => {
+  let mode = "login";
+  root.innerHTML = `<div class="view auth">
+    <div class="hero"><div class="logo">${ic("live")}</div><h1>${S.lang === "ar" ? "وهج" : "Wahj"}<span style="opacity:.5;font-weight:500"> Live</span></h1><p>${t("tag")}</p></div>
+    <div class="seg" id="am"><button class="on" data-m="login">${t("login")}</button><button data-m="register">${t("register")}</button></div>
+    <div class="field" style="margin-top:16px"><input class="inp" id="ah" placeholder="${t("handle")}" autocapitalize="none" autocomplete="username" dir="ltr"></div>
+    <div class="field hide" id="anw"><input class="inp" id="an" placeholder="${t("name")}"></div>
+    <div class="field"><input class="inp" id="ap" type="password" placeholder="${t("password")}" autocomplete="current-password" dir="ltr"></div>
+    <button class="btn p" id="ago" style="margin-top:10px">${t("go")}</button>
+    <button class="btn" id="aguest" style="margin-top:6px;color:var(--mut)">${t("guest")}</button>
+    <div class="row" style="justify-content:center;margin-top:14px"><button class="chip" id="alang">${ic("globe")} ${S.lang === "ar" ? "English" : "العربية"}</button></div>
+  </div>`;
+  $$("#am button").forEach((b) => (b.onclick = () => { mode = b.dataset.m; $$("#am button").forEach((x) => x.classList.toggle("on", x === b)); $("#anw").classList.toggle("hide", mode !== "register"); }));
+  $("#alang").onclick = () => { S.lang = S.lang === "ar" ? "en" : "ar"; store.set("lang", S.lang); applyLang(); go("auth"); };
+  $("#aguest").onclick = () => { store.set("guest", true); go("home"); };
+  const submit = async () => {
+    const b = $("#ago"); b.disabled = true;
+    const r = await api("/api/" + mode, { handle: $("#ah").value, name: $("#an").value, password: $("#ap").value });
+    b.disabled = false;
+    if (r.error) return toast(terr(r.error));
+    S.token = r.token; S.user = r.user; store.set("token", r.token); store.set("user", r.user);
+    Native.post("auth", { token: r.token, user: r.user });
+    haptic("success");
+    afterLogin();
+  };
+  $("#ago").onclick = submit;
+  $("#ap").onkeydown = (e) => e.key === "Enter" && submit();
+};
+
+/* ---------- home ---------- */
+VIEWS.home = (root) => {
+  let cat = "all", tab = "live", data = [];
+  root.innerHTML = `<div class="view">
+    <div class="top"><div class="brand"><div class="logo">${ic("live")}</div><b>${S.lang === "ar" ? "وهج" : "Wahj"}</b></div><div class="sp"></div>
+      <button class="ibtn" id="hr">${ic("refresh")}</button></div>
+    <div class="scroll" id="hs">
+      <div class="seg" style="margin-top:4px" id="ht"><button class="on" data-t="live">${t("liveNow")}</button><button data-t="fol">${t("following")}</button></div>
+      <div class="chips" style="margin-top:12px" id="hc">${CATS.map((c) => `<button class="chip ${c === "all" ? "on" : ""}" data-c="${c}">${CAT_EMO[c]} ${t(c)}</button>`).join("")}</div>
+      <div id="hl"><div style="height:200px;position:relative"><div class="spin"></div></div></div>
+    </div></div>`;
+  const card = (s, big) => {
+    const thumb = `/api/thumb/${s.id}?b=${Math.floor(Date.now() / 20000)}`;
+    const badges = `<div class="live"><span class="badge red">LIVE</span><span class="badge">${ic("eye")} ${fmtN(s.viewers)}</span>${s.guests ? `<span class="badge co">${ic("users")} ${s.guests + 1}</span>` : ""}</div>`;
+    const ph = `<div class="ph">${CAT_EMO[s.cat] || "🎮"}</div>`;
+    if (big) return `<div class="feat" data-id="${s.id}">${ph}<img src="${thumb}" onerror="this.remove()" alt="">${badges}<div class="ov"><div class="t">${esc(s.title)}</div>
+      <div class="who">${avatar(s.host)}<span style="font-weight:600">${esc(s.host && s.host.name)}</span><span class="mut small">· ${esc(s.game || t(s.cat || "all"))}</span></div></div></div>`;
+    return `<div class="card" data-id="${s.id}"><div class="th">${ph}<img src="${thumb}" onerror="this.remove()" alt="">${badges}</div>
+      <div class="meta"><div class="tt">${esc(s.title)}</div><div class="who">${avatar(s.host)}<span class="small" style="font-weight:600">${esc(s.host && s.host.name)}</span></div>
+      <div class="small mut" style="margin-top:3px">${esc(s.game || "")}</div></div></div>`;
+  };
+  const render = () => {
+    let list = data.filter((s) => cat === "all" || s.cat === cat);
+    if (tab === "fol") list = list.filter((s) => s.followed);
+    const el = $("#hl");
+    if (!list.length) {
+      el.innerHTML = `<div class="empty"><div class="big">📡</div><div style="font-weight:700;font-size:17px;color:var(--txt)">${t("noLive")}</div><div style="margin-top:6px">${t("beFirst")}</div>
+        <button class="btn p" style="margin-top:20px;width:auto;padding:14px 26px;display:inline-flex" id="hgo">${ic("live")} ${t("goLive")}</button></div>`;
+      $("#hgo").onclick = () => go("golive");
+      return;
+    }
+    const [f, ...rest] = list;
+    el.innerHTML = card(f, true) + (rest.length ? `<div class="h2">${ic("zap")} ${t("liveNow")}</div><div class="grid">${rest.map((s) => card(s)).join("")}</div>` : "");
+    $$("[data-id]", el).forEach((c) => (c.onclick = () => { haptic(); go("watch", c.dataset.id); }));
+  };
+  const load = async () => { const r = await api("/api/live"); if (r.streams) { data = r.streams; render(); } else if (!data.length) render(); };
+  $$("#ht button").forEach((b) => (b.onclick = () => { tab = b.dataset.t; $$("#ht button").forEach((x) => x.classList.toggle("on", x === b)); render(); }));
+  $$("#hc .chip").forEach((b) => (b.onclick = () => { cat = b.dataset.c; $$("#hc .chip").forEach((x) => x.classList.toggle("on", x === b)); render(); }));
+  $("#hr").onclick = () => { haptic(); load(); };
+  load();
+  const iv = setInterval(load, 15000);
+  return () => clearInterval(iv);
+};
+
+/* ---------- watch ---------- */
+VIEWS.watch = (root, id) => {
+  history.replaceState(null, "", "/w/" + id);
+  root.innerHTML = `<div class="view" id="watch">
+    <div class="stage" id="ws"></div>
+    <canvas id="fx"></canvas>
+    <div id="wfx" style="position:absolute;inset:0;z-index:8;pointer-events:none;overflow:hidden"></div>
+    <div class="wtop"><button class="ibtn" id="wx" style="background:rgba(0,0,0,.4)">${ic("x")}</button>
+      <div class="pill" id="wh"><div class="av md" id="wav"></div><div><div class="n" id="wn">…</div><div class="s" id="wg"></div></div></div>
+      <button class="fbtn hide" id="wf">${t("follow")}</button><div class="sp"></div>
+      <span class="stat"><span class="badge red" style="padding:2px 7px">LIVE</span></span>
+      <span class="stat" id="wv">${ic("eye")} 0</span></div>
+    <div class="pinned hide" id="wpin"></div>
+    <div class="chatov" id="wc"></div>
+    <div class="hype" id="whype"><i style="height:0%"></i></div><div class="hypel" id="whl">x1</div>
+    <div id="wpoll"></div>
+    <div class="wbar">
+      <div class="cin"><input id="wi" placeholder="${S.token ? t("chatPh") : t("loginToChat")}" maxlength="200" enterkeyhint="send"><button class="rbtn" id="wsend" style="width:36px;height:36px;background:none">${ic("send")}</button></div>
+      <button class="rbtn" id="wr">❤️</button><button class="rbtn hot" id="we">${ic("spark")}</button><button class="rbtn" id="wm">${ic("layers")}</button>
+    </div>
+    <div class="stat lat hide" id="wlat" style="position:absolute;z-index:6;top:calc(var(--st) + 64px);inset-inline-start:14px">${ic("zap")}<span></span></div>
+  </div>`;
+  const stageEl = $("#ws");
+  const stage = new Stage(stageEl);
+  let meta = null, me = {}, myVote = null, poll = null, isFollowing = false, hostInfo = null, sawPubs = false;
+  stage.onBlocked = () => {
+    if ($(".tapsound", root)) return;
+    const b = document.createElement("button"); b.className = "tapsound"; b.innerHTML = ic("vol") + " " + t("tapSound");
+    b.onclick = () => { stage.unmute(); FX.audio(); b.remove(); };
+    $("#watch").appendChild(b);
+  };
+  const chatEl = $("#wc");
+  const addChat = (html, cls = "", fade = true) => {
+    const d = document.createElement("div"); d.className = "cm " + cls; d.innerHTML = html; chatEl.appendChild(d);
+    while (chatEl.children.length > 40) chatEl.firstChild.remove();
+    if (fade) setTimeout(() => { d.classList.add("fade"); setTimeout(() => d.remove(), 1300); }, 20000);
+  };
+  const chatHtml = (m) => `${m.host ? `<span class="tag">${t("hostTag")}</span>` : m.guest ? `<span class="tag" style="background:var(--grad2)">${t("guestTag")}</span>` : ""}<b style="color:${esc(m.color)}">${esc(m.name)}</b>${esc(m.text)}`;
+  const offline = (txt) => {
+    if ($(".offline", stageEl)) return;
+    const o = document.createElement("div"); o.className = "offline";
+    o.innerHTML = `<div style="font-size:56px">📴</div><b style="color:#fff;font-size:18px">${txt}</b><button class="btn g" style="width:auto;padding:12px 24px;margin-top:10px">${t("back")}</button>`;
+    $("button", o).onclick = () => go("home");
+    stageEl.appendChild(o);
+  };
+  const renderPoll = () => {
+    const el = $("#wpoll");
+    if (!poll) return (el.innerHTML = "");
+    const total = poll.votes.reduce((a, b) => a + b, 0) || 0;
+    const left = Math.max(0, Math.round((poll.ends - Date.now()) / 1000));
+    el.innerHTML = `<div class="poll"><div class="q">${ic("poll")} ${esc(poll.q || t("poll"))}</div>${poll.opts.map((o, i) => {
+      const pct = total ? Math.round(poll.votes[i] * 100 / total) : 0;
+      return `<button class="po ${myVote === i ? "me" : ""}" data-o="${i}"><i style="width:${poll.done || myVote != null ? pct : 0}%"></i><span><span>${esc(o)}</span><b>${poll.done || myVote != null ? pct + "%" : ""}</b></span></button>`;
+    }).join("")}<div class="tm">${total} ${t("votes")} · ${poll.done ? t("ended") : left + t("secs")}</div></div>`;
+    $$(".po", el).forEach((b) => (b.onclick = () => { if (poll.done) return; if (!S.token) return toast(terr("login")); myVote = +b.dataset.o; ws.send({ t: "vote", opt: myVote }); haptic(); renderPoll(); }));
+    if (poll.done) setTimeout(() => { if (poll && poll.done) { poll = null; renderPoll(); } }, 8000);
+  };
+  const pollTick = setInterval(() => poll && !poll.done && renderPoll(), 1000);
+  const setHype = (v, lvl) => { $("#whype i").style.height = Math.min(100, v) + "%"; $("#whl").textContent = "x" + (lvl || 1); };
+  const banner = (txt) => { const b = document.createElement("div"); b.className = "banner"; b.innerHTML = txt; $("#watch").appendChild(b); setTimeout(() => b.remove(), 4200); };
+
+  const ws = new RoomWS(id);
+  ws.on((m) => {
+    switch (m.t) {
+      case "hello":
+        me = m.me; meta = m.meta;
+        if (!meta) return offline(t("offline"));
+        if (meta.ended) return offline(t("endedT"));
+        chatEl.innerHTML = "";
+        (m.history || []).slice(-12).forEach((x) => addChat(chatHtml(x)));
+        stage.setPubs(m.publishers); sawPubs = sawPubs || m.publishers.length > 0;
+        if (!m.publishers.length) addChat(t("pendingLive"), "sys");
+        $("#wv").innerHTML = ic("eye") + " " + fmtN(m.viewers);
+        poll = m.poll; renderPoll(); setHype(m.hype.v, m.hype.lvl);
+        if (m.pinned) showPin(m.pinned);
+        break;
+      case "publishers": stage.setPubs(m.list); sawPubs = true; break;
+      case "privacy": stage.setPrivacy(m.uid, m.on); break;
+      case "viewers": $("#wv").innerHTML = ic("eye") + " " + fmtN(m.n); break;
+      case "chat": addChat(chatHtml(m)); break;
+      case "react": if (m.uid !== me.uid) FX.floaty($("#wfx"), m.e); break;
+      case "effect":
+        FX.play(m.id, $("#wfx"), stageEl, $("#fx"), true);
+        addChat(`<b style="color:${esc(m.color)}">${esc(m.name)}</b>${t("sentFx")} ${(FX.list.find((x) => x.id === m.id) || {}).e || "✨"}`, "fx");
+        break;
+      case "hype": setHype(m.v, m.lvl); if (m.train) { const d = document.createElement("div"); d.className = "train"; d.textContent = t("hypeTrain") + " x" + m.lvl; $("#watch").appendChild(d); setTimeout(() => d.remove(), 2700); FX.confetti($("#fx")); } break;
+      case "poll": if (!poll || poll.id !== m.poll.id) myVote = null; poll = m.poll; renderPoll(); break;
+      case "challenges":
+        if (m.changed && hostInfo) {
+          const c = m.changed, hn = esc(hostInfo.name);
+          if (c.state === "accepted") banner(`🏆 ${hn} ${t("chAccepted")}<br><span style="font-weight:500">${esc(c.text)}</span>`);
+          if (c.state === "done") { banner(`🎉 ${hn} ${t("chDone")}`); FX.confetti($("#fx")); }
+          if (c.state === "failed") banner(`😅 ${hn} ${t("chFailed")}`);
+        }
+        root._ch = m.list;
+        break;
+      case "pinned": showPin(m.msg); break;
+      case "layout": stage.mode = m.mode; stage.focus = m.focus; stage.layout(); break;
+      case "guest-pending": toast(t("reqSent")); break;
+      case "guest-ok":
+        haptic("success");
+        sheet(`<div style="text-align:center"><div style="font-size:52px">🎮</div><h3 style="margin-top:6px">${esc(t("invited", { n: m.host }))}</h3><p class="mut" style="margin-bottom:16px">${esc(m.title)}</p></div>
+          <button class="btn p" id="gj">${ic("live")} ${t("joinNow")}</button><button class="btn g" style="margin-top:8px" id="gl">${t("later")}</button>`,
+          (sh, close) => { $("#gj", sh).onclick = () => { close(); go("golive", { joinRoom: id, hostName: m.host }); }; $("#gl", sh).onclick = close; });
+        break;
+      case "guest-no": toast("🙏"); break;
+      case "ended": offline(t("endedT")); stage.setPubs([]); break;
+      case "err": toast(terr(m.e)); break;
+    }
+  });
+  const showPin = (msg) => { const el = $("#wpin"); if (!msg) return el.classList.add("hide"); el.classList.remove("hide"); el.innerHTML = ic("pin") + `<span><b style="color:${esc(msg.color)}">${esc(msg.name)}</b> ${esc(msg.text)}</span>`; };
+
+  // header info
+  api("/api/stream/" + id).then((r) => {
+    const s = r.stream;
+    if (!s) return offline(t("offline"));
+    hostInfo = s.host;
+    $("#wav").outerHTML = avatar(s.host, "md");
+    $("#wn").textContent = s.host.name;
+    $("#wg").textContent = s.title;
+    if (S.user && S.user.id !== s.uid) {
+      isFollowing = S.following.has(s.uid);
+      const fb = $("#wf"); fb.classList.remove("hide");
+      const upd = () => { fb.textContent = isFollowing ? t("unfollow") : t("follow"); fb.classList.toggle("on", isFollowing); };
+      upd();
+      fb.onclick = async () => { isFollowing = !isFollowing; upd(); haptic(); await api("/api/follow", { target: s.uid, on: isFollowing }); isFollowing ? S.following.add(s.uid) : S.following.delete(s.uid); };
+    }
+    $("#wh").onclick = () => go("user", s.host.handle);
+  });
+
+  // stats
+  const latEl = $("#wlat");
+  const statT = setInterval(async () => {
+    const s = await stage.sub.stats();
+    if (s && s.fps) { latEl.classList.remove("hide"); $("span", latEl).textContent = `${s.delay.toFixed(1)}s · ${Math.round(s.fps)}fps`; }
+  }, 2000);
+
+  // input
+  const send = () => {
+    const i = $("#wi"); const v = i.value.trim(); if (!v) return;
+    if (!S.token) return toast(terr("login"));
+    ws.send({ t: "chat", text: v }); i.value = ""; haptic();
+  };
+  $("#wsend").onclick = send;
+  $("#wi").onkeydown = (e) => e.key === "Enter" && send();
+  $("#wx").onclick = () => go("home");
+  let lastR = 0;
+  $("#wr").onclick = () => { const e = ["❤️", "🔥", "😂", "👏", "😮", "💯"][Math.random() * 6 | 0]; FX.floaty($("#wfx"), e); if (Date.now() - lastR > 250) { ws.send({ t: "react", e }); lastR = Date.now(); } haptic(); FX.audio(); };
+  $("#we").onclick = () => {
+    FX.audio();
+    sheet(`<h3>${t("react")}</h3><div class="emoji">${["❤️", "🔥", "😂", "👏", "😮", "💯", "🏆"].map((e) => `<button data-e="${e}">${e}</button>`).join("")}</div>
+      <h3>${t("effects")}</h3><div class="fxgrid">${FX.list.map((f) => `<button class="fxb" data-fx="${f.id}">${f.e}<small>${S.lang === "ar" ? f.ar : f.en}</small></button>`).join("")}</div>
+      <button class="btn g" style="margin-top:16px" id="sch">${ic("trophy")} ${t("challenge")}</button>`,
+      (sh, close) => {
+        $$("[data-e]", sh).forEach((b) => (b.onclick = () => { FX.floaty($("#wfx"), b.dataset.e, 3); ws.send({ t: "react", e: b.dataset.e }); haptic(); }));
+        $$("[data-fx]", sh).forEach((b) => (b.onclick = () => { if (!S.token) return toast(terr("login")); ws.send({ t: "effect", id: b.dataset.fx }); haptic("medium"); close(); }));
+        $("#sch", sh).onclick = () => { close(); challengeSheet(); };
+      });
+  };
+  const challengeSheet = () => {
+    const list = root._ch || [];
+    sheet(`<h3>${ic("trophy")} ${t("challenges")}</h3>
+      <div class="row"><input class="inp" id="chi" placeholder="${t("challengePh")}" maxlength="90"><button class="btn p" style="width:auto;padding:15px 18px" id="chs">${ic("send")}</button></div>
+      <div id="chl">${list.length ? list.map((c) => `<div class="chl"><div class="row"><b style="color:${esc(c.color)};font-size:13px">${esc(c.name)}</b><span class="sp"></span><span class="st ${c.state}">${c.state === "new" ? "🔥 " + c.up : t(c.state === "accepted" ? "accept" : c.state)}</span></div>
+        <div style="margin-top:6px;font-size:15px">${esc(c.text)}</div>${c.state === "new" ? `<button class="mini" style="margin-top:8px" data-up="${c.id}">+1 🔥</button>` : ""}</div>`).join("") : `<p class="mut" style="padding:20px;text-align:center">${t("noCh")}</p>`}</div>`,
+      (sh, close) => {
+        $("#chs", sh).onclick = () => { const v = $("#chi", sh).value.trim(); if (!v) return; if (!S.token) return toast(terr("login")); ws.send({ t: "challenge", text: v }); haptic("success"); close(); };
+        $$("[data-up]", sh).forEach((b) => (b.onclick = () => { ws.send({ t: "ch-up", id: b.dataset.up }); b.remove(); }));
+      });
+  };
+  $("#wm").onclick = () => {
+    sheet(`<div class="tile" style="padding:6px 14px">
+      <div class="tg" id="mco"><div class="ic">${ic("users")}</div><div class="tx"><b>${t("reqJoin")}</b><span>${t("costream")}</span></div></div>
+      <div class="tg" id="mch"><div class="ic">${ic("trophy")}</div><div class="tx"><b>${t("challenges")}</b></div></div>
+      <div class="tg" id="mly"><div class="ic">${ic("grid")}</div><div class="tx"><b>${stage.mode === "split" ? t("layoutFocus") : t("layoutSplit")}</b></div></div>
+      <div class="tg" id="msnd"><div class="ic">${ic("vol")}</div><div class="tx"><b>${t("sound")}</b></div></div>
+      <div class="tg" id="msh"><div class="ic">${ic("share")}</div><div class="tx"><b>${t("share")}</b></div></div></div>`,
+      (sh, close) => {
+        $("#mco", sh).onclick = () => { close(); if (!S.token) return toast(terr("login")); ws.send({ t: "guest-req" }); };
+        $("#mch", sh).onclick = () => { close(); challengeSheet(); };
+        $("#mly", sh).onclick = () => { close(); stage.mode = stage.mode === "split" ? "focus" : "split"; stage.layout(); };
+        $("#msnd", sh).onclick = () => { close(); stage.unmute(); FX.audio(); };
+        $("#msh", sh).onclick = () => { close(); shareLink(location.origin + "/w/" + id, hostInfo ? hostInfo.name : ""); };
+      });
+  };
+  return () => { clearInterval(statT); clearInterval(pollTick); ws.close(); stage.destroy(); };
+};
+function shareLink(url, text) {
+  if (Native.has()) return Native.post("share", { url, text });
+  if (navigator.share) return navigator.share({ url, text }).catch(() => {});
+  navigator.clipboard && navigator.clipboard.writeText(url).then(() => toast(t("copied")));
+}
+
+/* ---------- go live ---------- */
+VIEWS.golive = (root, arg = {}) => {
+  if (!S.token) { toast(terr("auth")); return go("auth"); }
+  const joining = !!arg.joinRoom;
+  const cfg = Object.assign({ title: "", game: "", cat: "action", quality: "720", fps: 30, mic: true, privacy: { dnd: true, callGuard: true, bannerGuard: true } }, store.get("golive", {}));
+  cfg.privacy = Object.assign({ dnd: true, callGuard: true, bannerGuard: true }, cfg.privacy || {});
+  const nat = Native.has();
+  const webCap = !nat && navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia && !/iphone|ipad|android/i.test(navigator.userAgent);
+  const sw = (k, on) => `<div class="sw ${on ? "on" : ""}" data-sw="${k}"></div>`;
+  root.innerHTML = `<div class="view"><div class="top"><button class="ibtn" id="gb">${ic("back")}</button><div class="h1">${joining ? t("costream") : t("goLive")}</div></div>
+  <div class="scroll" style="padding-bottom:calc(30px + var(--sb))">
+    ${joining ? `<div class="tile" style="text-align:center"><div style="font-size:40px">🤝</div><b>${esc(t("invited", { n: arg.hostName || "" }))}</b></div>` : `
+    <div class="field"><label>${t("title")}</label><input class="inp" id="gt" maxlength="80" placeholder="${t("titlePh")}" value="${esc(cfg.title)}"></div>
+    <div class="field"><label>${t("game")}</label><input class="inp" id="gg" maxlength="40" placeholder="${t("gamePh")}" value="${esc(cfg.game)}"></div>
+    <div class="chips" id="ggs">${GAMES.map((g) => `<button class="chip" data-g="${esc(g)}">${esc(g)}</button>`).join("")}</div>
+    <div class="field"><label>${t("cat")}</label><div class="chips" id="gc">${CATS.slice(1).map((c) => `<button class="chip ${cfg.cat === c ? "on" : ""}" data-c="${c}">${CAT_EMO[c]} ${t(c)}</button>`).join("")}</div></div>`}
+    <div class="row" style="gap:12px;margin-top:6px">
+      <div style="flex:1"><label class="small mut" style="display:block;margin:0 4px 7px">${t("quality")}</label><div class="seg" id="gq">${["540", "720", "1080"].map((q) => `<button class="${cfg.quality === q ? "on" : ""}" data-q="${q}">${q}p</button>`).join("")}</div></div>
+      <div style="width:120px"><label class="small mut" style="display:block;margin:0 4px 7px">${t("fps")}</label><div class="seg" id="gf">${[30, 60].map((f) => `<button class="${cfg.fps === f ? "on" : ""}" data-f="${f}">${f}</button>`).join("")}</div></div>
+    </div>
+    <div class="tile" style="padding:4px 14px;margin-top:14px">
+      <div class="tg"><div class="ic">${ic("mic")}</div><div class="tx"><b>${t("mic")}</b><span>${t("micD")}</span></div>${sw("mic", cfg.mic)}</div>
+    </div>
+    <div class="h2">${ic("shield")} ${t("privacy")}</div>
+    <div class="tile" style="padding:4px 14px">
+      ${isAndroid() || !nat ? `<div class="tg"><div class="ic">${ic("bell")}</div><div class="tx"><b>${t("dnd")}</b><span>${t("dndD")}</span></div>${sw("dnd", cfg.privacy.dnd)}</div>` : ""}
+      <div class="tg"><div class="ic">${ic("phone")}</div><div class="tx"><b>${t("callG")}</b><span>${t("callGD")}</span></div>${sw("callGuard", cfg.privacy.callGuard)}</div>
+      ${isIOS() || !nat ? `<div class="tg"><div class="ic">${ic("eye")}</div><div class="tx"><b>${t("bannerG")}</b><span>${t("bannerGD")}</span></div>${sw("bannerGuard", cfg.privacy.bannerGuard)}</div>` : ""}
+      ${isAndroid() ? `<div class="tg"><div class="ic">${ic("lock")}</div><div class="tx"><b>${t("appOnly")}</b><span>${t("appOnlyD")}</span></div></div>` : ""}
+      ${isIOS() ? `<div class="tg" id="gfg"><div class="ic">${ic("bell")}</div><div class="tx"><b>${t("focusGuide")}</b></div><span class="mut">›</span></div>` : ""}
+    </div>
+    <button class="btn p" id="gs" style="margin-top:18px">${ic("live")} ${nat ? t("start") : webCap ? t("browserLive") : t("start")}</button>
+    ${!nat && !webCap ? `<p class="mut small" style="text-align:center;margin-top:10px">${t("needApp")}</p>` : ""}
+  </div></div>`;
+  $("#gb").onclick = () => go("home");
+  if (!joining) {
+    $$("#ggs .chip").forEach((b) => (b.onclick = () => { $("#gg").value = b.dataset.g; haptic(); }));
+    $$("#gc .chip").forEach((b) => (b.onclick = () => { cfg.cat = b.dataset.c; $$("#gc .chip").forEach((x) => x.classList.toggle("on", x === b)); }));
+  }
+  $$("#gq button").forEach((b) => (b.onclick = () => { cfg.quality = b.dataset.q; $$("#gq button").forEach((x) => x.classList.toggle("on", x === b)); }));
+  $$("#gf button").forEach((b) => (b.onclick = () => { cfg.fps = +b.dataset.f; $$("#gf button").forEach((x) => x.classList.toggle("on", x === b)); }));
+  $$("[data-sw]").forEach((s) => (s.onclick = () => {
+    const k = s.dataset.sw; s.classList.toggle("on"); const on = s.classList.contains("on"); haptic();
+    if (k === "mic") cfg.mic = on; else cfg.privacy[k] = on;
+    if (k === "dnd" && on && isAndroid()) Native.post("perm", { kind: "dnd" });
+  }));
+  const fg = $("#gfg"); if (fg) fg.onclick = focusGuide;
+  $("#gs").onclick = async () => {
+    if (!joining) { cfg.title = $("#gt").value.trim(); cfg.game = $("#gg").value.trim(); }
+    store.set("golive", cfg);
+    if (!nat && !webCap) return toast(t("needApp"));
+    const b = $("#gs"); b.disabled = true;
+    const r = await api("/api/go-live", { ...cfg, joinRoom: arg.joinRoom, device: S.native && S.native.device });
+    b.disabled = false;
+    if (r.error) return toast(terr(r.error));
+    S.live = { ...r.job, title: cfg.title, game: cfg.game, startedAt: Date.now() };
+    haptic("success");
+    if (nat) {
+      S.bstate = "starting";
+      Native.post("startBroadcast", { ...r.job, server: location.origin, token: S.token, title: cfg.title });
+      go("studio");
+    } else {
+      // desktop browser streaming
+      try {
+        const scr = await navigator.mediaDevices.getDisplayMedia({ video: { frameRate: cfg.fps, height: +cfg.quality }, audio: true });
+        const tracks = [{ track: scr.getVideoTracks()[0], role: "screen" }];
+        if (scr.getAudioTracks()[0]) tracks.push({ track: scr.getAudioTracks()[0], role: "audio" });
+        if (cfg.mic) { try { const m = await navigator.mediaDevices.getUserMedia({ audio: true }); tracks.push({ track: m.getAudioTracks()[0], role: "mic" }); } catch (e) {} }
+        const pub = new Pub(); await pub.start(tracks, r.job);
+        S.webPub = pub; S.bstate = "live";
+        scr.getVideoTracks()[0].onended = () => endLive();
+        go("studio");
+      } catch (e) {
+        console.warn(e); toast(String(e.message || e.error || e)); api("/api/end", { room: r.job.room, pub: r.job.pub });
+      }
+    }
+  };
+};
+function focusGuide() {
+  sheet(`<h3>${ic("bell")} ${t("focusGuide")}</h3><div class="tile" style="line-height:1.9;font-size:14.5px">${t("focusSteps")}</div>
+    <button class="btn p" id="fgo">${t("openShortcuts")}</button>`, (sh, close) => { $("#fgo", sh).onclick = () => { close(); Native.post("open", { url: "shortcuts://create-automation" }); }; });
+}
+async function endLive() {
+  const job = S.live;
+  if (!job) return;
+  Native.post("stopBroadcast", {});
+  if (S.webPub) { S.webPub.stop(); S.webPub = null; }
+  await api("/api/end", { room: job.room, pub: job.pub });
+  S.live = null; S.bstate = "idle";
+  if (current === "studio") go("home");
+}
+
+/* ---------- studio (streamer dashboard) ---------- */
+VIEWS.studio = (root) => {
+  const job = S.live;
+  if (!job) return go("home");
+  const nat = Native.has();
+  const st = { viewers: 0, peak: 0, hype: 0, lvl: 1, chat: [], reqs: [], ch: [], guests: [], pubs: [], privacy: false, overlay: store.get("overlay", true), cam: false, poll: null };
+  root.innerHTML = `<div class="view"><div class="top"><div class="brand" style="font-size:20px"><span class="badge red" id="sb">LIVE</span></div><div class="sp"></div>
+    <button class="ibtn" id="ssh">${ic("share")}</button><button class="ibtn" id="sx" style="color:#ff7b88">${ic("stop")}</button></div>
+  <div class="scroll" style="padding-bottom:calc(30px + var(--sb))">
+    <div class="lvcard"><div class="row"><div><div class="small" style="color:#d6d1ee">${t("liveFor")}</div><div class="big" id="sd">0:00</div></div><div class="sp"></div>
+      <div style="text-align:end"><div class="small" style="color:#d6d1ee" id="sst">${t("starting")}</div><div style="font-weight:700;margin-top:4px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(job.title || "")}</div></div></div>
+      <div class="kpis"><div class="kpi"><b id="kv">0</b><span>${t("viewers")}</span></div><div class="kpi"><b id="kp">0</b><span>${t("peak")}</span></div><div class="kpi"><b id="kh">x1</b><span>${t("hypeLvl")}</span></div></div>
+    </div>
+    <div id="shint"></div>
+    <div class="shield" id="sshield"><div class="ic">${ic("shield")}</div><div style="flex:1"><b id="sshT">${t("shieldOn")}</b><div class="small mut" id="sshD"></div></div></div>
+    <div class="acts">
+      <button class="act ${st.overlay ? "on" : ""}" id="aov">${ic("chat")}<span>${t("overlay")}</span></button>
+      <button class="act" id="acam">${ic("cam")}<span>${t("camBubble")}</span></button>
+      <button class="act" id="apoll">${ic("poll")}<span>${t("poll")}</span></button>
+      <button class="act" id="ach">${ic("trophy")}<span>${t("challenges")}</span></button>
+      <button class="act" id="areq">${ic("users")}<span>${t("costream")}</span></button>
+      <button class="act" id="apv">${ic("eye")}<span>${t("preview")}</span></button>
+      <button class="act" id="afg">${ic("bell")}<span>${t("privacy")}</span></button>
+      <button class="act" id="aend" style="color:#ff7b88">${ic("stop")}<span>${t("end")}</span></button>
+    </div>
+    <div class="prev hide" id="spv"><div class="stage" id="spvs" style="position:absolute;inset:0"></div></div>
+    <div class="h2">${ic("chat")} ${t("chatTitle")}</div>
+    <div class="row" style="margin-bottom:8px"><div class="cin" style="background:var(--card)"><input id="si" placeholder="${t("chatPh")}" maxlength="200"><button class="rbtn" id="ssend" style="width:36px;height:36px;background:none">${ic("send")}</button></div></div>
+    <div class="sl" id="sl"><p class="mut" style="text-align:center;padding:20px">${t("noChat")}</p></div>
+  </div></div>`;
+  if (job.role === "guest") { $("#apoll").classList.add("hide"); $("#ach").classList.add("hide"); $("#areq").classList.add("hide"); }
+  if (!isAndroid()) $("#acam").onclick = () => toast(t("camNA"));
+  const dot = (el, n) => { let d = $(".dot", el); if (!n) return d && d.remove(); if (!d) { d = document.createElement("span"); d.className = "dot"; el.appendChild(d); } d.textContent = n; };
+  const ws = new RoomWS(job.room, { pub: true });
+  let previewStage = null;
+  const renderChat = () => {
+    const el = $("#sl");
+    if (!st.chat.length) return;
+    el.innerHTML = st.chat.slice(-60).reverse().map((m) => `<div class="sm">${avatar(m)}<div class="tx"><b style="color:${esc(m.color)}">${esc(m.name)}</b><br>${esc(m.text)}</div>
+      ${job.role === "host" && m.uid !== S.user.id ? `<button class="mini" data-pin="${m.id}">${ic("pin")}</button><button class="mini" data-inv="${m.uid}" data-n="${esc(m.name)}">${ic("users")}</button>` : ""}</div>`).join("");
+    $$("[data-pin]", el).forEach((b) => (b.onclick = () => { ws.send({ t: "pin", id: b.dataset.pin }); toast(t("pin") + " ✓"); }));
+    $$("[data-inv]", el).forEach((b) => (b.onclick = () => confirmBox(t("invite") + ": " + b.dataset.n + "؟", () => ws.send({ t: "guest-invite", uid: b.dataset.inv }))));
+  };
+  const setShield = () => {
+    const sh = $("#sshield");
+    sh.classList.toggle("warn", st.privacy);
+    $("#sshT").textContent = st.privacy ? t("shieldPaused") : t("shieldOn");
+    const p = job.privacy || {};
+    $("#sshD").textContent = [isAndroid() && p.dnd ? t("dnd") : "", p.callGuard ? t("callG") : "", isIOS() && p.bannerGuard ? t("bannerG") : ""].filter(Boolean).join(" · ") || t("shieldOff");
+  };
+  setShield();
+  ws.on((m) => {
+    switch (m.t) {
+      case "hello":
+        st.chat = m.history || []; renderChat(); st.viewers = m.viewers; st.pubs = m.publishers || [];
+        if (m.requests) { st.reqs = m.requests; dot($("#areq"), st.reqs.length); }
+        st.ch = m.challenges || []; dot($("#ach"), st.ch.filter((c) => c.state === "new").length);
+        st.hype = m.hype.v; st.lvl = m.hype.lvl; st.guests = m.guests || []; st.poll = m.poll;
+        upd(); if (st.pubs.find((p) => p.uid === S.user.id)) setState("live");
+        if (m.meta && m.meta.ended) { toast(t("endedT")); endLive(); }
+        break;
+      case "chat": st.chat.push(m); renderChat(); break;
+      case "viewers": st.viewers = m.n; st.peak = Math.max(st.peak, m.n); upd(); break;
+      case "hype": st.hype = m.v; st.lvl = m.lvl; upd(); if (m.train) haptic("success"); break;
+      case "requests": st.reqs = m.list; dot($("#areq"), st.reqs.length); if (m.list.length) haptic(); break;
+      case "challenges": st.ch = m.list; dot($("#ach"), st.ch.filter((c) => c.state === "new").length); break;
+      case "guests": st.guests = m.list; break;
+      case "poll": st.poll = m.poll; break;
+      case "publishers": st.pubs = m.list; if (m.list.find((p) => p.uid === S.user.id)) setState("live"); previewStage && previewStage.setPubs(m.list);
+        if (nat) Native.post("voice", { room: job.room, pub: job.pub, server: location.origin, publishers: m.list, me: S.user.id });
+        break;
+      case "privacy": if (m.uid === S.user.id) { st.privacy = m.on; setShield(); } previewStage && previewStage.setPrivacy(m.uid, m.on); break;
+      case "effect": haptic("medium"); break;
+      case "kicked": case "ended": endLive(); break;
+      case "err": toast(terr(m.e)); break;
+    }
+  });
+  const upd = () => { $("#kv").textContent = fmtN(st.viewers); st.peak = Math.max(st.peak, st.viewers); $("#kp").textContent = fmtN(st.peak); $("#kh").textContent = "x" + st.lvl; };
+  const setState = (s) => {
+    S.bstate = s;
+    $("#sst").textContent = s === "live" ? "● " + t("onAir") : s === "stopped" ? t("stopped") : t("starting");
+    $("#sst").style.color = s === "live" ? "var(--ok)" : "";
+    const hint = $("#shint");
+    if (s === "starting" && isIOS()) {
+      hint.innerHTML = `<div class="shield warn"><div class="ic">${ic("live")}</div><div style="flex:1"><b>${t("tapStart")}</b></div><button class="mini p" id="sre">${t("reopen")}</button></div>`;
+      $("#sre").onclick = () => Native.post("startBroadcast", { ...job, server: location.origin, token: S.token, reopen: true });
+    } else hint.innerHTML = "";
+  };
+  setState(S.bstate === "live" ? "live" : "starting");
+  const off = Native.on((e) => {
+    if (e.type === "broadcast") {
+      setState(e.state);
+      if (e.error) toast(esc(e.error), 4000);
+      if (e.state === "stopped") { api("/api/end", { room: job.room, pub: job.pub }); S.live = null; setTimeout(() => current === "studio" && go("home"), 1500); }
+    }
+    if (e.type === "privacy") { st.privacy = e.on; setShield(); }
+    if (e.type === "overlay") { st.overlay = e.on; $("#aov").classList.toggle("on", e.on); }
+    if (e.type === "cam") { st.cam = e.on; $("#acam").classList.toggle("on", e.on); }
+  });
+  if (nat && st.overlay) setTimeout(() => Native.post("overlay", { on: true, room: job.room, token: S.token, server: location.origin }), 1200);
+  const timer = setInterval(() => ($("#sd").textContent = fmtDur(Date.now() - job.startedAt)), 1000);
+  const send = () => { const i = $("#si"); const v = i.value.trim(); if (!v) return; ws.send({ t: "chat", text: v }); i.value = ""; };
+  $("#ssend").onclick = send; $("#si").onkeydown = (e) => e.key === "Enter" && send();
+  const askEnd = () => confirmBox(t("endQ"), endLive);
+  $("#sx").onclick = askEnd; $("#aend").onclick = askEnd;
+  $("#ssh").onclick = () => shareLink(location.origin + "/w/" + job.room, job.title);
+  $("#aov").onclick = () => { st.overlay = !st.overlay; store.set("overlay", st.overlay); $("#aov").classList.toggle("on", st.overlay); haptic(); Native.post("overlay", { on: st.overlay, room: job.room, token: S.token, server: location.origin }); };
+  if (isAndroid()) $("#acam").onclick = () => { st.cam = !st.cam; $("#acam").classList.toggle("on", st.cam); haptic(); Native.post("camBubble", { on: st.cam }); };
+  $("#afg").onclick = () => (isIOS() ? focusGuide() : Native.post("perm", { kind: "dnd" }));
+  $("#apv").onclick = () => {
+    const el = $("#spv"); const on = el.classList.toggle("hide") === false; $("#apv").classList.toggle("on", on);
+    if (on) { previewStage = new Stage($("#spvs"), { muted: true }); previewStage.setPubs(st.pubs); } else if (previewStage) { previewStage.destroy(); previewStage = null; }
+  };
+  $("#apoll").onclick = () => {
+    if (st.poll && !st.poll.done) {
+      const total = st.poll.votes.reduce((a, b) => a + b, 0);
+      return sheet(`<h3>${ic("poll")} ${esc(st.poll.q)}</h3>${st.poll.opts.map((o, i) => `<div class="po"><i style="width:${total ? st.poll.votes[i] * 100 / total : 0}%"></i><span><span>${esc(o)}</span><b>${st.poll.votes[i]}</b></span></div>`).join("")}
+        <button class="btn d" style="margin-top:14px" id="pe">${t("endPoll")}</button>`, (sh, close) => { $("#pe", sh).onclick = () => { ws.send({ t: "endpoll" }); close(); }; });
+    }
+    sheet(`<h3>${ic("poll")} ${t("newPoll")}</h3><div class="field"><input class="inp" id="pq" placeholder="${t("question")}" maxlength="100"></div>
+      ${[1, 2, 3, 4].map((i) => `<div class="field"><input class="inp" data-po placeholder="${t("option")} ${i}" maxlength="40"></div>`).join("")}
+      <div class="seg" id="pd">${[30, 60, 120].map((s) => `<button class="${s === 60 ? "on" : ""}" data-s="${s}">${s}${t("secs")}</button>`).join("")}</div>
+      <button class="btn p" style="margin-top:14px" id="ps">${t("startPoll")}</button>`,
+      (sh, close) => {
+        let secs = 60;
+        $$("#pd button", sh).forEach((b) => (b.onclick = () => { secs = +b.dataset.s; $$("#pd button", sh).forEach((x) => x.classList.toggle("on", x === b)); }));
+        $("#ps", sh).onclick = () => { const opts = $$("[data-po]", sh).map((i) => i.value.trim()).filter(Boolean); if (opts.length < 2) return toast(t("option") + " ×2"); ws.send({ t: "poll", q: $("#pq", sh).value.trim(), opts, secs }); haptic("success"); close(); };
+      });
+  };
+  $("#ach").onclick = () => {
+    const render = (sh, close) => {
+      $("#chlist", sh).innerHTML = st.ch.length ? st.ch.map((c) => `<div class="chl"><div class="row"><b style="color:${esc(c.color)};font-size:13px">${esc(c.name)}</b><span class="sp"></span><span class="st ${c.state}">${c.state === "new" ? "🔥 " + c.up : t(c.state === "accepted" ? "accept" : c.state)}</span></div>
+        <div style="margin:6px 0 8px;font-size:15px">${esc(c.text)}</div><div class="row">${c.state === "new" ? `<button class="mini p" data-s="accepted" data-id="${c.id}">${t("accept")}</button><button class="mini" data-s="rejected" data-id="${c.id}">${t("reject")}</button>` : c.state === "accepted" ? `<button class="mini p" data-s="done" data-id="${c.id}">${t("done")}</button><button class="mini" data-s="failed" data-id="${c.id}">${t("failed")}</button>` : ""}</div></div>`).join("") : `<p class="mut" style="padding:20px;text-align:center">${t("noCh")}</p>`;
+      $$("[data-s]", sh).forEach((b) => (b.onclick = () => { ws.send({ t: "ch-set", id: b.dataset.id, state: b.dataset.s }); const c = st.ch.find((x) => x.id === b.dataset.id); if (c) c.state = b.dataset.s; haptic("success"); render(sh, close); }));
+    };
+    sheet(`<h3>${ic("trophy")} ${t("challenges")}</h3><div id="chlist"></div>`, render);
+  };
+  $("#areq").onclick = () => {
+    sheet(`<h3>${ic("users")} ${t("requests")}</h3><div id="rq"></div>`, (sh) => {
+      const r = () => {
+        $("#rq", sh).innerHTML = st.reqs.length ? st.reqs.map((q) => `<div class="sm" style="align-items:center">${avatar(q, "md")}<div class="tx"><b>${esc(q.name)}</b><br><span class="mut small">@${esc(q.handle)}</span></div>
+          <button class="mini p" data-ok="${q.uid}">${t("approve")}</button><button class="mini" data-no="${q.uid}">${t("deny")}</button></div>`).join("") : `<p class="mut" style="padding:20px;text-align:center">${t("noReq")}</p>`;
+        $$("[data-ok]", sh).forEach((b) => (b.onclick = () => { ws.send({ t: "guest-invite", uid: b.dataset.ok }); st.reqs = st.reqs.filter((x) => x.uid !== b.dataset.ok); r(); }));
+        $$("[data-no]", sh).forEach((b) => (b.onclick = () => { ws.send({ t: "guest-deny", uid: b.dataset.no }); st.reqs = st.reqs.filter((x) => x.uid !== b.dataset.no); r(); }));
+      };
+      r();
+    });
+  };
+  return () => { off(); clearInterval(timer); ws.close(); previewStage && previewStage.destroy(); };
+};
+
+/* ---------- profile (me) ---------- */
+VIEWS.me = (root) => {
+  if (!S.token) return go("auth");
+  const u = S.user;
+  root.innerHTML = `<div class="view"><div class="top"><div class="h1">${t("profile")}</div><div class="sp"></div><button class="ibtn" id="mset">${ic("gear")}</button></div>
+  <div class="scroll"><div style="text-align:center;margin-top:8px">${avatar(u, "lg").replace('class="av lg"', 'class="av lg" style="margin:0 auto;background:' + esc(u.color) + '"')}
+    <div style="font-size:24px;font-weight:800;margin-top:14px">${esc(u.name)}</div><div class="mut" dir="ltr">@${esc(u.handle)}</div>
+    <div style="margin-top:8px;color:#cfcae6">${esc(u.bio || "")}</div>
+    <div class="row" style="justify-content:center;gap:28px;margin-top:16px"><div><b id="mf" style="font-size:20px">–</b><div class="small mut">${t("followers")}</div></div></div>
+    <button class="btn g" style="margin-top:18px" id="med">${t("edit")}</button></div>
+  <div class="h2">${t("past")}</div><div id="mp" class="sl"></div></div></div>`;
+  api("/api/user/" + u.handle).then((r) => {
+    if (!r.user) return;
+    $("#mf").textContent = fmtN(r.followers);
+    $("#mp").innerHTML = r.streams.length ? r.streams.map((s) => `<div class="sm" data-id="${s.id}"><div class="tx"><b>${esc(s.title)}</b><br><span class="mut small">${esc(s.game || "")} · ${new Date(s.started).toLocaleDateString(S.lang)} · ${t("peak")} ${s.peak}</span></div>${s.live ? '<span class="badge red">LIVE</span>' : ""}</div>`).join("") : `<p class="mut small" style="text-align:center;padding:16px">${t("noPast")}</p>`;
+    $$("#mp [data-id]").forEach((x) => (x.onclick = () => go("watch", x.dataset.id)));
+  });
+  $("#med").onclick = () => {
+    const cols = ["#7C5CFF", "#FF4D8D", "#00D1FF", "#FFB800", "#2EE59D", "#FF6B3D", "#B26BFF", "#3DDCFF"];
+    let col = u.color;
+    sheet(`<h3>${t("edit")}</h3><div class="field"><label>${t("name")}</label><input class="inp" id="en" value="${esc(u.name)}" maxlength="32"></div>
+      <div class="field"><label>${t("bio")}</label><input class="inp" id="eb" value="${esc(u.bio || "")}" maxlength="140"></div>
+      <div class="field"><label>${t("color")}</label><div class="row" style="flex-wrap:wrap">${cols.map((c) => `<button data-c="${c}" style="width:40px;height:40px;border-radius:50%;background:${c};box-shadow:${c === col ? "0 0 0 3px #fff" : "none"}"></button>`).join("")}</div></div>
+      <button class="btn p" id="es">${t("save")}</button>`, (sh, close) => {
+      $$("[data-c]", sh).forEach((b) => (b.onclick = () => { col = b.dataset.c; $$("[data-c]", sh).forEach((x) => (x.style.boxShadow = x === b ? "0 0 0 3px #fff" : "none")); }));
+      $("#es", sh).onclick = async () => {
+        const r = await api("/api/profile", { name: $("#en", sh).value, bio: $("#eb", sh).value, color: col });
+        if (r.user) { S.user = r.user; store.set("user", r.user); close(); go("me"); }
+      };
+    });
+  };
+  $("#mset").onclick = settingsSheet;
+};
+function settingsSheet() {
+  sheet(`<h3>${t("settings")}</h3><div class="tile" style="padding:4px 14px">
+    <div class="tg" id="sl1"><div class="ic">${ic("globe")}</div><div class="tx"><b>${t("language")}</b><span>${S.lang === "ar" ? "العربية" : "English"}</span></div><span class="mut">⇄</span></div>
+    ${isIOS() ? `<div class="tg" id="sl2"><div class="ic">${ic("bell")}</div><div class="tx"><b>${t("focusGuide")}</b></div></div>` : ""}
+    ${isAndroid() ? `<div class="tg" id="sl3"><div class="ic">${ic("bell")}</div><div class="tx"><b>${t("dnd")}</b><span>${t("dndD")}</span></div></div>` : ""}
+    <div class="tg" id="sl4" style="color:#ff7b88"><div class="ic">${ic("out")}</div><div class="tx"><b>${t("logout")}</b></div></div></div>
+    <p class="mut small" style="text-align:center">Wahj Live · ${esc((S.native && S.native.version) || "web")}</p>`,
+    (sh, close) => {
+      $("#sl1", sh).onclick = () => { S.lang = S.lang === "ar" ? "en" : "ar"; store.set("lang", S.lang); applyLang(); Native.post("lang", { lang: S.lang }); close(); go(current === "auth" ? "auth" : current); };
+      if ($("#sl2", sh)) $("#sl2", sh).onclick = () => { close(); focusGuide(); };
+      if ($("#sl3", sh)) $("#sl3", sh).onclick = () => Native.post("perm", { kind: "dnd" });
+      $("#sl4", sh).onclick = () => { close(); S.token = ""; S.user = null; store.set("token", ""); store.set("user", null); store.set("guest", false); Native.post("auth", { token: "" }); go("auth"); };
+    });
+}
+
+/* ---------- other user's profile ---------- */
+VIEWS.user = (root, handle) => {
+  root.innerHTML = `<div class="view"><div class="top"><button class="ibtn" id="ub">${ic("back")}</button></div><div class="scroll" id="us"><div class="spin"></div></div></div>`;
+  $("#ub").onclick = () => go("home");
+  api("/api/user/" + encodeURIComponent(handle)).then((r) => {
+    if (!r.user) return ($("#us").innerHTML = `<div class="empty">${t("offline")}</div>`);
+    const u = r.user; let fol = S.following.has(u.id);
+    $("#us").innerHTML = `<div style="text-align:center">${avatar(u, "lg").replace('class="av lg"', 'class="av lg" style="margin:0 auto;background:' + esc(u.color) + '"')}
+      <div style="font-size:24px;font-weight:800;margin-top:14px">${esc(u.name)}</div><div class="mut" dir="ltr">@${esc(u.handle)}</div><div style="margin-top:8px;color:#cfcae6">${esc(u.bio)}</div>
+      <div style="margin-top:12px"><b>${fmtN(r.followers)}</b> <span class="mut small">${t("followers")}</span></div>
+      ${S.user && S.user.id !== u.id ? `<button class="btn ${fol ? "g" : "p"}" id="uf" style="margin-top:16px">${fol ? t("unfollow") : t("follow")}</button>` : ""}</div>
+      <div class="h2">${t("past")}</div><div class="sl">${r.streams.map((s) => `<div class="sm" data-id="${s.id}"><div class="tx"><b>${esc(s.title)}</b><br><span class="mut small">${esc(s.game || "")} · ${new Date(s.started).toLocaleDateString(S.lang)}</span></div>${s.live ? '<span class="badge red">LIVE</span>' : ""}</div>`).join("") || `<p class="mut small" style="text-align:center">${t("noPast")}</p>`}</div>`;
+    $$("[data-id]", $("#us")).forEach((x) => (x.onclick = () => go("watch", x.dataset.id)));
+    const fb = $("#uf");
+    if (fb) fb.onclick = async () => { fol = !fol; fb.className = "btn " + (fol ? "g" : "p"); fb.textContent = fol ? t("unfollow") : t("follow"); await api("/api/follow", { target: u.id, on: fol }); fol ? S.following.add(u.id) : S.following.delete(u.id); };
+  });
+};
+
+/* ================= boot ================= */
+async function afterLogin() {
+  const m = location.pathname.match(/^\/w\/([a-z0-9]+)/);
+  if (S.live && S.bstate !== "idle") return go("studio");
+  if (m) return go("watch", m[1]);
+  go("home");
+}
+async function boot() {
+  applyLang();
+  Native.post("info", {});
+  // wait briefly for native info
+  for (let i = 0; i < 10 && Native.has() && !S.native; i++) await sleep(60);
+  if (S.native && S.native.lang && !store.get("langSet", false)) { /* keep user choice */ }
+  api("/api/config").then((c) => { if (c.ice) S.ice = c.ice; });
+  // restore an ongoing broadcast after app reload
+  const resume = store.get("live", null);
+  if (resume && S.native && S.native.broadcasting && Date.now() - resume.startedAt < 12 * 3600e3) { S.live = resume; S.bstate = "live"; }
+  if (S.token) {
+    const r = await api("/api/me");
+    if (r.user) { S.user = r.user; store.set("user", r.user); S.following = new Set(r.following || []); Native.post("auth", { token: S.token, user: r.user }); }
+    else if (r.error === "auth") { S.token = ""; store.set("token", ""); }
+  }
+  const m = location.pathname.match(/^\/w\/([a-z0-9]+)/);
+  if (!S.token && !store.get("guest", false) && !m) return go("auth");
+  afterLogin();
+}
+// persist the live job so the studio survives a WebView reload
+setInterval(() => store.set("live", S.live), 3000);
+window.addEventListener("beforeunload", () => store.set("live", S.live));
+window.Wahj = { go, S, Native, endLive, current: () => current }; // for native/debug
+boot();

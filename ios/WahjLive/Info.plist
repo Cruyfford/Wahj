@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key><string>ar</string>
+	<key>CFBundleDisplayName</key><string>وهج Live</string>
+	<key>CFBundleExecutable</key><string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+	<key>CFBundleName</key><string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key><string>APPL</string>
+	<key>CFBundleShortVersionString</key><string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key><string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>CFBundleLocalizations</key><array><string>ar</string><string>en</string></array>
+	<key>CFBundleURLTypes</key>
+	<array><dict><key>CFBundleURLSchemes</key><array><string>wahj</string></array></dict></array>
+	<key>LSRequiresIPhoneOS</key><true/>
+	<key>LSApplicationQueriesSchemes</key><array><string>shortcuts</string></array>
+	<key>UIBackgroundModes</key><array><string>audio</string></array>
+	<key>NSMicrophoneUsageDescription</key><string>يُستخدم الميكروفون لدمج صوتك مع صوت اللعبة أثناء البث.</string>
+	<key>NSCameraUsageDescription</key><string>تُستخدم الكاميرا لعرض وجهك أثناء البث.</string>
+	<key>NSLocalNetworkUsageDescription</key><string>يتواصل وهج مع إضافة البث على نفس الجهاز.</string>
+	<key>NSAppTransportSecurity</key><dict><key>NSAllowsLocalNetworking</key><true/></dict>
+	<key>UILaunchScreen</key><dict><key>UIColorName</key><string>LaunchBG</string></dict>
+	<key>UIStatusBarStyle</key><string>UIStatusBarStyleLightContent</string>
+	<key>UIViewControllerBasedStatusBarAppearance</key><true/>
+	<key>UIRequiresFullScreen</key><false/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array><string>UIInterfaceOrientationPortrait</string><string>UIInterfaceOrientationLandscapeLeft</string><string>UIInterfaceOrientationLandscapeRight</string></array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array><string>UIInterfaceOrientationPortrait</string><string>UIInterfaceOrientationPortraitUpsideDown</string><string>UIInterfaceOrientationLandscapeLeft</string><string>UIInterfaceOrientationLandscapeRight</string></array>
+	<key>WahjServerURL</key><string>https://wahj-live.workers.dev</string>
+	<key>WahjRev</key><string></string>
+</dict>
+</plist>

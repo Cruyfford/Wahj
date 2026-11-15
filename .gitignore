@@ -1,0 +1,11 @@
+.DS_Store
+ios/build/
+ios/*.xcodeproj
+ios/Payload/
+android/.gradle/
+android/build/
+android/app/build/
+server/node_modules/
+server/.wrangler/
+*.ipa
+*.apk
