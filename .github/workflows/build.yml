@@ -36,9 +36,15 @@ jobs:
             exit 1
           fi
           echo "::add-mask::$T"
-          if [ -z "$ACC" ]; then
+          set -o pipefail
+          ACC=$(printf '%s' "$ACC" | tr -d '[:space:]')
+          OK=$(curl -s -H "Authorization: Bearer $T" "https://api.cloudflare.com/client/v4/accounts/$ACC" | jq -r '.success // false')
+          if [ -z "$ACC" ] || [ "$OK" != "true" ]; then
+            [ -n "$ACC" ] && echo "::warning::CLOUDFLARE_ACCOUNT_ID غير صحيح — سيتم اكتشافه تلقائياً من التوكن"
             ACC=$(curl -s -H "Authorization: Bearer $T" "https://api.cloudflare.com/client/v4/accounts?per_page=5" | jq -r '.result[0].id // empty')
           fi
+          [ -z "$ACC" ] && { echo "::error::التوكن لا يملك صلاحية على أي حساب"; exit 1; }
+          echo "::add-mask::$ACC"
           export CLOUDFLARE_API_TOKEN="$T" CLOUDFLARE_ACCOUNT_ID="$ACC"
           W="npx --yes wrangler@4"
           $W deploy --var NATIVE_REV:${{ steps.rev.outputs.rev }} 2>&1 | tee deploy.log
