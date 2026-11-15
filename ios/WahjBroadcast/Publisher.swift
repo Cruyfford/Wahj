@@ -7,7 +7,7 @@ import WebRTC
 final class Publisher: NSObject, RTCPeerConnectionDelegate {
     let job: WahjJob
     let sfu: SFU
-    let audio = ReplayAudio()
+    let audio: ReplayAudio
     private let factory: RTCPeerConnectionFactory
     private let source: RTCVideoSource
     private let capturer: RTCVideoCapturer
@@ -27,8 +27,10 @@ final class Publisher: NSObject, RTCPeerConnectionDelegate {
         if let h264 = RTCDefaultVideoEncoderFactory.supportedCodecs().first(where: { $0.name == kRTCVideoCodecH264Name }) {
             enc.preferredCodec = h264
         }
-        audio.micEnabled = job.mic ?? true
-        factory = RTCPeerConnectionFactory(encoderFactory: enc, decoderFactory: RTCDefaultVideoDecoderFactory(), audioDevice: audio)
+        let dev = ReplayAudio()
+        dev.micEnabled = job.mic ?? true
+        audio = dev
+        factory = RTCPeerConnectionFactory(encoderFactory: enc, decoderFactory: RTCDefaultVideoDecoderFactory(), audioDevice: dev)
         source = factory.videoSource()
         capturer = RTCVideoCapturer(delegate: source)
         super.init()
