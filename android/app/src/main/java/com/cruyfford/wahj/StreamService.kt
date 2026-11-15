@@ -373,12 +373,13 @@ class StreamService : Service() {
         override fun onFrameCaptured(frame: VideoFrame) {
             if (hidden()) {
                 val w = frame.rotatedWidth; val h = frame.rotatedHeight
-                var b = blank
-                if (b == null || b.width != w || b.height != h) {
-                    b?.release()
-                    b = JavaI420Buffer.allocate(w, h)
-                    fill(b.dataY, 16); fill(b.dataU, 128); fill(b.dataV, 128)
-                    blank = b
+                val old = blank
+                val b: JavaI420Buffer = if (old != null && old.width == w && old.height == h) old else {
+                    old?.release()
+                    val nb = JavaI420Buffer.allocate(w, h)
+                    fill(nb.dataY, 16); fill(nb.dataU, 128); fill(nb.dataV, 128)
+                    blank = nb
+                    nb
                 }
                 b.retain()
                 val f = VideoFrame(b, 0, frame.timestampNs)

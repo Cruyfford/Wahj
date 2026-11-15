@@ -6,14 +6,29 @@ from playwright.async_api import async_playwright
 
 B = sys.argv[1].rstrip("/") if len(sys.argv) > 1 else os.environ["SERVER"].rstrip("/")
 
+UA = {"user-agent": "Mozilla/5.0 WahjE2E"}
+
+def wait_up():
+    import time
+    for i in range(40):
+        try:
+            r = urllib.request.urlopen(urllib.request.Request(B + "/health", headers=UA), timeout=10)
+            print("health:", r.read()[:200]); return
+        except Exception as e:
+            print("waiting for server…", e); time.sleep(5)
+    raise SystemExit("server not reachable")
+
 def post(path, body, token=None):
-    h = {"content-type": "application/json"}
+    h = {"content-type": "application/json", **UA}
     if token: h["authorization"] = "Bearer " + token
     r = urllib.request.Request(B + path, data=json.dumps(body).encode(), headers=h)
     try:
         return json.load(urllib.request.urlopen(r))
     except urllib.error.HTTPError as e:
-        return json.loads(e.read() or b"{}")
+        raw = e.read()
+        print("HTTP", e.code, path, raw[:300])
+        try: return json.loads(raw or b"{}")
+        except Exception: return {"error": "http_%d" % e.code}
 
 def account(handle):
     r = post("/api/login", {"handle": handle, "password": "wahj-e2e-123"})
@@ -44,6 +59,7 @@ STATS = """async () => {
 }"""
 
 async def main():
+    wait_up()
     host = account("wahje2ehost")
     async with async_playwright() as p:
         br = await p.chromium.launch(args=["--autoplay-policy=no-user-gesture-required", "--use-fake-ui-for-media-stream"])
@@ -55,7 +71,7 @@ async def main():
         print("publish:", res)
         if "error" in res: raise SystemExit("publish failed")
         room = res["room"]
-        st = json.load(urllib.request.urlopen(B + f"/api/room/{room}/state"))
+        st = json.load(urllib.request.urlopen(urllib.request.Request(B + f"/api/room/{room}/state", headers=UA)))
         print("room state publishers:", len(st["publishers"]))
         assert st["publishers"], "no publishers registered"
         b = await (await br.new_context()).new_page()
