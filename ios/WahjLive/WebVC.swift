@@ -111,6 +111,8 @@ final class WebVC: UIViewController, WKScriptMessageHandler, WKNavigationDelegat
             } else { pip.stop() }
         case "voice":
             voice.update(server: data["server"] as? String ?? server, publishers: data["publishers"] as? [[String: Any]] ?? [], me: data["me"] as? String ?? "")
+        case "launchGame":
+            launchGame(name: data["name"] as? String ?? "", appId: data["appId"] as? String ?? "")
         case "share":
             var items: [Any] = []
             if let t = data["text"] as? String, !t.isEmpty { items.append(t) }
@@ -128,6 +130,31 @@ final class WebVC: UIViewController, WKScriptMessageHandler, WKNavigationDelegat
             }
         default: break
         }
+    }
+
+    /// Opens the chosen game: known URL schemes first, then a guess from its name, then its App Store page (one tap to "Open").
+    private func launchGame(name: String, appId: String) {
+        let n = name.lowercased()
+        let known: [(String, [String])] = [
+            ("pubg", ["pubgmobile://", "pubgm://"]), ("free fire", ["freefire://", "freefiremax://"]), ("minecraft", ["minecraft://"]),
+            ("roblox", ["roblox://"]), ("clash royale", ["clashroyale://"]), ("clash of clans", ["clashofclans://"]), ("brawl stars", ["brawlstars://"]),
+            ("fortnite", ["com.epicgames.fortnite://", "fortnite://"]), ("call of duty", ["codm://", "callofduty://"]), ("efootball", ["efootball://", "pesmobile://"]),
+            ("fc ", ["fcmobile://", "fifamobile://"]), ("fifa", ["fifamobile://"]), ("genshin", ["yuanshengame://", "genshinimpact://"]), ("among us", ["amongus://"]),
+            ("subway", ["subwaysurfers://"]), ("8 ball", ["8ballpool://"]), ("candy crush", ["candycrushsaga://"]), ("pokémon go", ["pokemongo://"]),
+            ("geometry dash", ["geometrydash://"]), ("stumble guys", ["stumbleguys://"]), ("mobile legends", ["mobilelegends://"]), ("honkai", ["honkaistarrail://"]),
+        ]
+        var schemes = known.filter { n.contains($0.0) }.flatMap { $0.1 }
+        let slug = n.folding(options: .diacriticInsensitive, locale: nil).filter { $0.isLetter || $0.isNumber }
+        if slug.count >= 3 { schemes.append(slug + "://") }
+        func next(_ i: Int) {
+            if i >= schemes.count {
+                if !appId.isEmpty, let u = URL(string: "itms-apps://apps.apple.com/app/id" + appId) { UIApplication.shared.open(u) }
+                return
+            }
+            guard let u = URL(string: schemes[i]) else { return next(i + 1) }
+            UIApplication.shared.open(u, options: [:]) { ok in if !ok { next(i + 1) } }
+        }
+        next(0)
     }
 
     private func startBroadcast(_ data: [String: Any]) {

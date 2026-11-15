@@ -428,6 +428,7 @@ const T = {
     focusSteps: "١. افتح تطبيق «الاختصارات» ← «الأتمتة» ← «أتمتة جديدة»<br>٢. اختر «تطبيق» ← وهج ← «عند الفتح»<br>٣. اختر «تشغيل فوري»<br>٤. أضف إجراء «تعيين التركيز» ← «عدم الإزعاج» ← تشغيل<br><br>الآن كل مرة تفتح وهج يتفعّل عدم الإزعاج تلقائياً ✓",
     openShortcuts: "فتح الاختصارات", errs: { bad_handle: "اسم المستخدم: ٣–٢٠ حرفاً إنجليزياً أو أرقام", weak_password: "كلمة المرور ٦ أحرف على الأقل", taken: "الاسم محجوز", bad_login: "بيانات الدخول غير صحيحة", rate: "محاولات كثيرة، انتظر قليلاً", net: "تعذّر الاتصال", auth: "سجّل الدخول أولاً", not_invited: "لم تتم دعوتك", login: "سجّل الدخول للمشاركة", slow: "انتظر لحظة", guests_full: "اكتمل عدد الضيوف (٣)", bad_email: "البريد الإلكتروني غير صحيح", email_taken: "هذا البريد مسجّل مسبقاً", bad_code: "الرمز غير صحيح أو منتهي", mail_off: "إرسال البريد غير مفعّل في السيرفر بعد", bad_link: "الرابط غير صحيح", bad_old: "كلمة المرور الحالية غير صحيحة", bad_image: "الصورة غير مدعومة", fx_off: "البثّاث أوقف المؤثرات", ch_off: "البثّاث أوقف التحديات", co_off: "البثّاث لا يقبل طلبات البث المشترك" },
     sentFx: "أرسل", hypeTrain: "قطار الحماس 🚀", latency: "تأخير", guestsN: "ضيوف", layoutSplit: "شاشة مقسومة", layoutFocus: "تركيز",
+    autoLaunch: "افتح اللعبة تلقائياً", autoLaunchD: "بعد بدء البث ينتقل وهج إلى اللعبة مباشرة", openingGame: "جارٍ فتح اللعبة…",
     recSave: "حفظ البث على السيرفر", recSaveD: "يُسجَّل بثك ويمكن إعادة مشاهدته من ملفك", recordings: "التسجيلات", noRecs: "لا توجد تسجيلات", replay: "إعادة مشاهدة", delRec: "حذف التسجيل", delRecQ: "حذف هذا التسجيل نهائياً؟",
     delAllRecs: "حذف كل التسجيلات", delAllQ: "حذف كل تسجيلاتك نهائياً؟", storage: "المساحة المستخدمة", recOff: "حفظ البثوث غير مفعّل في السيرفر", recording: "يتم التسجيل", recFull: "مساحة التسجيلات ممتلئة",
     settingsT: "الإعدادات", secAccount: "الحساب", secStream: "إعدادات البث الافتراضية", secRoom: "قواعد غرفتي", secWatch: "المشاهدة", secNotif: "الإشعارات", secApp: "التطبيق", secAbout: "حول",
@@ -475,6 +476,7 @@ const T = {
     focusSteps: "1. Open Shortcuts → Automation → New Automation<br>2. Choose App → Wahj → Is Opened<br>3. Choose Run Immediately<br>4. Add action Set Focus → Do Not Disturb → On<br><br>Now Do Not Disturb turns on automatically every time you open Wahj ✓",
     openShortcuts: "Open Shortcuts", errs: { bad_handle: "Username: 3–20 latin letters/digits", weak_password: "Password needs 6+ characters", taken: "Username taken", bad_login: "Wrong username or password", rate: "Too many attempts, wait a bit", net: "Connection failed", auth: "Sign in first", not_invited: "You were not invited", login: "Sign in to take part", slow: "Slow down a moment", guests_full: "Guest slots are full (3)", bad_email: "Invalid email address", email_taken: "Email already registered", bad_code: "Wrong or expired code", mail_off: "Email sending isn't enabled on the server yet", bad_link: "Invalid link", bad_old: "Current password is wrong", bad_image: "Unsupported image", fx_off: "The streamer turned effects off", ch_off: "The streamer turned challenges off", co_off: "The streamer isn't accepting co-stream requests" },
     sentFx: "sent", hypeTrain: "HYPE TRAIN 🚀", latency: "Delay", guestsN: "guests", layoutSplit: "Split screen", layoutFocus: "Focus",
+    autoLaunch: "Open the game automatically", autoLaunchD: "When the stream starts, Wahj switches straight to the game", openingGame: "Opening the game…",
     recSave: "Save streams on the server", recSaveD: "Your stream is recorded and can be replayed from your profile", recordings: "Recordings", noRecs: "No recordings", replay: "Replay", delRec: "Delete recording", delRecQ: "Delete this recording permanently?",
     delAllRecs: "Delete all recordings", delAllQ: "Delete all your recordings permanently?", storage: "Storage used", recOff: "Stream saving isn't enabled on the server", recording: "Recording", recFull: "Recording storage is full",
     settingsT: "Settings", secAccount: "Account", secStream: "Default stream settings", secRoom: "My room rules", secWatch: "Watching", secNotif: "Notifications", secApp: "App", secAbout: "About",
@@ -1583,7 +1585,7 @@ function shareLink(url, text) {
 VIEWS.golive = (root, arg = {}) => {
   if (!S.token) { toast(terr("auth")); return go("auth"); }
   const joining = !!arg.joinRoom;
-  const cfg = Object.assign({ title: "", game: "", gameIcon: "", cat: "action", quality: "720", fps: 30, mic: true, privacy: { dnd: true, callGuard: true, bannerGuard: true } }, store.get("golive", {}));
+  const cfg = Object.assign({ title: "", game: "", gameIcon: "", gameId: "", gamePkg: "", autoLaunch: true, cat: "action", quality: "720", fps: 30, mic: true, privacy: { dnd: true, callGuard: true, bannerGuard: true } }, store.get("golive", {}));
   cfg.privacy = Object.assign({ dnd: true, callGuard: true, bannerGuard: true }, cfg.privacy || {});
   const nat = Native.has();
   const webCap = !nat && navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia && !/iphone|ipad|android/i.test(navigator.userAgent);
@@ -1600,6 +1602,7 @@ VIEWS.golive = (root, arg = {}) => {
     </div>
     <div class="tile" style="padding:4px 14px;margin-top:14px">
       <div class="tg"><div class="ic">${ic("mic")}</div><div class="tx"><b>${t("mic")}</b><span>${t("micD")}</span></div>${sw("mic", cfg.mic)}</div>
+      ${nat && !joining ? `<div class="tg"><div class="ic">${ic("game")}</div><div class="tx"><b>${t("autoLaunch")}</b><span>${t("autoLaunchD")}</span></div>${sw("autoLaunch", cfg.autoLaunch)}</div>` : ""}
     </div>
     <div class="h2">${ic("shield")} ${t("privacy")}</div>
     <div class="tile" style="padding:4px 14px">
@@ -1621,14 +1624,18 @@ VIEWS.golive = (root, arg = {}) => {
         `<div style="flex:1;min-width:0"><b style="display:block;font-size:16px">${esc(cfg.game || t("pickGame"))}</b><span class="mut small">${cfg.game ? t("change") : t("searchGames")}</span></div><span class="mut">›</span>`;
     };
     showGame();
-    $("#gg").onclick = () => gamePicker((g) => { cfg.game = g.name || ""; cfg.gameIcon = g.icon || ""; cfg.gameIconData = g.iconData || ""; showGame(); });
+    $("#gg").onclick = () => gamePicker((g) => {
+      cfg.game = g.name || ""; cfg.gameIcon = g.icon || ""; cfg.gameIconData = g.iconData || ""; cfg.gameId = g.id || ""; cfg.gamePkg = g.pkg || "";
+      if (!cfg.gamePkg && Games.phone) { const n = (x) => x.toLowerCase().replace(/[^a-z0-9\u0600-\u06ff]/g, ""); const m = Games.phone.find((p) => n(p.name) && (n(p.name).includes(n(g.name).slice(0, 8)) || n(g.name).includes(n(p.name)))); if (m) cfg.gamePkg = m.pkg; }
+      showGame();
+    });
     $$("#gc .chip").forEach((b) => (b.onclick = () => { cfg.cat = b.dataset.c; $$("#gc .chip").forEach((x) => x.classList.toggle("on", x === b)); }));
   }
   $$("#gq button").forEach((b) => (b.onclick = () => { cfg.quality = b.dataset.q; $$("#gq button").forEach((x) => x.classList.toggle("on", x === b)); }));
   $$("#gf button").forEach((b) => (b.onclick = () => { cfg.fps = +b.dataset.f; $$("#gf button").forEach((x) => x.classList.toggle("on", x === b)); }));
   $$("[data-sw]").forEach((s) => (s.onclick = () => {
     const k = s.dataset.sw; s.classList.toggle("on"); const on = s.classList.contains("on"); haptic();
-    if (k === "mic") cfg.mic = on; else cfg.privacy[k] = on;
+    if (k === "mic") cfg.mic = on; else if (k === "autoLaunch") cfg.autoLaunch = on; else cfg.privacy[k] = on;
     if (k === "dnd" && on && isAndroid()) Native.post("perm", { kind: "dnd" });
   }));
   const fg = $("#gfg"); if (fg) fg.onclick = focusGuide;
@@ -1640,7 +1647,7 @@ VIEWS.golive = (root, arg = {}) => {
     const r = await api("/api/go-live", { ...cfg, gameIconData: cfg.gameIconData || undefined, joinRoom: arg.joinRoom, device: S.native && S.native.device });
     b.disabled = false;
     if (r.error) return toast(terr(r.error));
-    S.live = { ...r.job, title: cfg.title, game: cfg.game, startedAt: Date.now() };
+    S.live = { ...r.job, title: cfg.title, game: cfg.game, startedAt: Date.now(), launch: !joining && cfg.autoLaunch && cfg.game ? { name: cfg.game, pkg: cfg.gamePkg, appId: cfg.gameId } : null };
     haptic("success");
     if (nat) {
       S.bstate = "starting";
@@ -1769,6 +1776,11 @@ VIEWS.studio = (root) => {
   const off = Native.on((e) => {
     if (e.type === "broadcast") {
       setState(e.state);
+      if (e.state === "live" && job.launch && !job.launched) {
+        job.launched = true; S.live.launched = true;
+        toast(t("openingGame"));
+        setTimeout(() => Native.post("launchGame", job.launch), 900);
+      }
       if (e.error) toast(esc(e.error), 4000);
       if (e.state === "stopped") { api("/api/end", { room: job.room, pub: job.pub }); S.live = null; setTimeout(() => current === "studio" && go("home"), 1500); }
     }
@@ -1848,6 +1860,12 @@ function profileHtml(r, self) {
   </div>
   <div id="pact"></div>
   ${r.games.length ? `<div class="h2">${ic("game")} ${t("gamesPlayed")}</div><div class="chips">${r.games.map((g) => `<span class="chip gchip">${g.icon ? gIcon(g.icon) : "🎮"}<span>${esc(g.name)}</span><b>${g.n}</b></span>`).join("")}</div>` : ""}
+  ${(() => { const recs = r.streams.filter((s) => s.rec && !s.live); return recs.length ? `<div class="h2">${ic("live")} ${t("recordings")}</div><div class="grid">${recs.map((s) => `<div class="card" data-id="${s.id}" data-rec="1">
+      <div class="th land">${s.gameIcon ? `<div class="thbg" style="background-image:url('${esc(s.gameIcon)}')"></div>` : `<div class="ph">🎮</div>`}<img src="/api/thumb/${s.id}" onerror="this.remove()" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+        <div style="position:absolute;inset:0;display:grid;place-items:center"><div style="width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.55);display:grid;place-items:center;font-size:18px;backdrop-filter:blur(8px)">▶</div></div>
+        <span class="badge" style="position:absolute;bottom:8px;inset-inline-end:8px">${fmtDur(s.rec.dur * 1000)}</span>
+        ${self ? `<button class="mini" data-del="${s.id}" style="position:absolute;top:8px;inset-inline-end:8px;background:rgba(0,0,0,.55);color:#ff7b88">${ic("x")}</button>` : ""}</div>
+      <div class="meta"><div class="tt">${esc(s.title)}</div><div class="small mut" style="margin-top:4px">${s.game ? esc(s.game) + " · " : ""}${new Date(s.started).toLocaleDateString(S.lang)}</div></div></div>`).join("")}</div>` : ""; })()}
   <div class="h2">${t("past")}</div>
   <div class="sl">${r.streams.length ? r.streams.map((s) => `<div class="sm" data-id="${s.id}" data-rec="${s.rec && !s.live ? 1 : ""}" style="align-items:center">${s.gameIcon ? gIcon(s.gameIcon, "gi", 40) : `<div class="ph2" style="width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--card2)">🎮</div>`}
     <div class="tx"><b>${esc(s.title)}</b><br><span class="mut small">${esc(s.game || "")} · ${new Date(s.started).toLocaleDateString(S.lang)} · ${t("peak")} ${s.peak}</span></div>${s.live ? '<span class="badge red">LIVE</span>' : s.rec ? `<span class="badge" style="background:var(--grad)">▶ ${fmtDur(s.rec.dur * 1000)}</span>${self ? `<button class="mini" data-del="${s.id}" style="color:#ff7b88">${ic("x")}</button>` : ""}` : ""}</div>`).join("") : `<p class="mut small" style="text-align:center;padding:16px">${t("noPast")}</p>`}</div>`;

@@ -210,6 +210,16 @@ class MainActivity : AppCompatActivity() {
                 try { installedGames().forEach { list.put(it) } } catch (_: Exception) {}
                 emit(JSONObject().put("type", "games").put("list", list))
             }.start()
+            "launchGame" -> {
+                var pkg = d.optString("pkg")
+                if (pkg.isBlank()) {
+                    val want = d.optString("name").lowercase().filter { it.isLetterOrDigit() }
+                    pkg = try { installedGames().firstOrNull { val n = it.optString("name").lowercase().filter { c -> c.isLetterOrDigit() }; n.isNotEmpty() && want.isNotEmpty() && (n.contains(want.take(8)) || want.contains(n)) }?.optString("pkg") ?: "" } catch (_: Exception) { "" }
+                }
+                val i = if (pkg.isNotBlank()) packageManager.getLaunchIntentForPackage(pkg) else null
+                if (i != null) startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                else if (d.optString("name").isNotBlank()) runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://search?q=" + Uri.encode(d.optString("name")) + "&c=apps"))) }
+            }
             "share" -> {
                 val t = listOf(d.optString("text"), d.optString("url")).filter { it.isNotBlank() }.joinToString("\n")
                 startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, t), null))
