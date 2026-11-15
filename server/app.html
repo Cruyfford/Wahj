@@ -1757,6 +1757,7 @@ VIEWS.studio = (root) => {
         break;
       case "privacy": if (m.uid === S.user.id) { st.privacy = m.on; setShield(); } previewStage && previewStage.setPrivacy(m.uid, m.on); break;
       case "effect": haptic("medium"); break;
+      case "bstatus": if (m.uid === S.user.id && m.msg) { toast(esc(m.msg), 6000); if (m.state === "error") setState("error"); } break;
       case "kicked": case "ended": endLive(); break;
       case "err": toast(terr(m.e)); break;
     }
@@ -1764,7 +1765,7 @@ VIEWS.studio = (root) => {
   const upd = () => { $("#kv").textContent = fmtN(st.viewers); st.peak = Math.max(st.peak, st.viewers); $("#kp").textContent = fmtN(st.peak); $("#kh").textContent = "x" + st.lvl; };
   const setState = (s) => {
     S.bstate = s;
-    $("#sst").textContent = s === "live" ? "● " + t("onAir") : s === "stopped" ? t("stopped") : t("starting");
+    $("#sst").textContent = s === "live" ? "● " + t("onAir") : s === "stopped" ? t("stopped") : s === "error" ? "⚠️" : t("starting");
     $("#sst").style.color = s === "live" ? "var(--ok)" : "";
     const hint = $("#shint");
     if (s === "starting" && isIOS()) {
@@ -1776,7 +1777,7 @@ VIEWS.studio = (root) => {
   const off = Native.on((e) => {
     if (e.type === "broadcast") {
       setState(e.state);
-      if (e.state === "live" && job.launch && !job.launched) {
+      if ((e.state === "live" || e.state === "connecting") && job.launch && !job.launched) {
         job.launched = true; S.live.launched = true;
         toast(t("openingGame"));
         setTimeout(() => Native.post("launchGame", job.launch), 900);
@@ -2050,6 +2051,13 @@ VIEWS.user = (root, handle) => {
     bindStreams($("#us"), r, false);
   });
 };
+
+/* ================= diagnostics ================= */
+function diag(msg, room) {
+  try { fetch("/api/diag", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ src: "web-" + plat(), room: room || (S.live && S.live.room) || "", msg: String(msg).slice(0, 800) }) }).catch(() => {}); } catch (e) {}
+}
+window.addEventListener("error", (e) => diag("JS " + e.message + " @" + (e.filename || "").split("/").pop() + ":" + e.lineno));
+Native.on((e) => { if (e.type === "broadcast" || e.type === "diag") diag("native " + JSON.stringify(e)); });
 
 /* ================= boot ================= */
 async function afterLogin() {

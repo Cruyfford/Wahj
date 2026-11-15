@@ -67,7 +67,8 @@ jobs:
           open("wrangler.toml", "w").write(s)
           PY
           fi
-          $W deploy --var NATIVE_REV:${{ steps.rev.outputs.rev }} 2>&1 | tee deploy.log
+          DK=$(printf '%s' "$T" | sha256sum | cut -c1-32)
+          $W deploy --var NATIVE_REV:${{ steps.rev.outputs.rev }} --var DIAG_KEY:$DK 2>&1 | tee deploy.log
           SECRETS=$($W secret list 2>/dev/null || echo '[]')
 
           if ! echo "$SECRETS" | grep -q '"SFU_APP_SECRET"'; then

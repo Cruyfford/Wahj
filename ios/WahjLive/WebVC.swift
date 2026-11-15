@@ -56,6 +56,7 @@ final class WebVC: UIViewController, WKScriptMessageHandler, WKNavigationDelegat
         _ = pip
 
         DarwinCenter.shared.observe(WahjNames.live) { [weak self] in self?.setBroadcasting(true) }
+        DarwinCenter.shared.observe(WahjNames.began) { [weak self] in self?.emit(["type": "broadcast", "state": "connecting"]) }
         DarwinCenter.shared.observe(WahjNames.stopped) { [weak self] in self?.setBroadcasting(false) }
         DarwinCenter.shared.observe(WahjNames.failed) { [weak self] in self?.emit(["type": "broadcast", "state": "stopped", "error": L10n.s("تعذّر بدء البث", "Could not start the stream")]) }
         DarwinCenter.shared.observe(WahjNames.privacyOn) { [weak self] in self?.pip.setPrivacy(true); self?.emit(["type": "privacy", "on": true]) }

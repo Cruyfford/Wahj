@@ -121,6 +121,17 @@ export default {
       }
       if (p === "/api/ice") return J({ iceServers: await iceServers(env) });
 
+      // ---- diagnostics ----
+      if (p === "/api/diag" && req.method === "POST") {
+        const b = await req.json().catch(() => ({}));
+        await hub(env, "/diag-add", { ip: req.headers.get("cf-connecting-ip") || "", ua: (req.headers.get("user-agent") || "").slice(0, 80),
+          src: String(b.src || "").slice(0, 20), room: String(b.room || "").slice(0, 20), msg: String(b.msg || "").slice(0, 800) });
+        return J({ ok: true });
+      }
+      if (p === "/api/diag" && env.DIAG_KEY && url.searchParams.get("key") === env.DIAG_KEY) {
+        return J(await hub(env, "/diag-get", { n: +url.searchParams.get("n") || 200 }));
+      }
+
       // ---- recordings (R2, HLS fMP4) ----
       let mr = p.match(/^\/api\/rec\/([a-z0-9]+)\/(init|seg)$/);
       if (mr && req.method === "POST") {
@@ -310,7 +321,7 @@ export default {
       }
 
       // ---- rooms ----
-      m = p.match(/^\/api\/room\/([a-z0-9]+)\/(ws|publish|privacy|state)$/);
+      m = p.match(/^\/api\/room\/([a-z0-9]+)\/(ws|publish|privacy|state|status)$/);
       if (m) {
         const room = m[1];
         if (m[2] === "ws") {
@@ -387,6 +398,7 @@ export class Hub {
     this.sql.exec("CREATE TABLE IF NOT EXISTS avatars(uid TEXT PRIMARY KEY, data BLOB)");
     this.sql.exec(`CREATE TABLE IF NOT EXISTS recs(id TEXT PRIMARY KEY, uid TEXT, title TEXT, game TEXT, gameIcon TEXT, started INTEGER,
       ended INTEGER DEFAULT 0, dur REAL DEFAULT 0, bytes INTEGER DEFAULT 0, segs INTEGER DEFAULT 0, init INTEGER DEFAULT 0, deleted INTEGER DEFAULT 0, w INTEGER DEFAULT 0, h INTEGER DEFAULT 0)`);
+    this.sql.exec("CREATE TABLE IF NOT EXISTS diag(id INTEGER PRIMARY KEY AUTOINCREMENT, t INTEGER, ip TEXT, ua TEXT, src TEXT, room TEXT, msg TEXT)");
     this.sql.exec("CREATE TABLE IF NOT EXISTS recsegs(rec TEXT, n INTEGER, dur REAL, bytes INTEGER, PRIMARY KEY(rec, n))");
     try { this.sql.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_email ON users(email)"); } catch (e) {}
   }
@@ -722,6 +734,16 @@ export class Hub {
       }
       return J2({ ok: true, ids: rows.map((r) => r.id) });
     }
+    if (p === "/diag-add") {
+      if (this.limited("dg:" + b.ip, 300, 600000)) return J2({ ok: false });
+      this.sql.exec("INSERT INTO diag(t, ip, ua, src, room, msg) VALUES(?,?,?,?,?,?)", t, b.ip, b.ua, b.src, b.room, b.msg);
+      this.sql.exec("DELETE FROM diag WHERE id <= (SELECT MAX(id) - 1000 FROM diag)");
+      return J2({ ok: true });
+    }
+    if (p === "/diag-get") {
+      return J2({ logs: this.all("SELECT * FROM diag ORDER BY id DESC LIMIT ?", Math.min(1000, b.n | 0 || 200)).reverse()
+        .map((r) => ({ ...r, ip: (r.ip || "").replace(/[.:][^.:]*$/, ".x") })) });
+    }
     if (p === "/viewers") {
       this.sql.exec("UPDATE streams SET viewers=?, peak=MAX(peak,?), guests=? WHERE id=?", b.n | 0, b.n | 0, b.guests | 0, String(b.room));
       return J2({ ok: true });
@@ -897,6 +919,10 @@ export class Room {
       await this.state.storage.put("pubs", this.pubs);
       this.bcast({ t: "publishers", list: this.publishers() });
       this.state.storage.setAlarm(now() + 30000);
+      return R({ ok: true });
+    }
+    if (p === "/status") {
+      this.bcast({ t: "bstatus", uid: body.uid, state: String(body.state || "").slice(0, 20), msg: String(body.msg || "").slice(0, 300) });
       return R({ ok: true });
     }
     if (p === "/privacy") {

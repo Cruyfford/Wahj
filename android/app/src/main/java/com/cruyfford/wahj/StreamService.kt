@@ -196,6 +196,7 @@ class StreamService : Service() {
         cap.startCapture(w, h, fps)
         startPlaybackCapture(cap.mediaProjection)
         audioSource = f.createAudioSource(MediaConstraints())
+        Bus.emit("diag", "msg" to "android capture ${w}x$h@$fps sdk=${Build.VERSION.SDK_INT} rec=${job.optBoolean("rec")}")
         publish()
         Bus.emit("broadcast", "state" to "live")
     }
@@ -433,6 +434,7 @@ class StreamService : Service() {
 
     // ---------------- teardown ----------------
     private fun fail(msg: String) {
+        Bus.emit("diag", "msg" to "android fail: $msg")
         Bus.emit("broadcast", "state" to "stopped", "error" to msg)
         main.post { stopAll(msg, notify = false) }
     }

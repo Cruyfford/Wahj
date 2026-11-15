@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
         StreamService.projectionData = res.data
         val i = Intent(this, StreamService::class.java).setAction(StreamService.ACTION_START).putExtra("job", job.toString())
         ContextCompat.startForegroundService(this, i)
-        emit(JSONObject().put("type", "broadcast").put("state", "starting"))
+        emit(JSONObject().put("type", "broadcast").put("state", "connecting"))
     }
 
     private val perms = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { _ ->

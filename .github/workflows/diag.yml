@@ -1,0 +1,21 @@
+name: Read diagnostics
+
+on:
+  workflow_dispatch:
+    inputs:
+      n:
+        description: lines
+        default: "200"
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch logs
+        env:
+          RAW: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          T=$(printf '%s' "$RAW" | tr -d '[:space:]')
+          DK=$(printf '%s' "$T" | sha256sum | cut -c1-32)
+          curl -s "https://wahj-live.cruyfford4488.workers.dev/api/diag?n=${{ inputs.n }}&key=$DK" \
+            | jq -r '.logs[] | "\(.t/1000|strftime("%H:%M:%S")) [\(.src)] \(.room) \(.msg)"'

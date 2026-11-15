@@ -9,6 +9,7 @@ enum WahjNames {
     static let privacyOn = "com.cruyfford.wahj.privacy.on"
     static let privacyOff = "com.cruyfford.wahj.privacy.off"
     static let failed = "com.cruyfford.wahj.failed"
+    static let began = "com.cruyfford.wahj.began"
     static let appGroup = "group.com.cruyfford.wahj"
     static let localPort: UInt16 = 47821
 }
@@ -143,6 +144,24 @@ final class DarwinCenter {
             me.lock.lock(); let h = me.handlers[key]; me.lock.unlock()
             DispatchQueue.main.async { h?() }
         }, name as CFString, nil, .deliverImmediately)
+    }
+}
+
+/// Sends a diagnostic line to the server (fire and forget).
+enum Diag {
+    static var room = ""
+    static var server = WahjConfig.serverURL
+    static func log(_ msg: String, src: String = "ios-ext") {
+        NSLog("[wahj] \(msg)")
+        guard !server.isEmpty else { return }
+        let mem = memoryMB()
+        Task { _ = try? await Http.json(server + "/api/diag", method: "POST", body: ["src": src, "room": room, "msg": msg + " [mem \(mem)MB]"]) }
+    }
+    static func memoryMB() -> Int {
+        var info = task_vm_info_data_t()
+        var count = mach_msg_type_number_t(MemoryLayout<task_vm_info_data_t>.size / MemoryLayout<natural_t>.size)
+        let kr = withUnsafeMutablePointer(to: &info) { $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) { task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count) } }
+        return kr == KERN_SUCCESS ? Int(info.phys_footprint / 1_048_576) : -1
     }
 }
 

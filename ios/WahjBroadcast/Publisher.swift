@@ -40,6 +40,7 @@ final class Publisher: NSObject, RTCPeerConnectionDelegate {
 
     func start() async throws {
         let ice = await sfu.iceServers()
+        Diag.log("ice servers=\(ice.count)")
         let cfg = RTCConfiguration()
         cfg.iceServers = ice.compactMap { s in
             let urls: [String] = (s["urls"] as? [String]) ?? ((s["urls"] as? String).map { [$0] } ?? [])
@@ -79,9 +80,11 @@ final class Publisher: NSObject, RTCPeerConnectionDelegate {
         try await setLocal(pc, offer)
         await waitGathering(pc)
         guard let local = pc.localDescription else { throw WahjError.bad("no local sdp") }
+        Diag.log("offer ready gathering=\(pc.iceGatheringState.rawValue) mids=\(vtx.mid),\(atx.mid)")
 
         let sid = try await sfu.newSession()
         sessionId = sid
+        Diag.log("sfu session ok")
         let suffix = String(UUID().uuidString.prefix(6)).lowercased()
         let vName = "screen-" + suffix, aName = "audio-" + suffix
         let r = try await sfu.tracks(sid, [
@@ -95,6 +98,7 @@ final class Publisher: NSObject, RTCPeerConnectionDelegate {
             throw WahjError.bad("SFU: \(r)")
         }
         try await setRemote(pc, RTCSessionDescription(type: .answer, sdp: sdp))
+        Diag.log("answer applied")
         try await Http.json(job.serverURL + "/api/room/\(job.room)/publish", method: "POST", body: [
             "sessionId": sid,
             "tracks": [
@@ -180,6 +184,7 @@ final class Publisher: NSObject, RTCPeerConnectionDelegate {
     func peerConnectionShouldNegotiate(_ peerConnection: RTCPeerConnection) {}
     func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceConnectionState) {
         guard peerConnection === pc else { return }
+        Diag.log("ice state \(newState.rawValue)")
         switch newState {
         case .failed: restart()
         case .disconnected:

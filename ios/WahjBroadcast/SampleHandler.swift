@@ -18,7 +18,10 @@ class SampleHandler: RPBroadcastSampleHandler, CXCallObserverDelegate {
     private let work = DispatchQueue(label: "wahj.thumb")
     private var finished = false
 
+    private var frames = 0
     override func broadcastStarted(withSetupInfo setupInfo: [String: NSObject]?) {
+        DarwinCenter.post(WahjNames.began)
+        Diag.log("broadcastStarted ios=\(UIDevice.current.systemVersion)")
         DarwinCenter.shared.observe(WahjNames.stopRequest) { [weak self] in
             self?.finish(L10n.s("تم إيقاف البث من تطبيق وهج", "Stopped from the Wahj app"))
         }
@@ -29,14 +32,19 @@ class SampleHandler: RPBroadcastSampleHandler, CXCallObserverDelegate {
 
     private func boot() async {
         guard let job = await JobLoader.load() else {
+            Diag.log("no job found")
             finish(L10n.s("افتح تطبيق وهج واضغط «ابدأ البث المباشر» أولاً", "Open Wahj and tap “Start live stream” first"))
             return
         }
         self.job = job
+        Diag.room = job.room
+        Diag.server = job.serverURL
+        Diag.log("job loaded role=\(job.role) q=\(job.quality ?? "") fps=\(job.fps ?? 0) rec=\(job.rec ?? false) server=\(job.serverURL)")
         guardian.callGuard = job.privacy?["callGuard"] ?? true
         guardian.bannerGuard = job.privacy?["bannerGuard"] ?? true
         let p = Publisher(job: job)
-        p.onFatal = { [weak self] m in self?.finish(m) }
+        p.onFatal = { [weak self] m in Diag.log("fatal: \(m)"); self?.finish(m) }
+        p.onState = { s in Diag.log("publisher state: \(s)") }
         do {
             if job.rec == true {
                 let r = SegmentRecorder(job: job)
@@ -49,6 +57,9 @@ class SampleHandler: RPBroadcastSampleHandler, CXCallObserverDelegate {
             startThumbs()
             if callObserver.calls.contains(where: { !$0.hasEnded }) { guardian.setCall(true) }
         } catch {
+            Diag.log("start failed: \(error.localizedDescription) | \(error)")
+            _ = try? await Http.json(job.serverURL + "/api/room/\(job.room)/status", method: "POST",
+                                     body: ["state": "error", "msg": "iPhone: " + error.localizedDescription], headers: ["x-pub": job.pub])
             DarwinCenter.post(WahjNames.failed)
             finish(L10n.s("تعذّر الاتصال بالسيرفر: ", "Could not connect: ") + error.localizedDescription)
         }
@@ -59,6 +70,8 @@ class SampleHandler: RPBroadcastSampleHandler, CXCallObserverDelegate {
         switch type {
         case .video:
             guard let pb = CMSampleBufferGetImageBuffer(sb) else { return }
+            frames += 1
+            if frames == 1 || frames % 900 == 0 { Diag.log("video frames=\(frames) size=\(CVPixelBufferGetWidth(pb))x\(CVPixelBufferGetHeight(pb)) fmt=\(CVPixelBufferGetPixelFormatType(pb))") }
             let (rotation, edge, cgo) = Self.orientation(sb)
             let time = CMSampleBufferGetPresentationTimeStamp(sb)
             if guardian.hideAll {
@@ -85,6 +98,7 @@ class SampleHandler: RPBroadcastSampleHandler, CXCallObserverDelegate {
     override func broadcastResumed() { pub?.audio.muted = false }
 
     override func broadcastFinished() {
+        Diag.log("broadcastFinished frames=\(frames)")
         cleanup()
     }
 
@@ -106,6 +120,7 @@ class SampleHandler: RPBroadcastSampleHandler, CXCallObserverDelegate {
     }
 
     private func finish(_ message: String) {
+        Diag.log("finish: \(message)")
         cleanup()
         finishBroadcastWithError(NSError(domain: "Wahj", code: 1, userInfo: [NSLocalizedDescriptionKey: message]))
     }
