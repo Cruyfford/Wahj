@@ -145,6 +145,14 @@ export default {
       }
 
       // ---- game catalog (App Store icons) ----
+      if (p === "/api/games/debug") {
+        const out = {};
+        for (const [k, u] of [["search", "https://itunes.apple.com/search?entity=software&limit=3&country=us&term=pubg"], ["rss", "https://itunes.apple.com/us/rss/topfreeapplications/limit=3/genre=6014/json"], ["rss2", "https://rss.marketingtools.apple.com/api/v2/us/apps/top-free/10/apps.json"]]) {
+          try { const r = await fetch(u, { headers: { "user-agent": "Mozilla/5.0", accept: "application/json" } }); out[k] = { status: r.status, ct: r.headers.get("content-type"), body: (await r.text()).slice(0, 300) }; }
+          catch (e) { out[k] = { err: String(e) }; }
+        }
+        return J(out);
+      }
       if (p === "/api/games/search" || p === "/api/games/top") {
         const cache = caches.default;
         const key = new Request(url.toString().toLowerCase(), { method: "GET" });

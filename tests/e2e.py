@@ -67,6 +67,7 @@ async def main():
     srch = get("/api/games/search?q=pubg")["items"]
     print("games/search pubg:", [g["name"] for g in srch[:3]])
     print("speed/ping:", get("/api/speed/ping"))
+    if not (top or srch): print("DEBUG", json.dumps(get("/api/games/debug"), ensure_ascii=False)[:1500])
     assert top or srch, "game catalog empty"
     host = account("wahje2ehost")
     async with async_playwright() as p:
