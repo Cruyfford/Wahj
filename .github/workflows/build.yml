@@ -32,6 +32,9 @@ jobs:
           TURN_ID: ${{ secrets.TURN_KEY_ID }}
           TURN_TOKEN: ${{ secrets.TURN_KEY_TOKEN }}
           RESEND: ${{ secrets.RESEND_API_KEY }}
+          PP_ID: ${{ secrets.PAYPAL_CLIENT_ID }}
+          PP_SECRET: ${{ secrets.PAYPAL_SECRET }}
+          PP_MODE: ${{ secrets.PAYPAL_MODE }}
           MAIL_FROM: ${{ secrets.MAIL_FROM }}
         run: |
           T=$(printf '%s' "$RAW" | tr -d '[:space:]')
@@ -101,6 +104,11 @@ jobs:
             fi
           fi
 
+          if [ -n "$PP_ID" ] && [ -n "$PP_SECRET" ]; then
+            printf '%s' "$PP_ID"     | $W secret put PAYPAL_CLIENT_ID
+            printf '%s' "$PP_SECRET" | $W secret put PAYPAL_SECRET
+            printf '%s' "${PP_MODE:-sandbox}" | $W secret put PAYPAL_MODE
+          fi
           if [ -n "$RESEND" ]; then
             printf '%s' "$RESEND" | $W secret put RESEND_API_KEY
             [ -n "$MAIL_FROM" ] && printf '%s' "$MAIL_FROM" | $W secret put MAIL_FROM

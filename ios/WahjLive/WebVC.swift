@@ -82,6 +82,7 @@ final class WebVC: UIViewController, WKScriptMessageHandler, WKNavigationDelegat
         // wahj://w/<room>
         let parts = url.pathComponents.filter { $0 != "/" }
         if url.host == "w", let room = parts.first { loadApp(path: "/w/" + room) }
+        if url.host == "wallet" { web.evaluateJavaScript("window.Wahj && Wahj.go('wallet')", completionHandler: nil) }
     }
 
     static func broadcastExtensionID() -> String? {

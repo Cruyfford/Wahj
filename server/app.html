@@ -321,6 +321,59 @@ svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-l
 .verdict{margin-top:14px;padding:14px;border-radius:18px;background:rgba(46,229,157,.1);border:1px solid rgba(46,229,157,.35);font-size:14px;line-height:1.7}
 .verdict.w{background:rgba(255,184,0,.1);border-color:rgba(255,184,0,.35)}
 .verdict.b{background:rgba(255,77,94,.1);border-color:rgba(255,77,94,.35)}
+
+/* ===== cosmetics ===== */
+.un{font-weight:800}
+.un-rainbow{background:linear-gradient(90deg,#ff4d4d,#ffb800,#2ee59d,#00d1ff,#7c5cff,#ff4d8d,#ff4d4d);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent!important;animation:unflow 3s linear infinite}
+.un-fire{background:linear-gradient(0deg,#ff3d00,#ff9100,#ffea00,#ff9100,#ff3d00);background-size:100% 300%;-webkit-background-clip:text;background-clip:text;color:transparent!important;animation:unfire 1.2s linear infinite;filter:drop-shadow(0 0 6px rgba(255,120,0,.7))}
+.un-neon{color:#7df9ff!important;text-shadow:0 0 6px #00e5ff,0 0 14px #00b8ff,0 0 24px #7c5cff;animation:unneon 1.6s ease-in-out infinite}
+.un-gold{background:linear-gradient(100deg,#b8860b 0%,#ffd700 30%,#fff6c2 45%,#ffd700 60%,#b8860b 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent!important;animation:unflow 2.2s linear infinite}
+.un-galaxy{background:linear-gradient(120deg,#7c5cff,#ff4dd8,#00d1ff,#2b1bff,#ff4dd8,#7c5cff);background-size:400% 400%;-webkit-background-clip:text;background-clip:text;color:transparent!important;animation:ungal 5s ease infinite;filter:drop-shadow(0 0 5px rgba(160,100,255,.7))}
+.un-ice{background:linear-gradient(90deg,#e0fbff,#7fe7ff,#ffffff,#7fe7ff,#e0fbff);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent!important;animation:unflow 2.6s linear infinite;filter:drop-shadow(0 0 5px rgba(127,231,255,.6))}
+@keyframes unflow{to{background-position:300% 0}}
+@keyframes unfire{to{background-position:0 300%}}
+@keyframes unneon{50%{text-shadow:0 0 3px #00e5ff,0 0 8px #00b8ff,0 0 12px #7c5cff;opacity:.85}}
+@keyframes ungal{50%{background-position:100% 50%}}
+.bdg{display:inline-flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;padding:1px 6px;border-radius:7px;margin-inline-end:5px;vertical-align:1px;line-height:1.5;white-space:nowrap}
+.bdg-vip{background:linear-gradient(120deg,#ffd700,#ff9a3d);color:#2b1600;box-shadow:0 0 10px rgba(255,200,0,.5)}
+.bdg-founder{background:linear-gradient(120deg,#7c5cff,#ff4d8d);color:#fff;box-shadow:0 0 10px rgba(255,77,141,.6)}
+.bdg-star,.bdg-flame,.bdg-diamond,.bdg-crown,.bdg-gamer{background:rgba(255,255,255,.12);font-size:12px;padding:0 4px}
+.frm{position:relative;border-radius:50%;flex:none}
+.frm::before{content:"";position:absolute;inset:-4px;border-radius:50%;z-index:0;animation:spin 3s linear infinite}
+.frm>.av{position:relative;z-index:1;box-shadow:0 0 0 3px var(--bg)}
+.frm-neon::before{background:conic-gradient(#00e5ff,#7c5cff,#00e5ff);filter:drop-shadow(0 0 6px #00e5ff)}
+.frm-gold::before{background:conic-gradient(#b8860b,#ffd700,#fff6c2,#ffd700,#b8860b)}
+.frm-fire::before{background:conic-gradient(#ff3d00,#ffea00,#ff9100,#ff3d00);filter:drop-shadow(0 0 8px #ff6a00)}
+.frm-rainbow::before{background:conic-gradient(#ff4d4d,#ffb800,#2ee59d,#00d1ff,#7c5cff,#ff4d8d,#ff4d4d)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.coin{display:inline-flex;align-items:center;gap:5px;font-weight:800}
+.coin i{width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff6c2,#ffd700 45%,#c08a00);box-shadow:inset 0 -2px 0 rgba(0,0,0,.2);display:inline-block}
+.wallet{border-radius:26px;padding:20px;background:linear-gradient(135deg,#2a1d5c,#5a1f4f 60%,#6b3a10);position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.12)}
+.wallet::after{content:"";position:absolute;inset:-40%;background:radial-gradient(circle,rgba(255,215,0,.18),transparent 55%);animation:spin 12s linear infinite}
+.wallet .big{font-size:42px;font-weight:900;letter-spacing:-1px}
+.packs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pack{border-radius:18px;padding:14px 8px;text-align:center;background:var(--card);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:6px}
+.pack b{font-size:18px}.pack .pr{font-size:12.5px;padding:5px 12px;border-radius:10px;background:var(--grad);color:#fff;font-weight:700}
+.pack.best{border-color:rgba(255,215,0,.6);box-shadow:0 0 20px rgba(255,215,0,.15)}
+.vipcard{border-radius:24px;padding:18px;margin-top:12px;background:linear-gradient(130deg,#3b2a00,#7a5200 50%,#2a1a00);border:1px solid rgba(255,215,0,.45);position:relative;overflow:hidden}
+.vipcard h3{font-size:22px;font-weight:900;background:linear-gradient(100deg,#ffd700,#fff6c2,#ffd700);-webkit-background-clip:text;background-clip:text;color:transparent}
+.shopg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.item{border-radius:18px;padding:14px;background:var(--card);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.item.on{border-color:var(--ok);box-shadow:0 0 0 1px var(--ok) inset}
+.item .pv{min-height:44px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.giftg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.gift{border-radius:18px;padding:10px 4px;background:var(--card);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:4px}
+.gift .e{font-size:34px;line-height:1.1}
+.gift:active{transform:scale(.92)}
+.gbanner{position:absolute;z-index:9;left:50%;top:calc(var(--st) + 120px);transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:10px 18px 10px 10px;border-radius:99px;
+  background:linear-gradient(120deg,rgba(124,92,255,.9),rgba(255,77,141,.9));box-shadow:0 10px 40px rgba(255,77,141,.5);animation:gbin .5s cubic-bezier(.2,1.4,.4,1);white-space:nowrap;font-weight:700}
+[dir=rtl] .gbanner{padding:10px 10px 10px 18px}
+.gbanner .ge{font-size:30px}
+@keyframes gbin{from{transform:translate(-50%,-30px) scale(.6);opacity:0}}
+.entr{position:absolute;z-index:9;inset-inline-start:12px;bottom:calc(var(--sb) + 150px);padding:8px 14px;border-radius:14px;background:linear-gradient(90deg,rgba(255,215,0,.95),rgba(255,154,61,.85));color:#2b1600;font-weight:800;font-size:13.5px;animation:entr 4s ease forwards;pointer-events:none}
+@keyframes entr{0%{transform:translateX(-120%)}12%,85%{transform:none;opacity:1}100%{opacity:0}}
+[dir=rtl] .entr{animation-name:entrr}
+@keyframes entrr{0%{transform:translateX(120%)}12%,85%{transform:none;opacity:1}100%{opacity:0}}
 </style></head><body>
 <svg width="0" height="0" style="position:absolute">
   <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></symbol>
@@ -426,8 +479,12 @@ const T = {
     unfollow: "متابَع", followers: "متابِع", past: "بثوث سابقة", edit: "تعديل الملف", save: "حفظ", bio: "نبذة", color: "لون الحساب",
     settings: "الإعدادات", language: "اللغة", logout: "تسجيل الخروج", focusGuide: "دليل إخفاء الإشعارات في آيفون",
     focusSteps: "١. افتح تطبيق «الاختصارات» ← «الأتمتة» ← «أتمتة جديدة»<br>٢. اختر «تطبيق» ← وهج ← «عند الفتح»<br>٣. اختر «تشغيل فوري»<br>٤. أضف إجراء «تعيين التركيز» ← «عدم الإزعاج» ← تشغيل<br><br>الآن كل مرة تفتح وهج يتفعّل عدم الإزعاج تلقائياً ✓",
-    openShortcuts: "فتح الاختصارات", errs: { bad_handle: "اسم المستخدم: ٣–٢٠ حرفاً إنجليزياً أو أرقام", weak_password: "كلمة المرور ٦ أحرف على الأقل", taken: "الاسم محجوز", bad_login: "بيانات الدخول غير صحيحة", rate: "محاولات كثيرة، انتظر قليلاً", net: "تعذّر الاتصال", auth: "سجّل الدخول أولاً", not_invited: "لم تتم دعوتك", login: "سجّل الدخول للمشاركة", slow: "انتظر لحظة", guests_full: "اكتمل عدد الضيوف (٣)", bad_email: "البريد الإلكتروني غير صحيح", email_taken: "هذا البريد مسجّل مسبقاً", bad_code: "الرمز غير صحيح أو منتهي", mail_off: "إرسال البريد غير مفعّل في السيرفر بعد", bad_link: "الرابط غير صحيح", bad_old: "كلمة المرور الحالية غير صحيحة", bad_image: "الصورة غير مدعومة", fx_off: "البثّاث أوقف المؤثرات", ch_off: "البثّاث أوقف التحديات", co_off: "البثّاث لا يقبل طلبات البث المشترك" },
+    openShortcuts: "فتح الاختصارات", errs: { bad_handle: "اسم المستخدم: ٣–٢٠ حرفاً إنجليزياً أو أرقام", weak_password: "كلمة المرور ٦ أحرف على الأقل", taken: "الاسم محجوز", bad_login: "بيانات الدخول غير صحيحة", rate: "محاولات كثيرة، انتظر قليلاً", net: "تعذّر الاتصال", auth: "سجّل الدخول أولاً", not_invited: "لم تتم دعوتك", login: "سجّل الدخول للمشاركة", slow: "انتظر لحظة", guests_full: "اكتمل عدد الضيوف (٣)", bad_email: "البريد الإلكتروني غير صحيح", email_taken: "هذا البريد مسجّل مسبقاً", bad_code: "الرمز غير صحيح أو منتهي", mail_off: "إرسال البريد غير مفعّل في السيرفر بعد", bad_link: "الرابط غير صحيح", no_coins: "رصيدك غير كافٍ 🪙", vip_only: "خاص بمشتركي VIP 👑", owned: "تملكه مسبقاً", self: "لا يمكنك إهداء نفسك", pay_off: "الدفع غير مفعّل بعد", pay_fail: "تعذّر إنشاء الدفع", forbidden: "غير مسموح", not_found: "غير موجود", bad_old: "كلمة المرور الحالية غير صحيحة", bad_image: "الصورة غير مدعومة", fx_off: "البثّاث أوقف المؤثرات", ch_off: "البثّاث أوقف التحديات", co_off: "البثّاث لا يقبل طلبات البث المشترك" },
     sentFx: "أرسل", hypeTrain: "قطار الحماس 🚀", latency: "تأخير", guestsN: "ضيوف", layoutSplit: "شاشة مقسومة", layoutFocus: "تركيز",
+    wallet: "المحفظة", coins: "كوينز", buyCoins: "شراء كوينز", shop: "المتجر", vip: "اشتراك VIP", vipD: "اسم متحرك بكل الألوان • شارة VIP • مؤثرات حصرية • إعلان دخولك للبث", vipBuy: "اشترك 30 يوم", vipUntil: "VIP حتى {d}",
+    names: "ألوان الاسم", badges: "الشارات", frames: "إطارات الصورة", buy: "شراء", equip: "استخدام", equipped: "مستخدم ✓", unequip: "إزالة", noCoins: "رصيدك غير كافٍ", gifts: "هدايا", sendGift: "إرسال",
+    giftSent: "أرسل", payOpen: "أكمل الدفع في PayPal ثم ارجع إلى وهج", paid: "تمت إضافة {n} كوينز 🎉", payOff: "الدفع غير مفعّل بعد في السيرفر", history: "السجل", earned: "أرباح الهدايا",
+    entered: "دخل البث ✨", vipOnly: "خاص بمشتركي VIP 👑", admin: "لوحة المالك", grant: "منح", handleQ: "اسم المستخدم", vipDays: "أيام VIP", sandbox: "وضع التجربة (Sandbox)",
     soonT: "سيبدأ البث خلال لحظات 🎮", soonS: "البثّاث يفتح اللعبة الآن", openGameNow: "افتح {g} الآن — يبدأ البث للمشاهدين عند دخولك اللعبة", soonShield: "المشاهدون يرون «سيبدأ البث» حتى تدخل اللعبة",
     autoLaunch: "افتح اللعبة تلقائياً", autoLaunchD: "بعد بدء البث ينتقل وهج إلى اللعبة مباشرة", openingGame: "جارٍ فتح اللعبة…",
     recSave: "حفظ البث على السيرفر", recSaveD: "يُسجَّل بثك ويمكن إعادة مشاهدته من ملفك", recordings: "التسجيلات", noRecs: "لا توجد تسجيلات", replay: "إعادة مشاهدة", delRec: "حذف التسجيل", delRecQ: "حذف هذا التسجيل نهائياً؟",
@@ -475,8 +532,12 @@ const T = {
     unfollow: "Following", followers: "followers", past: "Past streams", edit: "Edit profile", save: "Save", bio: "Bio", color: "Accent color",
     settings: "Settings", language: "Language", logout: "Sign out", focusGuide: "Hide notifications on iPhone",
     focusSteps: "1. Open Shortcuts → Automation → New Automation<br>2. Choose App → Wahj → Is Opened<br>3. Choose Run Immediately<br>4. Add action Set Focus → Do Not Disturb → On<br><br>Now Do Not Disturb turns on automatically every time you open Wahj ✓",
-    openShortcuts: "Open Shortcuts", errs: { bad_handle: "Username: 3–20 latin letters/digits", weak_password: "Password needs 6+ characters", taken: "Username taken", bad_login: "Wrong username or password", rate: "Too many attempts, wait a bit", net: "Connection failed", auth: "Sign in first", not_invited: "You were not invited", login: "Sign in to take part", slow: "Slow down a moment", guests_full: "Guest slots are full (3)", bad_email: "Invalid email address", email_taken: "Email already registered", bad_code: "Wrong or expired code", mail_off: "Email sending isn't enabled on the server yet", bad_link: "Invalid link", bad_old: "Current password is wrong", bad_image: "Unsupported image", fx_off: "The streamer turned effects off", ch_off: "The streamer turned challenges off", co_off: "The streamer isn't accepting co-stream requests" },
+    openShortcuts: "Open Shortcuts", errs: { bad_handle: "Username: 3–20 latin letters/digits", weak_password: "Password needs 6+ characters", taken: "Username taken", bad_login: "Wrong username or password", rate: "Too many attempts, wait a bit", net: "Connection failed", auth: "Sign in first", not_invited: "You were not invited", login: "Sign in to take part", slow: "Slow down a moment", guests_full: "Guest slots are full (3)", bad_email: "Invalid email address", email_taken: "Email already registered", bad_code: "Wrong or expired code", mail_off: "Email sending isn't enabled on the server yet", bad_link: "Invalid link", no_coins: "Not enough coins 🪙", vip_only: "VIP only 👑", owned: "Already owned", self: "You can't gift yourself", pay_off: "Payments aren't enabled yet", pay_fail: "Couldn't start the payment", forbidden: "Not allowed", not_found: "Not found", bad_old: "Current password is wrong", bad_image: "Unsupported image", fx_off: "The streamer turned effects off", ch_off: "The streamer turned challenges off", co_off: "The streamer isn't accepting co-stream requests" },
     sentFx: "sent", hypeTrain: "HYPE TRAIN 🚀", latency: "Delay", guestsN: "guests", layoutSplit: "Split screen", layoutFocus: "Focus",
+    wallet: "Wallet", coins: "coins", buyCoins: "Buy coins", shop: "Shop", vip: "VIP membership", vipD: "Animated name in every style • VIP badge • exclusive effects • entrance announcement", vipBuy: "Subscribe 30 days", vipUntil: "VIP until {d}",
+    names: "Name styles", badges: "Badges", frames: "Avatar frames", buy: "Buy", equip: "Use", equipped: "In use ✓", unequip: "Remove", noCoins: "Not enough coins", gifts: "Gifts", sendGift: "Send",
+    giftSent: "sent", payOpen: "Finish paying in PayPal, then come back to Wahj", paid: "{n} coins added 🎉", payOff: "Payments aren't enabled on the server yet", history: "History", earned: "Gift earnings",
+    entered: "joined the stream ✨", vipOnly: "VIP only 👑", admin: "Owner panel", grant: "Grant", handleQ: "Username", vipDays: "VIP days", sandbox: "Test mode (Sandbox)",
     soonT: "Starting in a moment 🎮", soonS: "The streamer is opening the game", openGameNow: "Open {g} now — viewers see the stream once you're in the game", soonShield: "Viewers see “starting soon” until you're in the game",
     autoLaunch: "Open the game automatically", autoLaunchD: "When the stream starts, Wahj switches straight to the game", openingGame: "Opening the game…",
     recSave: "Save streams on the server", recSaveD: "Your stream is recorded and can be replayed from your profile", recordings: "Recordings", noRecs: "No recordings", replay: "Replay", delRec: "Delete recording", delRecQ: "Delete this recording permanently?",
@@ -579,7 +640,17 @@ function confirmBox(q, yes) {
   sheet(`<h3>${esc(q)}</h3><div class="row" style="margin-top:8px"><button class="btn g" data-n>${t("no")}</button><button class="btn d" data-y>${t("yes")}</button></div>`,
     (sh, close) => { $("[data-n]", sh).onclick = close; $("[data-y]", sh).onclick = () => { close(); yes(); }; });
 }
-const avatar = (u, cls = "", style = "") => (u && u.avatar)
+const BADGE_E = { star: "⭐", flame: "🔥", diamond: "💎", crown: "👑", gamer: "🎮" };
+function badgeHtml(L) {
+  if (!L || !L.badge) return "";
+  if (L.badge === "vip") return `<span class="bdg bdg-vip">VIP</span>`;
+  if (L.badge === "founder") return `<span class="bdg bdg-founder">${S.lang === "ar" ? "المؤسس" : "FOUNDER"}</span>`;
+  return `<span class="bdg bdg-${esc(L.badge)}">${BADGE_E[L.badge] || ""}</span>`;
+}
+const uname = (u, tag = "b") => { const L = (u && u.look) || {}; return `${badgeHtml(L)}<${tag} class="un ${L.name ? "un-" + esc(L.name) : ""}" style="color:${esc((u && u.color) || "#fff")}">${esc((u && u.name) || "")}</${tag}>`; };
+const coinHtml = (n) => `<span class="coin"><i></i>${fmtN(n | 0)}</span>`;
+const avatar = (u, cls = "", style = "") => { const a = avatar0(u, cls, style); const f = u && u.look && u.look.frame; return f ? `<div class="frm frm-${esc(f)}">${a}</div>` : a; };
+const avatar0 = (u, cls = "", style = "") => (u && u.avatar)
   ? `<div class="av ${cls}" style="background:${esc(u.color || "#7C5CFF")};overflow:hidden;${style}"><img src="${esc(u.avatar)}" alt="" style="width:100%;height:100%;object-fit:cover"></div>`
   : `<div class="av ${cls}" style="background:${esc((u && u.color) || "#7C5CFF")};${style}">${esc(((u && (u.name || u.handle)) || "?").trim().charAt(0).toUpperCase())}</div>`;
 const fmtN = (n) => (n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + "K" : String(n | 0));
@@ -760,6 +831,8 @@ const FX = window.FX = {
     { id: "shake", e: "💥", ar: "انفجار", en: "Boom" },
     { id: "airhorn", e: "📯", ar: "بوق", en: "Airhorn" },
     { id: "boo", e: "👻", ar: "أشباح", en: "Ghosts" },
+    { id: "fireworks", e: "🎆", ar: "ألعاب نارية", en: "Fireworks", vip: true },
+    { id: "meteor", e: "☄️", ar: "نيازك", en: "Meteors", vip: true },
   ],
   ac: null,
   audio() { try { this.ac = this.ac || new (window.AudioContext || window.webkitAudioContext)(); if (this.ac.state === "suspended") this.ac.resume(); return this.ac; } catch (e) { return null; } },
@@ -992,6 +1065,80 @@ const FX = window.FX = {
       });
     });
     this.tone([220, 165], 1.6, "triangle", 0.1); this.tone([330, 247], 1.4, "sine", 0.06, 0.3);
+  },
+
+  /* VIP: fireworks over the whole screen */
+  fireworks(canvas) {
+    const cols = ["#ff4d8d", "#ffd700", "#00d1ff", "#2ee59d", "#b26bff", "#ffffff", "#ff6b3d"];
+    this.start(canvas, 4600, (ctx, p, W, H, s, ms) => {
+      if (!s.r) s.r = []; if (!s.sp) s.sp = [];
+      if (p < 0.8 && (!s.next || ms > s.next)) { s.next = ms + 260 + Math.random() * 260; s.r.push({ x: W * (0.15 + Math.random() * 0.7), y: H, ty: H * (0.15 + Math.random() * 0.35), c: cols[Math.random() * cols.length | 0] }); }
+      ctx.fillStyle = `rgba(5,3,20,${0.35 * this.env(p)})`; ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = "lighter";
+      s.r = s.r.filter((r) => {
+        r.y -= (r.y - r.ty) * 0.08 + 4; ctx.fillStyle = r.c; ctx.fillRect(r.x - 2, r.y, 4, 12);
+        if (r.y - r.ty < 6) { for (let i = 0; i < 70; i++) { const a = Math.random() * 7, v = 2 + Math.random() * 6; s.sp.push({ x: r.x, y: r.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, c: r.c, l: 1 }); } this.noise(0.4, 0.25, 900); return false; }
+        return true;
+      });
+      s.sp = s.sp.filter((q) => { q.vy += 0.08; q.vx *= 0.985; q.vy *= 0.985; q.x += q.vx; q.y += q.vy; q.l -= 0.012; ctx.globalAlpha = Math.max(0, q.l); ctx.fillStyle = q.c; ctx.beginPath(); ctx.arc(q.x, q.y, 2.4, 0, 7); ctx.fill(); return q.l > 0; });
+    });
+  },
+  /* VIP: meteor shower */
+  meteor(canvas, stage) {
+    this.start(canvas, 3600, (ctx, p, W, H, s, ms) => {
+      ctx.fillStyle = `rgba(10,4,30,${0.5 * this.env(p)})`; ctx.fillRect(0, 0, W, H);
+      if (!s.m) s.m = Array.from({ length: 16 }, (_, i) => ({ x: W * (0.3 + Math.random() * 1.0), y: -Math.random() * H * 0.8 - 40, v: 8 + Math.random() * 9, r: 4 + Math.random() * 8, d: i * 120 }));
+      s.m.forEach((m) => {
+        if (ms < m.d) return;
+        m.x -= m.v * 0.75; m.y += m.v;
+        const g = ctx.createLinearGradient(m.x, m.y, m.x + m.v * 9, m.y - m.v * 12);
+        g.addColorStop(0, "rgba(255,240,200,1)"); g.addColorStop(0.3, "rgba(255,140,40,.8)"); g.addColorStop(1, "rgba(255,60,0,0)");
+        ctx.strokeStyle = g; ctx.lineWidth = m.r; ctx.lineCap = "round"; ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x + m.v * 9, m.y - m.v * 12); ctx.stroke();
+        if (m.y > H * 0.85 && !m.hit) { m.hit = 1; if (!P.reduceFx && stage) { stage.classList.remove("shake"); void stage.offsetWidth; stage.classList.add("shake"); } }
+      });
+    });
+    this.noise(3, 0.3, 500);
+  },
+  /* gifts: a big animated scene per gift */
+  gift(canvas, stage, id, n = 1) {
+    const E = { rose: "🌹", heart: "💖", controller: "🎮", car: "🏎️", lion: "🦁", crown: "👑", rocket: "🚀" }[id] || "🎁";
+    const big = { rose: 0.35, heart: 0.4, controller: 0.45, car: 0.4, lion: 0.6, crown: 0.55, rocket: 0.5 }[id] || 0.4;
+    const dur = { rose: 2600, heart: 2800, controller: 2800, car: 3000, lion: 3600, crown: 3800, rocket: 4200 }[id] || 3000;
+    if (id === "heart") this.hearts(canvas);
+    if (id === "crown") setTimeout(() => this.confetti(canvas), 900);
+    if (id === "rocket") setTimeout(() => this.fireworks(canvas), 1800);
+    if (id === "lion" && !P.reduceFx && stage) setTimeout(() => { stage.classList.remove("shake"); void stage.offsetWidth; stage.classList.add("shake"); }, 700);
+    this.start(canvas, dur, (ctx, p, W, H, s, ms) => {
+      const e = this.env(p, 0.08, 0.8), sz = Math.min(W, H) * big;
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      // golden rays behind premium gifts
+      if (["lion", "crown", "rocket", "car"].includes(id)) {
+        ctx.save(); ctx.translate(W / 2, H * 0.45); ctx.rotate(ms * 0.0006);
+        for (let i = 0; i < 16; i++) { ctx.rotate(Math.PI / 8); ctx.fillStyle = `rgba(255,215,0,${0.12 * e})`; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.max(W, H), -40); ctx.lineTo(Math.max(W, H), 40); ctx.fill(); }
+        ctx.restore();
+      }
+      ctx.globalAlpha = e; ctx.font = `${sz}px system-ui`;
+      if (id === "car") {
+        const x = W + sz - p * (W + sz * 2) * 1.05;
+        for (let i = 0; i < 12; i++) { ctx.fillStyle = `rgba(255,255,255,${0.25 * e})`; ctx.fillRect(x + sz * 0.4 + Math.random() * 120, H * 0.45 - sz * 0.3 + Math.random() * sz * 0.6, 40 + Math.random() * 80, 3); }
+        ctx.save(); ctx.translate(x, H * 0.45 + Math.sin(ms * 0.05) * 3); ctx.fillText(E, 0, 0); ctx.restore();
+      } else if (id === "rocket") {
+        const y = H + sz - this.ease(Math.min(1, p * 1.3)) * (H + sz * 2);
+        for (let i = 0; i < 20; i++) { const r = 8 + Math.random() * 26; const gy = y + sz * 0.45 + Math.random() * 120; const g = ctx.createRadialGradient(W / 2, gy, 0, W / 2, gy, r); g.addColorStop(0, "rgba(255,230,120,.9)"); g.addColorStop(1, "rgba(255,80,0,0)"); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(W / 2 + (Math.random() - 0.5) * 30, gy, r, 0, 7); ctx.fill(); }
+        ctx.save(); ctx.translate(W / 2, y); ctx.rotate(-Math.PI / 4); ctx.fillText(E, 0, 0); ctx.restore();
+      } else if (id === "crown") {
+        const y = p < 0.3 ? -sz + this.ease(p / 0.3) * (H * 0.42 + sz) : H * 0.42 + Math.sin(ms * 0.006) * 6;
+        ctx.save(); ctx.shadowColor = "rgba(255,215,0,.9)"; ctx.shadowBlur = 40; ctx.fillText(E, W / 2, y); ctx.restore();
+      } else {
+        const k = this.ease(Math.min(1, p * 4)), pulse = 1 + 0.08 * Math.sin(ms * 0.012);
+        ctx.save(); ctx.translate(W / 2, H * 0.45); ctx.scale(k * pulse, k * pulse); if (id === "controller") ctx.rotate(Math.sin(ms * 0.01) * 0.25);
+        ctx.shadowColor = "rgba(255,255,255,.6)"; ctx.shadowBlur = 30; ctx.fillText(E, 0, 0); ctx.restore();
+        if (id === "rose") { if (!s.pt) s.pt = Array.from({ length: 40 }, () => ({ x: Math.random() * W, y: -Math.random() * H, v: 1.5 + Math.random() * 3, r: Math.random() * 6 })); ctx.font = "22px system-ui"; s.pt.forEach((q) => { q.y += q.v; q.r += 0.05; ctx.save(); ctx.translate(q.x + Math.sin(q.y * 0.02) * 20, q.y); ctx.rotate(q.r); ctx.fillText("🌸", 0, 0); ctx.restore(); }); }
+      }
+      if (n > 1) { ctx.globalAlpha = e; ctx.font = `900 ${Math.min(W, H) * 0.14}px system-ui`; ctx.fillStyle = "#fff"; ctx.strokeStyle = "rgba(0,0,0,.5)"; ctx.lineWidth = 6; ctx.strokeText("×" + n, W / 2, H * 0.45 + sz * 0.7); ctx.fillText("×" + n, W / 2, H * 0.45 + sz * 0.7); }
+    });
+    const tones = { rose: [[659, 784], 0.4], heart: [[523, 659], 0.4], controller: [[440, 660, 880], 0.5], car: [[110, 160], 1.2], lion: [[80, 110], 1.4], crown: [[523, 659, 784, 1046], 0.9], rocket: [[200, 400], 1.6] }[id];
+    if (tones) this.tone(tones[0], tones[1], id === "lion" || id === "car" ? "sawtooth" : "triangle", 0.09);
   },
 
   play(id, root, stage, canvas) {
@@ -1234,6 +1381,86 @@ function loadHls() {
   return (hlsLoading = hlsLoading || new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = "/hls.js"; sc.onload = () => res(window.Hls); sc.onerror = rej; document.head.appendChild(sc); }));
 }
 
+/* ---------- economy ---------- */
+const GIFT_E = { rose: "🌹", heart: "💖", controller: "🎮", car: "🏎️", lion: "🦁", crown: "👑", rocket: "🚀" };
+const GIFT_N = { rose: ["وردة", "Rose"], heart: ["قلب", "Heart"], controller: ["يد تحكم", "Controller"], car: ["سيارة", "Supercar"], lion: ["أسد", "Lion"], crown: ["تاج", "Crown"], rocket: ["صاروخ", "Rocket"] };
+let SHOPDATA = null;
+async function shopData() { if (!SHOPDATA) SHOPDATA = await api("/api/shop"); return SHOPDATA; }
+async function refreshMe() { const r = await api("/api/wallet", {}); if (r.user) { S.user = { ...S.user, ...r.user }; store.set("user", S.user); } return r; }
+function giftSheet(send) {
+  shopData().then((d) => {
+    const gifts = Object.entries(d.gifts || {});
+    let n = 1;
+    sheet(`<div class="row"><h3 style="margin:0">🎁 ${t("gifts")}</h3><span class="sp"></span><button class="chip" id="gw">${coinHtml(S.user && S.user.coins)} +</button></div>
+      <div class="giftg" style="margin-top:12px">${gifts.map(([id, g]) => `<button class="gift" data-g="${id}"><span class="e">${g.e}</span><small>${GIFT_N[id] ? GIFT_N[id][S.lang === "ar" ? 0 : 1] : id}</small>${coinHtml(g.price)}</button>`).join("")}</div>
+      <div class="seg" id="gn" style="margin-top:12px">${[1, 5, 10, 99].map((k) => `<button class="${k === 1 ? "on" : ""}" data-n="${k}">×${k}</button>`).join("")}</div>`, (sh, close) => {
+      $("#gw", sh).onclick = () => { close(); go("wallet"); };
+      $$("#gn button", sh).forEach((b) => (b.onclick = () => { n = +b.dataset.n; $$("#gn button", sh).forEach((x) => x.classList.toggle("on", x === b)); }));
+      $$("[data-g]", sh).forEach((b) => (b.onclick = () => {
+        const g = d.gifts[b.dataset.g];
+        if (!S.user || (S.user.coins | 0) < g.price * n) { close(); toast(t("noCoins")); return go("wallet"); }
+        send(b.dataset.g, n); haptic("success"); close();
+      }));
+    });
+  });
+}
+VIEWS.wallet = (root) => {
+  if (!S.token) return go("auth");
+  let tab = "names";
+  root.innerHTML = `<div class="view"><div class="top"><button class="ibtn" id="wb">${ic("back")}</button><div class="h1">${t("wallet")}</div></div>
+  <div class="scroll" id="wsc" style="padding-bottom:calc(30px + var(--sb))"><div style="height:200px;position:relative"><div class="spin"></div></div></div></div>`;
+  $("#wb").onclick = () => go("me");
+  let polling = null;
+  const render = async () => {
+    const [d, r] = await Promise.all([shopData(), refreshMe()]);
+    const u = S.user; if (!u) return;
+    const vip = u.vipUntil > Date.now();
+    const items = Object.entries(d.shop).filter(([id, it]) => it.kind === tab.slice(0, -1) && !(it.admin && !u.admin));
+    const owns = (id, it) => it.admin ? u.admin : it.vip ? vip : (vip && it.kind === "name") || (u.owned || []).includes(id);
+    const prev = (id) => {
+      const [k, v] = id.split(":");
+      if (k === "name") return `<b class="un un-${v}" style="font-size:20px">${esc(u.name)}</b>`;
+      if (k === "badge") return badgeHtml({ badge: v }) + `<b>${esc(u.name)}</b>`;
+      return `<div class="frm frm-${v}">${avatar0(u, "md")}</div>`;
+    };
+    $("#wsc").innerHTML = `
+      <div class="wallet"><div class="small" style="opacity:.8;position:relative;z-index:1">${t("wallet")}</div>
+        <div class="big" style="position:relative;z-index:1">${coinHtml(u.coins)}</div>
+        <div class="small" style="opacity:.8;position:relative;z-index:1">${t("earned")}: ${coinHtml(u.earned)}${vip ? ` · <b style="color:#ffd700">${t("vipUntil", { d: new Date(u.vipUntil).toLocaleDateString(S.lang) })}</b>` : ""}</div></div>
+      <div class="h2">${t("buyCoins")} ${d.mode !== "live" && d.pay ? `<span class="small mut">· ${t("sandbox")}</span>` : ""}</div>
+      <div class="packs">${Object.entries(d.packs).map(([id, p], i) => `<button class="pack ${i === 2 ? "best" : ""}" data-pack="${id}">${coinHtml(p.coins)}<span class="pr">$${p.usd}</span></button>`).join("")}</div>
+      <div class="vipcard"><h3>👑 ${t("vip")}</h3><p style="margin:8px 0 12px;line-height:1.7;color:#ffe9a8;font-size:14px">${t("vipD")}</p>
+        <button class="btn" id="vbuy" style="background:linear-gradient(120deg,#ffd700,#ff9a3d);color:#2b1600">${t("vipBuy")} · ${coinHtml(d.vip)}</button></div>
+      <div class="seg" id="wt" style="margin-top:18px">${["names", "badges", "frames"].map((k) => `<button class="${k === tab ? "on" : ""}" data-t="${k}">${t(k)}</button>`).join("")}</div>
+      <div class="shopg" style="margin-top:12px">${items.map(([id, it]) => {
+        const own = owns(id, it), on = (u.equip || {})[it.kind] === id;
+        return `<div class="item ${on ? "on" : ""}"><div class="pv">${prev(id)}</div>
+          ${own ? `<button class="mini ${on ? "" : "p"}" data-eq="${id}" data-k="${it.kind}">${on ? t("unequip") : t("equip")}</button>`
+                : it.vip ? `<span class="small" style="color:#ffd700">${t("vipOnly")}</span>` : `<button class="mini p" data-buy="${id}">${t("buy")} ${coinHtml(it.price)}</button>`}</div>`;
+      }).join("")}</div>
+      ${u.admin ? `<div class="h2">🛠️ ${t("admin")}</div><div class="tile"><div class="field"><input class="inp" id="ah2" placeholder="${t("handleQ")}" dir="ltr" autocapitalize="none"></div>
+        <div class="row"><input class="inp" id="ac2" inputmode="numeric" placeholder="${t("coins")}"><input class="inp" id="av2" inputmode="numeric" placeholder="${t("vipDays")}"></div>
+        <button class="btn p" id="ag2" style="margin-top:10px">${t("grant")}</button></div>` : ""}
+      <div class="h2">${t("history")}</div><div class="sl">${(r.tx || []).map((x) => `<div class="sm"><div class="tx">${esc(x.kind)} <span class="mut small">${esc(x.ref)}</span><br><span class="mut small">${new Date(x.t).toLocaleString(S.lang)}</span></div><b style="color:${x.delta > 0 ? "var(--ok)" : "#ff7b88"}">${x.delta > 0 ? "+" : ""}${x.delta}</b></div>`).join("")}</div>`;
+    $$("#wt button").forEach((b) => (b.onclick = () => { tab = b.dataset.t; render(); }));
+    $$("[data-buy]").forEach((b) => (b.onclick = async () => { const x = await api("/api/buy", { item: b.dataset.buy }); if (x.error) return toast(terr(x.error)); S.user = { ...S.user, ...x.user }; store.set("user", S.user); haptic("success"); toast(t("saved")); render(); }));
+    $$("[data-eq]").forEach((b) => (b.onclick = async () => { const on = (S.user.equip || {})[b.dataset.k] === b.dataset.eq; const x = await api("/api/equip", { kind: b.dataset.k, item: on ? "" : b.dataset.eq }); if (x.error) return toast(terr(x.error)); S.user = { ...S.user, ...x.user }; store.set("user", S.user); haptic(); render(); }));
+    $("#vbuy").onclick = () => confirmBox(`${t("vipBuy")} — ${d.vip} ${t("coins")}?`, async () => { const x = await api("/api/vip", {}); if (x.error) return toast(terr(x.error)); S.user = { ...S.user, ...x.user }; store.set("user", S.user); haptic("success"); FX.play("fireworks", null, null, null); toast("👑 VIP"); render(); });
+    $$("[data-pack]").forEach((b) => (b.onclick = async () => {
+      if (!d.pay) return toast(t("payOff"));
+      b.disabled = true; const x = await api("/api/pay/create", { pack: b.dataset.pack }); b.disabled = false;
+      if (x.error) return toast(terr(x.error));
+      if (Native.has()) Native.post("open", { url: x.url }); else window.open(x.url, "_blank");
+      toast(t("payOpen"), 6000);
+      clearInterval(polling); let k = 0;
+      polling = setInterval(async () => { if (++k > 200 || current !== "wallet") return clearInterval(polling); const st = await api("/api/pay/status?id=" + x.id); if (st.status === "paid") { clearInterval(polling); haptic("success"); toast(t("paid", { n: st.coins })); FX.play("confetti", null, null, null); render(); } }, 3000);
+    }));
+    if ($("#ag2")) $("#ag2").onclick = async () => { const x = await api("/api/admin/grant", { handle: $("#ah2").value.trim(), coins: +$("#ac2").value || 0, vipDays: +$("#av2").value || 0 }); if (x.error) return toast(terr(x.error)); toast("✓ @" + x.user.handle + " · " + x.user.coins + " 🪙"); if (x.user.id === S.user.id) render(); };
+  };
+  render();
+  return () => clearInterval(polling);
+};
+
 /* ---------- replay (recorded stream) ---------- */
 VIEWS.replay = (root, arg) => {
   const id = typeof arg === "string" ? arg : arg.id;
@@ -1355,9 +1582,9 @@ VIEWS.home = (root) => {
     const ph = s.gameIcon ? `<div class="thbg" style="background-image:url('${esc(s.gameIcon)}')"></div>${gIcon(s.gameIcon, "gi thic")}` : `<div class="ph">${CAT_EMO[s.cat] || "🎮"}</div>`;
     const gb = s.game ? `<div class="gbadge">${gIcon(s.gameIcon)}<span>${esc(s.game)}</span></div>` : "";
     if (big) return `<div class="feat" data-id="${s.id}">${ph}<img src="${thumb}" onerror="this.remove()" alt="" style="position:absolute;inset:0">${badges}<div class="ov"><div class="t">${esc(s.title)}</div>
-      <div class="who">${avatar(s.host)}<span style="font-weight:600">${esc(s.host && s.host.name)}</span></div>${s.game ? `<div class="row" style="gap:8px;margin-top:8px">${gIcon(s.gameIcon, "gi", 22)}<span class="small" style="color:#e6e1ff;font-weight:600">${esc(s.game)}</span></div>` : ""}</div></div>`;
+      <div class="who">${avatar(s.host)}<span style="font-weight:600">${uname(s.host, "span")}</span></div>${s.game ? `<div class="row" style="gap:8px;margin-top:8px">${gIcon(s.gameIcon, "gi", 22)}<span class="small" style="color:#e6e1ff;font-weight:600">${esc(s.game)}</span></div>` : ""}</div></div>`;
     return `<div class="card" data-id="${s.id}"><div class="th">${ph}<img src="${thumb}" onerror="this.remove()" alt="" style="position:absolute;inset:0">${badges}${gb}</div>
-      <div class="meta"><div class="tt">${esc(s.title)}</div><div class="who">${avatar(s.host)}<span class="small" style="font-weight:600">${esc(s.host && s.host.name)}</span></div></div></div>`;
+      <div class="meta"><div class="tt">${esc(s.title)}</div><div class="who">${avatar(s.host)}<span class="small" style="font-weight:600">${uname(s.host, "span")}</span></div></div></div>`;
   };
   const render = () => {
     // games being streamed right now
@@ -1406,7 +1633,7 @@ VIEWS.watch = (root, id) => {
     <div id="wpoll"></div>
     <div class="wbar">
       <div class="cin"><input id="wi" placeholder="${S.token ? t("chatPh") : t("loginToChat")}" maxlength="200" enterkeyhint="send"><button class="rbtn" id="wsend" style="width:36px;height:36px;background:none">${ic("send")}</button></div>
-      <button class="rbtn" id="wr">❤️</button><button class="rbtn hot" id="we">${ic("spark")}</button><button class="rbtn" id="wm">${ic("layers")}</button>
+      <button class="rbtn" id="wr">❤️</button><button class="rbtn" id="wgf">🎁</button><button class="rbtn hot" id="we">${ic("spark")}</button><button class="rbtn" id="wm">${ic("layers")}</button>
     </div>
     <div class="stat lat hide" id="wlat" style="position:absolute;z-index:6;top:calc(var(--st) + 64px);inset-inline-start:14px">${ic("zap")}<span></span></div>
   </div>`;
@@ -1426,7 +1653,7 @@ VIEWS.watch = (root, id) => {
     while (chatEl.children.length > 40) chatEl.firstChild.remove();
     if (fade) setTimeout(() => { d.classList.add("fade"); setTimeout(() => d.remove(), 1300); }, 20000);
   };
-  const chatHtml = (m) => `${m.host ? `<span class="tag">${t("hostTag")}</span>` : m.guest ? `<span class="tag" style="background:var(--grad2)">${t("guestTag")}</span>` : ""}<b style="color:${esc(m.color)}">${esc(m.name)}</b>${esc(m.text)}`;
+  const chatHtml = (m) => `${m.host ? `<span class="tag">${t("hostTag")}</span>` : m.guest ? `<span class="tag" style="background:var(--grad2)">${t("guestTag")}</span>` : ""}${uname(m)} ${esc(m.text)}`;
   const offline = (txt) => {
     $$(".wtop .badge.red").forEach((b) => (b.parentElement.style.display = "none"));
     if ($(".offline", stageEl)) return;
@@ -1487,6 +1714,16 @@ VIEWS.watch = (root, id) => {
         root._ch = m.list;
         break;
       case "pinned": showPin(m.msg); break;
+      case "gift": {
+        FX.gift($("#fx"), stageEl, m.gift, m.n);
+        const gb = document.createElement("div"); gb.className = "gbanner";
+        gb.innerHTML = `<span class="ge">${(GIFT_E[m.gift] || "🎁")}</span><span>${uname(m, "span")} ${t("giftSent")} ×${m.n}</span>`;
+        $("#watch").appendChild(gb); setTimeout(() => gb.remove(), 3500);
+        addChat(`${uname(m)} ${t("giftSent")} ${(GIFT_E[m.gift] || "🎁")} ×${m.n}`, "fx");
+        break;
+      }
+      case "coins": if (S.user) { S.user.coins = m.coins; store.set("user", S.user); } break;
+      case "enter": { const d = document.createElement("div"); d.className = "entr"; d.innerHTML = `${badgeHtml(m.look)}${esc(m.name)} ${t("entered")}`; $("#watch").appendChild(d); setTimeout(() => d.remove(), 4200); break; }
       case "layout": stage.mode = m.mode; stage.focus = m.focus; stage.layout(); break;
       case "guest-pending": toast(t("reqSent")); break;
       case "guest-ok":
@@ -1508,7 +1745,7 @@ VIEWS.watch = (root, id) => {
     if (!s) return offline(t("offline"));
     hostInfo = s.host;
     $("#wav").outerHTML = avatar(s.host, "md");
-    $("#wn").textContent = s.host.name;
+    $("#wn").innerHTML = uname(s.host, "span");
     $("#wg").innerHTML = (s.game ? gIcon(s.gameIcon) + esc(s.game) + " · " : "") + esc(s.title);
     if (S.user && S.user.id !== s.uid) {
       isFollowing = S.following.has(s.uid);
@@ -1538,14 +1775,20 @@ VIEWS.watch = (root, id) => {
   $("#wx").onclick = () => go("home");
   let lastR = 0;
   $("#wr").onclick = () => { const e = ["❤️", "🔥", "😂", "👏", "😮", "💯"][Math.random() * 6 | 0]; FX.floaty($("#wfx"), e); if (Date.now() - lastR > 250) { ws.send({ t: "react", e }); lastR = Date.now(); } haptic(); FX.audio(); };
+  $("#wgf").onclick = () => { FX.audio(); if (!S.token) return toast(terr("login")); giftSheet((g, n) => ws.send({ t: "gift", gift: g, n })); };
   $("#we").onclick = () => {
     FX.audio();
     sheet(`<h3>${t("react")}</h3><div class="emoji">${["❤️", "🔥", "😂", "👏", "😮", "💯", "🏆"].map((e) => `<button data-e="${e}">${e}</button>`).join("")}</div>
-      <h3>${t("effects")}</h3><div class="fxgrid">${FX.list.map((f) => `<button class="fxb" data-fx="${f.id}">${f.e}<small>${S.lang === "ar" ? f.ar : f.en}</small></button>`).join("")}</div>
+      <h3>${t("effects")}</h3><div class="fxgrid">${FX.list.map((f) => `<button class="fxb" data-fx="${f.id}" ${f.vip ? 'style="border-color:rgba(255,215,0,.5)"' : ""}>${f.e}<small>${f.vip ? "👑 " : ""}${S.lang === "ar" ? f.ar : f.en}</small></button>`).join("")}</div>
       <button class="btn g" style="margin-top:16px" id="sch">${ic("trophy")} ${t("challenge")}</button>`,
       (sh, close) => {
         $$("[data-e]", sh).forEach((b) => (b.onclick = () => { FX.floaty($("#wfx"), b.dataset.e, 3); ws.send({ t: "react", e: b.dataset.e }); haptic(); }));
-        $$("[data-fx]", sh).forEach((b) => (b.onclick = () => { if (!S.token) return toast(terr("login")); ws.send({ t: "effect", id: b.dataset.fx }); haptic("medium"); close(); }));
+        $$("[data-fx]", sh).forEach((b) => (b.onclick = () => {
+          if (!S.token) return toast(terr("login"));
+          const f = FX.list.find((x) => x.id === b.dataset.fx);
+          if (f && f.vip && !(S.user && S.user.look && S.user.look.vip)) { close(); return toast(t("vipOnly")); }
+          ws.send({ t: "effect", id: b.dataset.fx }); haptic("medium"); close();
+        }));
         $("#sch", sh).onclick = () => { close(); challengeSheet(); };
       });
   };
@@ -1724,7 +1967,7 @@ VIEWS.studio = (root) => {
   const renderChat = () => {
     const el = $("#sl");
     if (!st.chat.length) return;
-    el.innerHTML = st.chat.slice(-60).reverse().map((m) => `<div class="sm">${avatar(m)}<div class="tx"><b style="color:${esc(m.color)}">${esc(m.name)}</b><br>${esc(m.text)}</div>
+    el.innerHTML = st.chat.slice(-60).reverse().map((m) => `<div class="sm">${avatar(m)}<div class="tx">${uname(m)}<br>${esc(m.text)}</div>
       ${job.role === "host" && m.uid !== S.user.id ? `<button class="mini" data-pin="${m.id}">${ic("pin")}</button><button class="mini" data-inv="${m.uid}" data-n="${esc(m.name)}">${ic("users")}</button>` : ""}</div>`).join("");
     $$("[data-pin]", el).forEach((b) => (b.onclick = () => { ws.send({ t: "pin", id: b.dataset.pin }); toast(t("pin") + " ✓"); }));
     $$("[data-inv]", el).forEach((b) => (b.onclick = () => confirmBox(t("invite") + ": " + b.dataset.n + "؟", () => ws.send({ t: "guest-invite", uid: b.dataset.inv }))));
@@ -1759,6 +2002,7 @@ VIEWS.studio = (root) => {
         break;
       case "privacy": if (m.uid === S.user.id) { st.privacy = m.on && m.reason !== "app"; setShield(); } previewStage && previewStage.setPrivacy(m.uid, m.on, m.reason); break;
       case "effect": haptic("medium"); break;
+      case "gift": haptic("success"); toast(`${GIFT_E[m.gift] || "🎁"} ${uname(m, "span")} ${t("giftSent")} ×${m.n} · +${Math.floor(m.value * 0.7)} 🪙`, 4000); st.chat.push({ uid: m.uid, name: m.name, color: m.color, look: m.look, text: `🎁 ${GIFT_E[m.gift] || ""} ×${m.n}` }); renderChat(); break;
       case "bstatus": if (m.uid === S.user.id && m.msg) { toast(esc(m.msg), 6000); if (m.state === "error") setState("error"); } break;
       case "kicked": case "ended": endLive(); break;
       case "err": toast(terr(m.e)); break;
@@ -1852,7 +2096,7 @@ function profileHtml(r, self) {
   return `<div style="text-align:center;margin-top:8px">
     <div style="position:relative;width:96px;margin:0 auto">${avatar(u, "lg", "width:96px;height:96px;margin:0 auto")}
       ${self ? `<button id="pcam" style="position:absolute;bottom:-2px;inset-inline-end:-4px;width:34px;height:34px;border-radius:50%;background:var(--grad);display:grid;place-items:center;border:3px solid var(--bg)">${ic("cam")}</button>` : ""}</div>
-    <div style="font-size:24px;font-weight:800;margin-top:14px">${esc(u.name)}</div>
+    <div style="font-size:24px;font-weight:800;margin-top:14px">${uname(u, "span")}</div>
     <div class="mut" dir="ltr">@${esc(u.handle)}</div>
     ${u.bio ? `<div style="margin-top:10px;color:#e6e1ff;line-height:1.6">${esc(u.bio)}</div>` : ""}
     ${u.link ? `<a href="${esc(u.link)}" target="_blank" rel="noopener" class="chip" style="display:inline-flex;gap:6px;margin-top:10px;text-decoration:none;color:#b9a8ff">${ic("globe")} ${esc(u.link.replace(/^https?:\/\/(www\.)?/, "").slice(0, 40))}</a>` : ""}
@@ -1897,9 +2141,10 @@ async function uploadPhoto(data) {
 }
 VIEWS.me = (root) => {
   if (!S.token) return go("auth");
-  root.innerHTML = `<div class="view"><div class="top"><div class="h1">${t("profile")}</div><div class="sp"></div><button class="ibtn" id="mset">${ic("gear")}</button></div>
+  root.innerHTML = `<div class="view"><div class="top"><div class="h1">${t("profile")}</div><div class="sp"></div><button class="chip" id="mwal" style="padding:9px 14px">${coinHtml(S.user.coins)}</button><button class="ibtn" id="mset">${ic("gear")}</button></div>
   <div class="scroll" id="ms"><div style="height:200px;position:relative"><div class="spin"></div></div></div></div>`;
   $("#mset").onclick = () => go("settings");
+  $("#mwal").onclick = () => go("wallet");
   api("/api/user/" + S.user.handle).then((r) => {
     if (!r.user) return;
     r.user = { ...r.user, ...S.user };

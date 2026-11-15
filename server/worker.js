@@ -250,6 +250,50 @@ export default {
         if (!r.ok) return new Response(null, { status: 404, headers: CORS });
         return new Response(r.body, { headers: { "content-type": "image/jpeg", "cache-control": "public, max-age=86400", ...CORS } });
       }
+      // ---- economy ----
+      if (p === "/api/shop") return J({ packs: PACKS, vip: VIP_PRICE, shop: SHOP, gifts: GIFTS, pay: !!(env.PAYPAL_CLIENT_ID && env.PAYPAL_SECRET), mode: env.PAYPAL_MODE || "sandbox" });
+      if (["/api/buy", "/api/equip", "/api/vip", "/api/wallet", "/api/admin/grant"].includes(p) && req.method === "POST") {
+        const b = await req.json().catch(() => ({}));
+        const r = await hub(env, p.replace("/api", "").replace("/admin/grant", "/grant"), { ...b, token: bearer(req) });
+        return J(r, r.error ? 400 : 200);
+      }
+      if (p === "/api/pay/create" && req.method === "POST") {
+        if (!env.PAYPAL_CLIENT_ID || !env.PAYPAL_SECRET) return J({ error: "pay_off" }, 400);
+        const b = await req.json().catch(() => ({}));
+        const me = await hub(env, "/me", { token: bearer(req) });
+        if (!me.user) return J({ error: "auth" }, 401);
+        const pack = PACKS[b.pack];
+        if (!pack) return J({ error: "bad_pack" }, 400);
+        const r = await paypal(env, "POST", "/v2/checkout/orders", {
+          intent: "CAPTURE",
+          purchase_units: [{ reference_id: b.pack, custom_id: me.user.id + ":" + b.pack, description: `Wahj Live — ${pack.coins} coins`,
+            amount: { currency_code: "USD", value: pack.usd } }],
+          payment_source: { paypal: { experience_context: { brand_name: "Wahj Live", user_action: "PAY_NOW", shipping_preference: "NO_SHIPPING",
+            return_url: url.origin + "/pay/return", cancel_url: url.origin + "/pay/cancel" } } },
+        });
+        const link = (r.data.links || []).find((l) => l.rel === "payer-action" || l.rel === "approve");
+        if (!r.data.id || !link) return J({ error: "pay_fail", detail: JSON.stringify(r.data).slice(0, 300) }, 502);
+        await hub(env, "/order-new", { id: r.data.id, uid: me.user.id, pack: b.pack, coins: pack.coins, usd: pack.usd });
+        return J({ id: r.data.id, url: link.href });
+      }
+      if (p === "/api/pay/status") {
+        return J(await hub(env, "/order-get", { id: url.searchParams.get("id") || "", token: bearer(req) }));
+      }
+      if (p === "/pay/return" || p === "/pay/cancel") {
+        const id = url.searchParams.get("token") || "";
+        if (p === "/pay/cancel" || !id) return payPage(false, "تم إلغاء الدفع");
+        const o = await hub(env, "/order-get", { id, raw: true });
+        if (!o.order) return payPage(false, "طلب غير معروف");
+        if (o.order.status !== "paid") {
+          const r = await paypal(env, "POST", `/v2/checkout/orders/${id}/capture`, {});
+          const cap = r.data.purchase_units && r.data.purchase_units[0].payments && r.data.purchase_units[0].payments.captures && r.data.purchase_units[0].payments.captures[0];
+          const done = (r.data.status === "COMPLETED" || (r.data.details && r.data.details[0] && r.data.details[0].issue === "ORDER_ALREADY_CAPTURED")) &&
+            (!cap || (cap.amount && cap.amount.value === o.order.usd && cap.amount.currency_code === "USD"));
+          if (!done) return payPage(false, "لم يكتمل الدفع");
+          await hub(env, "/order-paid", { id });
+        }
+        return payPage(true, `تمت إضافة ${o.order.coins} كوينز 🪙`);
+      }
       if (p === "/api/me") return J(await hub(env, "/me", { token: bearer(req) }));
       if (p === "/api/profile" && req.method === "POST") {
         const b = await req.json();
@@ -333,6 +377,7 @@ export default {
             u.searchParams.set("name", me.user.name);
             u.searchParams.set("color", me.user.color || "");
             u.searchParams.set("handle", me.user.handle);
+            u.searchParams.set("look", JSON.stringify(me.user.look || {}));
           }
           u.searchParams.set("room", room);
           u.searchParams.set("pub", url.searchParams.get("pub") === "1" ? "1" : "");
@@ -358,6 +403,48 @@ export default {
 // ======================================================================
 // Hub — accounts, streams, publish tokens (single SQLite Durable Object)
 // ======================================================================
+// ---------------- economy ----------------
+const PACKS = {
+  p100: { coins: 100, usd: "0.99" }, p550: { coins: 550, usd: "4.99" },
+  p1200: { coins: 1200, usd: "9.99" }, p2600: { coins: 2600, usd: "19.99" }, p7000: { coins: 7000, usd: "49.99" },
+};
+const VIP_PRICE = 900; // coins / 30 days
+const SHOP = {
+  // animated name styles
+  "name:rainbow": { kind: "name", price: 300 }, "name:fire": { kind: "name", price: 300 }, "name:neon": { kind: "name", price: 250 },
+  "name:gold": { kind: "name", price: 400 }, "name:galaxy": { kind: "name", price: 500 }, "name:ice": { kind: "name", price: 250 },
+  // badges
+  "badge:star": { kind: "badge", price: 150 }, "badge:flame": { kind: "badge", price: 200 }, "badge:diamond": { kind: "badge", price: 400 },
+  "badge:crown": { kind: "badge", price: 600 }, "badge:gamer": { kind: "badge", price: 250 }, "badge:vip": { kind: "badge", price: 0, vip: true },
+  "badge:founder": { kind: "badge", price: 0, admin: true },
+  // avatar frames
+  "frame:neon": { kind: "frame", price: 300 }, "frame:gold": { kind: "frame", price: 400 }, "frame:fire": { kind: "frame", price: 500 },
+  "frame:rainbow": { kind: "frame", price: 450 },
+};
+const GIFTS = {
+  rose: { price: 10, e: "🌹" }, heart: { price: 30, e: "💖" }, controller: { price: 99, e: "🎮" }, car: { price: 299, e: "🏎️" },
+  lion: { price: 499, e: "🦁" }, crown: { price: 999, e: "👑" }, rocket: { price: 1999, e: "🚀" },
+};
+const VIP_FX = new Set(["fireworks", "meteor"]);
+const STREAMER_SHARE = 0.7;
+
+async function paypal(env, method, path, body) {
+  const base = env.PAYPAL_MODE === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
+  const auth = await fetch(base + "/v1/oauth2/token", {
+    method: "POST", body: "grant_type=client_credentials",
+    headers: { authorization: "Basic " + btoa(env.PAYPAL_CLIENT_ID + ":" + env.PAYPAL_SECRET), "content-type": "application/x-www-form-urlencoded" },
+  }).then((r) => r.json());
+  if (!auth.access_token) throw new Error("paypal auth: " + JSON.stringify(auth).slice(0, 200));
+  const r = await fetch(base + path, { method, headers: { authorization: "Bearer " + auth.access_token, "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
+  return { status: r.status, data: await r.json().catch(() => ({})) };
+}
+function payPage(ok, msg) {
+  return new Response(`<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Wahj</title>
+<body style="margin:0;background:#06050A;color:#fff;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center">
+<div><div style="font-size:64px">${ok ? "🎉" : "⚠️"}</div><h2>${msg}</h2><a href="wahj://wallet" style="display:inline-block;margin-top:14px;background:linear-gradient(120deg,#7C5CFF,#FF4D8D);color:#fff;padding:14px 28px;border-radius:16px;text-decoration:none;font-weight:700">العودة إلى وهج</a></div>
+<script>setTimeout(()=>location.href="wahj://wallet",1200)</script></body>`, { headers: { "content-type": "text/html; charset=utf-8" } });
+}
+
 const REC_LIMIT = 9.5e9; // keep under the R2 free tier (10 GB)
 const COLORS = ["#7C5CFF", "#FF4D8D", "#00D1FF", "#FFB800", "#2EE59D", "#FF6B3D", "#B26BFF", "#3DDCFF"];
 
@@ -398,6 +485,11 @@ export class Hub {
     this.sql.exec("CREATE TABLE IF NOT EXISTS avatars(uid TEXT PRIMARY KEY, data BLOB)");
     this.sql.exec(`CREATE TABLE IF NOT EXISTS recs(id TEXT PRIMARY KEY, uid TEXT, title TEXT, game TEXT, gameIcon TEXT, started INTEGER,
       ended INTEGER DEFAULT 0, dur REAL DEFAULT 0, bytes INTEGER DEFAULT 0, segs INTEGER DEFAULT 0, init INTEGER DEFAULT 0, deleted INTEGER DEFAULT 0, w INTEGER DEFAULT 0, h INTEGER DEFAULT 0)`);
+    for (const c of ["coins INTEGER DEFAULT 0", "vipUntil INTEGER DEFAULT 0", "owned TEXT DEFAULT '[]'", "equip TEXT DEFAULT '{}'", "earned INTEGER DEFAULT 0"]) {
+      try { this.sql.exec("ALTER TABLE users ADD COLUMN " + c); } catch (e) {}
+    }
+    this.sql.exec("CREATE TABLE IF NOT EXISTS tx(id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT, delta INTEGER, kind TEXT, ref TEXT, t INTEGER)");
+    this.sql.exec("CREATE TABLE IF NOT EXISTS orders(id TEXT PRIMARY KEY, uid TEXT, pack TEXT, coins INTEGER, usd TEXT, status TEXT, t INTEGER)");
     this.sql.exec("CREATE TABLE IF NOT EXISTS diag(id INTEGER PRIMARY KEY AUTOINCREMENT, t INTEGER, ip TEXT, ua TEXT, src TEXT, room TEXT, msg TEXT)");
     this.sql.exec("CREATE TABLE IF NOT EXISTS recsegs(rec TEXT, n INTEGER, dur REAL, bytes INTEGER, PRIMARY KEY(rec, n))");
     try { this.sql.exec("CREATE UNIQUE INDEX IF NOT EXISTS users_email ON users(email)"); } catch (e) {}
@@ -415,10 +507,33 @@ export class Hub {
   }
   recTotal() { return (this.one("SELECT SUM(bytes) b FROM recs WHERE deleted=0") || {}).b || 0; }
   prefsOf(u) { try { return JSON.parse(u.prefs || "{}") || {}; } catch (e) { return {}; } }
+  isAdmin(u) { return !!u && String(this.env.ADMIN_HANDLES || "cruyfford").split(",").map((x) => x.trim().toLowerCase()).includes(u.handle); }
+  isVip(u) { return !!u && (u.vipUntil || 0) > now(); }
+  jarr(s) { try { return JSON.parse(s || "[]") || []; } catch (e) { return []; } }
+  jobj(s) { try { return JSON.parse(s || "{}") || {}; } catch (e) { return {}; } }
+  ownsItem(u, id) {
+    const it = SHOP[id]; if (!it) return false;
+    if (it.admin) return this.isAdmin(u);
+    if (it.vip) return this.isVip(u);
+    if (this.isVip(u) && it.kind === "name") return true; // VIP: every name style
+    return this.jarr(u.owned).includes(id);
+  }
+  lookOf(u) {
+    if (!u) return {};
+    const e = this.jobj(u.equip), out = { vip: this.isVip(u) };
+    for (const k of ["name", "badge", "frame"]) if (e[k] && this.ownsItem(u, e[k])) out[k] = e[k].split(":")[1];
+    if (!out.badge && this.isAdmin(u)) out.badge = "founder";
+    return out;
+  }
+  addCoins(uid, delta, kind, ref) {
+    this.sql.exec("UPDATE users SET coins=coins+? WHERE id=?", delta, uid);
+    this.sql.exec("INSERT INTO tx(uid, delta, kind, ref, t) VALUES(?,?,?,?,?)", uid, delta, kind, String(ref || ""), now());
+  }
   pubUser(u, self) {
-    return u && { id: u.id, handle: u.handle, name: u.name, color: u.color, bio: u.bio || "", link: u.link || "",
+    return u && { id: u.id, handle: u.handle, name: u.name, color: u.color, bio: u.bio || "", link: u.link || "", look: this.lookOf(u),
       avatar: u.av ? "/api/avatar/" + u.id + "?v=" + u.av : "", created: u.created,
-      ...(self ? { email: u.email || "", notify: u.notify !== 0, prefs: this.prefsOf(u) } : {}) };
+      ...(self ? { email: u.email || "", notify: u.notify !== 0, prefs: this.prefsOf(u), coins: u.coins | 0, vipUntil: u.vipUntil || 0,
+        owned: this.jarr(u.owned), equip: this.jobj(u.equip), earned: u.earned | 0, admin: this.isAdmin(u) } : {}) };
   }
   limited(k, max, win) {
     const r = this.one("SELECT * FROM hits WHERE k=?", k);
@@ -734,6 +849,82 @@ export class Hub {
       }
       return J2({ ok: true, ids: rows.map((r) => r.id) });
     }
+    if (p === "/wallet") {
+      const u = this.user(b.token); if (!u) return J2({ error: "auth" });
+      return J2({ user: this.pubUser(u, true), tx: this.all("SELECT delta, kind, ref, t FROM tx WHERE uid=? ORDER BY id DESC LIMIT 30", u.id) });
+    }
+    if (p === "/buy") {
+      const u = this.user(b.token); if (!u) return J2({ error: "auth" });
+      const it = SHOP[b.item]; if (!it || it.vip || it.admin) return J2({ error: "bad_item" });
+      if (this.ownsItem(u, b.item)) return J2({ error: "owned" });
+      if ((u.coins | 0) < it.price) return J2({ error: "no_coins" });
+      this.addCoins(u.id, -it.price, "shop", b.item);
+      const owned = [...this.jarr(u.owned), b.item];
+      const eq = { ...this.jobj(u.equip), [it.kind]: b.item };
+      this.sql.exec("UPDATE users SET owned=?, equip=? WHERE id=?", JSON.stringify(owned), JSON.stringify(eq), u.id);
+      return J2({ user: this.pubUser(this.one("SELECT * FROM users WHERE id=?", u.id), true) });
+    }
+    if (p === "/equip") {
+      const u = this.user(b.token); if (!u) return J2({ error: "auth" });
+      const kind = String(b.kind || ""); if (!["name", "badge", "frame"].includes(kind)) return J2({ error: "bad_item" });
+      const eq = this.jobj(u.equip);
+      if (!b.item) delete eq[kind];
+      else { if (!SHOP[b.item] || SHOP[b.item].kind !== kind || !this.ownsItem(u, b.item)) return J2({ error: "not_owned" }); eq[kind] = b.item; }
+      this.sql.exec("UPDATE users SET equip=? WHERE id=?", JSON.stringify(eq), u.id);
+      return J2({ user: this.pubUser(this.one("SELECT * FROM users WHERE id=?", u.id), true) });
+    }
+    if (p === "/vip") {
+      const u = this.user(b.token); if (!u) return J2({ error: "auth" });
+      if ((u.coins | 0) < VIP_PRICE) return J2({ error: "no_coins" });
+      this.addCoins(u.id, -VIP_PRICE, "vip", "30d");
+      const until = Math.max(u.vipUntil || 0, t) + 30 * 86400000;
+      const eq = this.jobj(u.equip); if (!eq.badge) eq.badge = "badge:vip";
+      this.sql.exec("UPDATE users SET vipUntil=?, equip=? WHERE id=?", until, JSON.stringify(eq), u.id);
+      return J2({ user: this.pubUser(this.one("SELECT * FROM users WHERE id=?", u.id), true) });
+    }
+    if (p === "/grant") {
+      const a = this.user(b.token); if (!this.isAdmin(a)) return J2({ error: "forbidden" });
+      const u = this.one("SELECT * FROM users WHERE handle=? AND deleted=0", String(b.handle || "").toLowerCase().replace(/^@/, ""));
+      if (!u) return J2({ error: "not_found" });
+      const coins = Math.max(-1e6, Math.min(1e6, b.coins | 0));
+      if (coins) this.addCoins(u.id, coins, "admin", a.handle);
+      const days = Math.max(0, Math.min(3650, b.vipDays | 0));
+      if (days) this.sql.exec("UPDATE users SET vipUntil=? WHERE id=?", Math.max(u.vipUntil || 0, t) + days * 86400000, u.id);
+      return J2({ ok: true, user: this.pubUser(this.one("SELECT * FROM users WHERE id=?", u.id), true) });
+    }
+    if (p === "/gift") {
+      // called by a Room: viewer pays, streamer receives 70%
+      const g = GIFTS[b.gift]; if (!g) return J2({ error: "bad_gift" });
+      const from = this.one("SELECT * FROM users WHERE id=? AND deleted=0", String(b.from));
+      if (!from) return J2({ error: "auth" });
+      if (b.from === b.to) return J2({ error: "self" });
+      const n = Math.max(1, Math.min(99, b.n | 0 || 1));
+      const cost = g.price * n;
+      if ((from.coins | 0) < cost) return J2({ error: "no_coins" });
+      this.addCoins(from.id, -cost, "gift", b.gift + "x" + n + ">" + b.to);
+      const share = Math.floor(cost * STREAMER_SHARE);
+      this.addCoins(String(b.to), share, "gift_in", b.gift + "x" + n + "<" + from.id);
+      this.sql.exec("UPDATE users SET earned=earned+? WHERE id=?", share, String(b.to));
+      return J2({ ok: true, coins: (from.coins | 0) - cost, cost, share, n });
+    }
+    if (p === "/order-new") {
+      this.sql.exec("INSERT OR REPLACE INTO orders VALUES(?,?,?,?,?,?,?)", b.id, b.uid, b.pack, b.coins, b.usd, "created", t);
+      return J2({ ok: true });
+    }
+    if (p === "/order-get") {
+      const o = this.one("SELECT * FROM orders WHERE id=?", String(b.id));
+      if (b.raw) return J2({ order: o });
+      const u = this.user(b.token);
+      if (!o || !u || o.uid !== u.id) return J2({ error: "not_found" });
+      return J2({ status: o.status, coins: o.coins, balance: u.coins | 0 });
+    }
+    if (p === "/order-paid") {
+      const o = this.one("SELECT * FROM orders WHERE id=?", String(b.id));
+      if (!o || o.status === "paid") return J2({ ok: true });
+      this.sql.exec("UPDATE orders SET status='paid' WHERE id=?", o.id);
+      this.addCoins(o.uid, o.coins, "purchase", o.id);
+      return J2({ ok: true });
+    }
     if (p === "/diag-add") {
       if (this.limited("dg:" + b.ip, 300, 600000)) return J2({ ok: false });
       this.sql.exec("INSERT INTO diag(t, ip, ua, src, room, msg) VALUES(?,?,?,?,?,?)", t, b.ip, b.ua, b.src, b.room, b.msg);
@@ -956,6 +1147,7 @@ export class Room {
         uid, name: url.searchParams.get("name") || "", color: url.searchParams.get("color") || "#7C5CFF",
         handle: url.searchParams.get("handle") || "", anon: !uid, id: rid(6),
         pub: url.searchParams.get("pub") === "1",
+        look: (() => { try { return JSON.parse(url.searchParams.get("look") || "{}"); } catch (e) { return {}; } })(),
       };
       this.state.acceptWebSocket(server);
       server.serializeAttachment(att);
@@ -969,6 +1161,9 @@ export class Room {
         rules: this.meta ? { allowFx: this.pref("allowFx") !== false, allowCh: this.pref("allowCh") !== false, coStream: this.pref("coStream") || "all", slow: this.pref("slow") | 0 } : null,
       });
       this.state.waitUntil(this.syncHub());
+      if (att.look && att.look.vip && !att.pub && this.allowed("enter:" + uid, 60000)) {
+        this.bcast({ t: "enter", name: att.name, color: att.color, look: att.look });
+      }
       return new Response(null, { status: 101, webSocket: client });
     }
     return R({ error: "unknown" }, 404);
@@ -996,7 +1191,7 @@ export class Room {
         const slow = host ? 0 : ((this.meta && this.meta.prefs && this.meta.prefs.slow) | 0) * 1000;
         if (!text) return;
         if (!this.allowed("c:" + me.uid, Math.max(700, slow))) return slow ? this.send(ws, { t: "err", e: "slow" }) : undefined;
-        const msg = { t: "chat", id: rid(8), uid: me.uid, name: me.name, color: me.color, text, at: t, host, guest: this.guests.includes(me.uid) };
+        const msg = { t: "chat", id: rid(8), uid: me.uid, name: me.name, color: me.color, text, at: t, host, guest: this.guests.includes(me.uid), look: me.look || {} };
         this.pushHistory(msg);
         this.bcast(msg);
         this.addHype(1);
@@ -1012,9 +1207,26 @@ export class Room {
       case "effect": {
         if (me.anon) return this.send(ws, { t: "err", e: "login" });
         if (this.pref("allowFx") === false && !host) return this.send(ws, { t: "err", e: "fx_off" });
-        if (!EFFECTS.has(m.id) || !this.allowed("e:" + me.uid, 4000)) return this.send(ws, { t: "err", e: "slow" });
+        if (VIP_FX.has(m.id) && !(me.look && me.look.vip)) return this.send(ws, { t: "err", e: "vip_only" });
+        if (!(EFFECTS.has(m.id) || VIP_FX.has(m.id)) || !this.allowed("e:" + me.uid, 4000)) return this.send(ws, { t: "err", e: "slow" });
         this.bcast({ t: "effect", id: m.id, name: me.name, color: me.color, at: t });
         this.addHype(6);
+        return;
+      }
+      case "gift": {
+        if (me.anon) return this.send(ws, { t: "err", e: "login" });
+        if (!this.meta || this.meta.ended || !GIFTS[m.gift]) return;
+        if (!this.allowed("g:" + me.uid, 800)) return this.send(ws, { t: "err", e: "slow" });
+        const to = m.to && (this.guests.includes(m.to) || m.to === this.meta.host) ? m.to : this.meta.host;
+        const r = await this.env.HUB.get(this.env.HUB.idFromName("hub")).fetch("https://hub/gift", {
+          method: "POST", body: JSON.stringify({ from: me.uid, to, gift: m.gift, n: m.n | 0 || 1 }) }).then((x) => x.json());
+        if (r.error) return this.send(ws, { t: "err", e: r.error });
+        this.send(ws, { t: "coins", coins: r.coins });
+        const ev = { t: "gift", id: rid(6), gift: m.gift, n: r.n, uid: me.uid, name: me.name, color: me.color, look: me.look || {}, to, value: r.cost, at: t };
+        this.giftTotal = (this.giftTotal || 0) + r.cost;
+        this.pushHistory({ t: "chat", id: ev.id, uid: me.uid, name: me.name, color: me.color, look: me.look || {}, text: `🎁 ${GIFTS[m.gift].e} ×${r.n}`, at: t, gift: true });
+        this.bcast(ev);
+        this.addHype(Math.min(60, 5 + r.cost / 20));
         return;
       }
       case "vote": {

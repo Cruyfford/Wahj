@@ -115,6 +115,7 @@ class MainActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         val d = intent.data ?: return
         if (d.host == "w") web.loadUrl(server + "/w" + (d.path ?: ""))
+        if (d.host == "wallet") web.evaluateJavascript("window.Wahj && Wahj.go('wallet')", null)
     }
 
     override fun onDestroy() {
