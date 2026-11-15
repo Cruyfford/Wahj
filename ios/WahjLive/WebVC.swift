@@ -57,6 +57,12 @@ final class WebVC: UIViewController, WKScriptMessageHandler, WKNavigationDelegat
 
         DarwinCenter.shared.observe(WahjNames.live) { [weak self] in self?.setBroadcasting(true) }
         DarwinCenter.shared.observe(WahjNames.began) { [weak self] in self?.emit(["type": "broadcast", "state": "connecting"]) }
+        // Tell the broadcast extension whether Wahj is on screen (the stream shows "starting soon" until you're in the game).
+        DarwinCenter.shared.observe(WahjNames.appQuery) {
+            DarwinCenter.post(UIApplication.shared.applicationState == .active ? WahjNames.appFront : WahjNames.appBack)
+        }
+        NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { _ in DarwinCenter.post(WahjNames.appFront) }
+        NotificationCenter.default.addObserver(forName: UIApplication.willResignActiveNotification, object: nil, queue: .main) { _ in DarwinCenter.post(WahjNames.appBack) }
         DarwinCenter.shared.observe(WahjNames.stopped) { [weak self] in self?.setBroadcasting(false) }
         DarwinCenter.shared.observe(WahjNames.failed) { [weak self] in self?.emit(["type": "broadcast", "state": "stopped", "error": L10n.s("تعذّر بدء البث", "Could not start the stream")]) }
         DarwinCenter.shared.observe(WahjNames.privacyOn) { [weak self] in self?.pip.setPrivacy(true); self?.emit(["type": "privacy", "on": true]) }
@@ -149,11 +155,12 @@ final class WebVC: UIViewController, WKScriptMessageHandler, WKNavigationDelegat
         if slug.count >= 3 { schemes.append(slug + "://") }
         func next(_ i: Int) {
             if i >= schemes.count {
-                if !appId.isEmpty, let u = URL(string: "itms-apps://apps.apple.com/app/id" + appId) { UIApplication.shared.open(u) }
+                // No known link for this game: ask the streamer to open it (never send them to the App Store mid-stream).
+                emit(["type": "launch", "ok": false, "name": name])
                 return
             }
             guard let u = URL(string: schemes[i]) else { return next(i + 1) }
-            UIApplication.shared.open(u, options: [:]) { ok in if !ok { next(i + 1) } }
+            UIApplication.shared.open(u, options: [:]) { ok in if ok { self.emit(["type": "launch", "ok": true]) } else { next(i + 1) } }
         }
         next(0)
     }

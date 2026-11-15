@@ -57,6 +57,7 @@ const T = {
     focusSteps: "١. افتح تطبيق «الاختصارات» ← «الأتمتة» ← «أتمتة جديدة»<br>٢. اختر «تطبيق» ← وهج ← «عند الفتح»<br>٣. اختر «تشغيل فوري»<br>٤. أضف إجراء «تعيين التركيز» ← «عدم الإزعاج» ← تشغيل<br><br>الآن كل مرة تفتح وهج يتفعّل عدم الإزعاج تلقائياً ✓",
     openShortcuts: "فتح الاختصارات", errs: { bad_handle: "اسم المستخدم: ٣–٢٠ حرفاً إنجليزياً أو أرقام", weak_password: "كلمة المرور ٦ أحرف على الأقل", taken: "الاسم محجوز", bad_login: "بيانات الدخول غير صحيحة", rate: "محاولات كثيرة، انتظر قليلاً", net: "تعذّر الاتصال", auth: "سجّل الدخول أولاً", not_invited: "لم تتم دعوتك", login: "سجّل الدخول للمشاركة", slow: "انتظر لحظة", guests_full: "اكتمل عدد الضيوف (٣)", bad_email: "البريد الإلكتروني غير صحيح", email_taken: "هذا البريد مسجّل مسبقاً", bad_code: "الرمز غير صحيح أو منتهي", mail_off: "إرسال البريد غير مفعّل في السيرفر بعد", bad_link: "الرابط غير صحيح", bad_old: "كلمة المرور الحالية غير صحيحة", bad_image: "الصورة غير مدعومة", fx_off: "البثّاث أوقف المؤثرات", ch_off: "البثّاث أوقف التحديات", co_off: "البثّاث لا يقبل طلبات البث المشترك" },
     sentFx: "أرسل", hypeTrain: "قطار الحماس 🚀", latency: "تأخير", guestsN: "ضيوف", layoutSplit: "شاشة مقسومة", layoutFocus: "تركيز",
+    soonT: "سيبدأ البث خلال لحظات 🎮", soonS: "البثّاث يفتح اللعبة الآن", openGameNow: "افتح {g} الآن — يبدأ البث للمشاهدين عند دخولك اللعبة", soonShield: "المشاهدون يرون «سيبدأ البث» حتى تدخل اللعبة",
     autoLaunch: "افتح اللعبة تلقائياً", autoLaunchD: "بعد بدء البث ينتقل وهج إلى اللعبة مباشرة", openingGame: "جارٍ فتح اللعبة…",
     recSave: "حفظ البث على السيرفر", recSaveD: "يُسجَّل بثك ويمكن إعادة مشاهدته من ملفك", recordings: "التسجيلات", noRecs: "لا توجد تسجيلات", replay: "إعادة مشاهدة", delRec: "حذف التسجيل", delRecQ: "حذف هذا التسجيل نهائياً؟",
     delAllRecs: "حذف كل التسجيلات", delAllQ: "حذف كل تسجيلاتك نهائياً؟", storage: "المساحة المستخدمة", recOff: "حفظ البثوث غير مفعّل في السيرفر", recording: "يتم التسجيل", recFull: "مساحة التسجيلات ممتلئة",
@@ -105,6 +106,7 @@ const T = {
     focusSteps: "1. Open Shortcuts → Automation → New Automation<br>2. Choose App → Wahj → Is Opened<br>3. Choose Run Immediately<br>4. Add action Set Focus → Do Not Disturb → On<br><br>Now Do Not Disturb turns on automatically every time you open Wahj ✓",
     openShortcuts: "Open Shortcuts", errs: { bad_handle: "Username: 3–20 latin letters/digits", weak_password: "Password needs 6+ characters", taken: "Username taken", bad_login: "Wrong username or password", rate: "Too many attempts, wait a bit", net: "Connection failed", auth: "Sign in first", not_invited: "You were not invited", login: "Sign in to take part", slow: "Slow down a moment", guests_full: "Guest slots are full (3)", bad_email: "Invalid email address", email_taken: "Email already registered", bad_code: "Wrong or expired code", mail_off: "Email sending isn't enabled on the server yet", bad_link: "Invalid link", bad_old: "Current password is wrong", bad_image: "Unsupported image", fx_off: "The streamer turned effects off", ch_off: "The streamer turned challenges off", co_off: "The streamer isn't accepting co-stream requests" },
     sentFx: "sent", hypeTrain: "HYPE TRAIN 🚀", latency: "Delay", guestsN: "guests", layoutSplit: "Split screen", layoutFocus: "Focus",
+    soonT: "Starting in a moment 🎮", soonS: "The streamer is opening the game", openGameNow: "Open {g} now — viewers see the stream once you're in the game", soonShield: "Viewers see “starting soon” until you're in the game",
     autoLaunch: "Open the game automatically", autoLaunchD: "When the stream starts, Wahj switches straight to the game", openingGame: "Opening the game…",
     recSave: "Save streams on the server", recSaveD: "Your stream is recorded and can be replayed from your profile", recordings: "Recordings", noRecs: "No recordings", replay: "Replay", delRec: "Delete recording", delRecQ: "Delete this recording permanently?",
     delAllRecs: "Delete all recordings", delAllQ: "Delete all your recordings permanently?", storage: "Storage used", recOff: "Stream saving isn't enabled on the server", recording: "Recording", recFull: "Recording storage is full",
@@ -660,7 +662,7 @@ class Stage {
       const t = this.tracks.get(p.uid + ":screen"); if (t) this.attach({ uid: p.uid, role: "screen" }, t);
     }
     $(".nm", el).innerHTML = `${esc(p.name)}${p.role === "guest" ? " · " + t("guestTag") : ""}`;
-    this.setPrivacy(p.uid, !!p.privacy);
+    this.setPrivacy(p.uid, !!p.privacy, p.privacy && p.privacy.reason);
   }
   attach(info, track) {
     if (info.role === "screen") {
@@ -684,14 +686,14 @@ class Stage {
     }
   }
   unmute() { this.muted = false; for (const a of this.audios.values()) { a.muted = false; a.play().catch(() => {}); } }
-  setPrivacy(uid, on) {
+  setPrivacy(uid, on, reason) {
     const el = this.tiles.get(uid); if (!el) return;
     let o = $(".priv", el);
-    if (on && !o) {
-      o = document.createElement("div"); o.className = "priv";
-      o.innerHTML = `<div class="lk">${ic("lock")}</div><b>${t("privTitle")}</b><span>${t("privSub")}</span>`;
-      el.appendChild(o);
-    } else if (!on && o) o.remove();
+    if (!on) { o && o.remove(); return; }
+    if (!o) { o = document.createElement("div"); o.className = "priv"; el.appendChild(o); }
+    o.innerHTML = reason === "app"
+      ? `<div class="lk" style="background:var(--grad)">${ic("game")}</div><b>${t("soonT")}</b><span>${t("soonS")}</span>`
+      : `<div class="lk">${ic("lock")}</div><b>${t("privTitle")}</b><span>${t("privSub")}</span>`;
   }
   drag(el) {
     let sx, sy, ox, oy;
@@ -1094,7 +1096,7 @@ VIEWS.watch = (root, id) => {
         if (m.pinned) showPin(m.pinned);
         break;
       case "publishers": stage.setPubs(m.list); sawPubs = true; break;
-      case "privacy": stage.setPrivacy(m.uid, m.on); break;
+      case "privacy": stage.setPrivacy(m.uid, m.on, m.reason); break;
       case "viewers": $("#wv").innerHTML = ic("eye") + " " + fmtN(m.n); break;
       case "chat": addChat(chatHtml(m)); break;
       case "react": if (m.uid !== me.uid) FX.floaty($("#wfx"), m.e); break;
@@ -1384,7 +1386,7 @@ VIEWS.studio = (root) => {
       case "publishers": st.pubs = m.list; if (m.list.find((p) => p.uid === S.user.id)) setState("live"); previewStage && previewStage.setPubs(m.list);
         if (nat) Native.post("voice", { room: job.room, pub: job.pub, server: location.origin, publishers: m.list, me: S.user.id });
         break;
-      case "privacy": if (m.uid === S.user.id) { st.privacy = m.on; setShield(); } previewStage && previewStage.setPrivacy(m.uid, m.on); break;
+      case "privacy": if (m.uid === S.user.id) { st.privacy = m.on && m.reason !== "app"; setShield(); } previewStage && previewStage.setPrivacy(m.uid, m.on, m.reason); break;
       case "effect": haptic("medium"); break;
       case "bstatus": if (m.uid === S.user.id && m.msg) { toast(esc(m.msg), 6000); if (m.state === "error") setState("error"); } break;
       case "kicked": case "ended": endLive(); break;
@@ -1415,6 +1417,7 @@ VIEWS.studio = (root) => {
       if (e.state === "stopped") { api("/api/end", { room: job.room, pub: job.pub }); S.live = null; setTimeout(() => current === "studio" && go("home"), 1500); }
     }
     if (e.type === "privacy") { st.privacy = e.on; setShield(); }
+    if (e.type === "launch" && !e.ok) toast(t("openGameNow", { g: esc(e.name || t("game")) }), 7000);
     if (e.type === "overlay") { st.overlay = e.on; $("#aov").classList.toggle("on", e.on); }
     if (e.type === "cam") { st.cam = e.on; $("#acam").classList.toggle("on", e.on); }
   });

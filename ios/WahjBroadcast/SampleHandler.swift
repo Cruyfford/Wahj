@@ -19,6 +19,16 @@ class SampleHandler: RPBroadcastSampleHandler, CXCallObserverDelegate {
     private var finished = false
 
     private var frames = 0
+    // "starting soon" while Wahj itself is on screen (until the streamer switches to the game)
+    private var appFront = true
+    private var appBackAt: CFTimeInterval = 0
+    private var appKnown = false
+    private var lastPriv = ""
+    private var appHidden: Bool { appFront || CACurrentMediaTime() - appBackAt < 1.2 }
+    // upright frames
+    private let upCtx = CIContext(options: [.cacheIntermediates: false])
+    private var upPool: CVPixelBufferPool?
+    private var upSize = CGSize.zero
     override func broadcastStarted(withSetupInfo setupInfo: [String: NSObject]?) {
         DarwinCenter.post(WahjNames.began)
         Diag.log("broadcastStarted ios=\(UIDevice.current.systemVersion)")
@@ -26,7 +36,22 @@ class SampleHandler: RPBroadcastSampleHandler, CXCallObserverDelegate {
             self?.finish(L10n.s("تم إيقاف البث من تطبيق وهج", "Stopped from the Wahj app"))
         }
         callObserver.setDelegate(self, queue: DispatchQueue.main)
-        guardian.onChange = { [weak self] on in self?.sendPrivacy(on) }
+        guardian.onChange = { [weak self] _ in self?.updatePrivacy() }
+        DarwinCenter.shared.observe(WahjNames.appFront) { [weak self] in
+            guard let self = self else { return }
+            self.appKnown = true; self.appFront = true; self.updatePrivacy()
+        }
+        DarwinCenter.shared.observe(WahjNames.appBack) { [weak self] in
+            guard let self = self else { return }
+            self.appKnown = true; self.appFront = false; self.appBackAt = CACurrentMediaTime()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.3) { self.updatePrivacy() }
+        }
+        DarwinCenter.post(WahjNames.appQuery)
+        // If Wahj doesn't answer it isn't in the foreground.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            guard let self = self, !self.appKnown else { return }
+            self.appFront = false; self.appBackAt = 0; self.updatePrivacy()
+        }
         Task { await boot() }
     }
 
@@ -74,16 +99,20 @@ class SampleHandler: RPBroadcastSampleHandler, CXCallObserverDelegate {
             if frames == 1 || frames % 900 == 0 { Diag.log("video frames=\(frames) size=\(CVPixelBufferGetWidth(pb))x\(CVPixelBufferGetHeight(pb)) fmt=\(CVPixelBufferGetPixelFormatType(pb))") }
             let (rotation, edge, cgo) = Self.orientation(sb)
             let time = CMSampleBufferGetPresentationTimeStamp(sb)
-            if guardian.hideAll {
-                if let b = blankBuffer(like: pb) { p.push(b, rotation: rotation, time: time); recorder?.push(b, orientation: .up, time: time) }
+            if guardian.hideAll || appHidden {
+                if let b = blankBuffer(like: pb) { p.push(b, rotation: ._0, time: time); recorder?.push(b, orientation: .up, time: time) }
                 return
             }
             guardian.process(pb, edge: edge)
-            p.push(pb, rotation: rotation, time: time)
-            recorder?.push(pb, orientation: cgo, time: time)
-            if wantThumb {
-                wantThumb = false
-                makeThumb(pb, cgo)
+            // Rotate the pixels so landscape games stream in landscape and portrait ones in portrait.
+            if let up = upright(pb, cgo) {
+                p.push(up, rotation: ._0, time: time)
+                recorder?.push(up, orientation: .up, time: time)
+                if wantThumb { wantThumb = false; makeThumb(up, .up) }
+            } else {
+                p.push(pb, rotation: rotation, time: time)
+                recorder?.push(pb, orientation: cgo, time: time)
+                if wantThumb { wantThumb = false; makeThumb(pb, cgo) }
             }
         case .audioApp:
             p.audio.pushApp(sb)
@@ -130,13 +159,45 @@ class SampleHandler: RPBroadcastSampleHandler, CXCallObserverDelegate {
         guardian.setCall(callObserver.calls.contains(where: { !$0.hasEnded }))
     }
 
-    private func sendPrivacy(_ on: Bool) {
-        DarwinCenter.post(on ? WahjNames.privacyOn : WahjNames.privacyOff)
+    private func updatePrivacy() {
+        let reason = guardian.callActive && guardian.callGuard ? "call" : (appHidden ? "app" : "")
+        guard reason != lastPriv else { return }
+        lastPriv = reason
+        let on = !reason.isEmpty
+        if reason != "app" { DarwinCenter.post(on ? WahjNames.privacyOn : WahjNames.privacyOff) }
+        Diag.log("privacy -> \(reason.isEmpty ? "off" : reason)")
         guard let job = job else { return }
         Task {
             _ = try? await Http.json(job.serverURL + "/api/room/\(job.room)/privacy", method: "POST",
-                                     body: ["on": on, "reason": "call"], headers: ["x-pub": job.pub])
+                                     body: ["on": on, "reason": reason], headers: ["x-pub": job.pub])
         }
+    }
+
+    /// Renders the frame upright (and down-scaled to the stream size) into a pooled NV12 buffer.
+    private func upright(_ pb: CVPixelBuffer, _ o: CGImagePropertyOrientation) -> CVPixelBuffer? {
+        let longSide: CGFloat = { switch job?.quality ?? "720" { case "1080": return 1920; case "540": return 960; default: return 1280 } }()
+        var img = CIImage(cvPixelBuffer: pb)
+        if o != .up { img = img.oriented(o) }
+        let e = img.extent
+        let s = min(1, longSide / max(e.width, e.height))
+        let w = (Int(e.width * s) / 2) * 2, h = (Int(e.height * s) / 2) * 2
+        guard w > 0, h > 0 else { return nil }
+        if upPool == nil || upSize != CGSize(width: w, height: h) {
+            let attrs: [String: Any] = [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_420YpCbCr8BiPlanarFullRange,
+                                        kCVPixelBufferWidthKey as String: w, kCVPixelBufferHeightKey as String: h,
+                                        kCVPixelBufferIOSurfacePropertiesKey as String: [:] as [String: Any]]
+            var pool: CVPixelBufferPool?
+            CVPixelBufferPoolCreate(nil, [kCVPixelBufferPoolMinimumBufferCountKey as String: 3] as CFDictionary, attrs as CFDictionary, &pool)
+            upPool = pool; upSize = CGSize(width: w, height: h)
+            Diag.log("stream canvas \(w)x\(h) orientation=\(o.rawValue)")
+        }
+        guard let pool = upPool else { return nil }
+        var out: CVPixelBuffer?
+        CVPixelBufferPoolCreatePixelBuffer(nil, pool, &out)
+        guard let o2 = out else { return nil }
+        img = img.transformed(by: CGAffineTransform(translationX: -e.minX, y: -e.minY)).transformed(by: CGAffineTransform(scaleX: s, y: s))
+        upCtx.render(img, to: o2, bounds: CGRect(x: 0, y: 0, width: w, height: h), colorSpace: CGColorSpaceCreateDeviceRGB())
+        return o2
     }
 
     private func blankBuffer(like pb: CVPixelBuffer) -> CVPixelBuffer? {

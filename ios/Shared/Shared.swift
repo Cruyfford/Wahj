@@ -10,6 +10,9 @@ enum WahjNames {
     static let privacyOff = "com.cruyfford.wahj.privacy.off"
     static let failed = "com.cruyfford.wahj.failed"
     static let began = "com.cruyfford.wahj.began"
+    static let appFront = "com.cruyfford.wahj.app.front"
+    static let appBack = "com.cruyfford.wahj.app.back"
+    static let appQuery = "com.cruyfford.wahj.app.query"
     static let appGroup = "group.com.cruyfford.wahj"
     static let localPort: UInt16 = 47821
 }

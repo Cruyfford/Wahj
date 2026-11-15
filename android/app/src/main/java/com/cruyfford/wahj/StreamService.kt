@@ -52,6 +52,9 @@ class StreamService : Service() {
         @Volatile var running = false
         @Volatile var dndApplied = false
         @Volatile var notifAt = 0L
+        /** Wahj on screen → viewers see "starting soon" (the stream begins once you're in the game). */
+        @Volatile var appFront = false
+        @Volatile var appBackAt = 0L
         var projectionData: Intent? = null
     }
 
@@ -371,13 +374,19 @@ class StreamService : Service() {
             hiddenByCall = call
             Bus.emit("privacy", "on" to call)
             overlays?.privacy(call)
+        }
+        val reason = if (hiddenByCall) "call" else if (appHidden()) "app" else ""
+        if (reason != lastReason) {
+            lastReason = reason
             exec.execute {
-                try { Net.json("$server/api/room/${job.optString("room")}/privacy", "POST", JSONObject().put("on", call).put("reason", "call"), mapOf("x-pub" to job.optString("pub"))) } catch (_: Exception) {}
+                try { Net.json("$server/api/room/${job.optString("room")}/privacy", "POST", JSONObject().put("on", reason.isNotEmpty()).put("reason", reason), mapOf("x-pub" to job.optString("pub"))) } catch (_: Exception) {}
             }
         }
     }
 
-    private fun hidden(): Boolean = hiddenByCall || System.currentTimeMillis() - notifAt < 4000
+    private fun appHidden() = appFront || System.currentTimeMillis() - appBackAt < 1200
+    private fun hidden(): Boolean = hiddenByCall || appHidden() || System.currentTimeMillis() - notifAt < 4000
+    private var lastReason = ""
 
     private inner class GuardObserver(private val inner: CapturerObserver) : CapturerObserver {
         override fun onCapturerStarted(success: Boolean) = inner.onCapturerStarted(success)

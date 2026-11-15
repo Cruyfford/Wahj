@@ -150,8 +150,15 @@ class MainActivity : AppCompatActivity() {
         startActivity(Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")))
     }
 
+    override fun onPause() {
+        super.onPause()
+        StreamService.appFront = false
+        StreamService.appBackAt = System.currentTimeMillis()
+    }
+
     override fun onResume() {
         super.onResume()
+        StreamService.appFront = true
         val p = pendingAfterOverlay
         if (p != null && (Build.VERSION.SDK_INT < 23 || Settings.canDrawOverlays(this))) { pendingAfterOverlay = null; p() }
     }
@@ -217,8 +224,8 @@ class MainActivity : AppCompatActivity() {
                     pkg = try { installedGames().firstOrNull { val n = it.optString("name").lowercase().filter { c -> c.isLetterOrDigit() }; n.isNotEmpty() && want.isNotEmpty() && (n.contains(want.take(8)) || want.contains(n)) }?.optString("pkg") ?: "" } catch (_: Exception) { "" }
                 }
                 val i = if (pkg.isNotBlank()) packageManager.getLaunchIntentForPackage(pkg) else null
-                if (i != null) startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                else if (d.optString("name").isNotBlank()) runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://search?q=" + Uri.encode(d.optString("name")) + "&c=apps"))) }
+                if (i != null) { startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); emit(JSONObject().put("type", "launch").put("ok", true)) }
+                else emit(JSONObject().put("type", "launch").put("ok", false).put("name", d.optString("name")))
             }
             "share" -> {
                 val t = listOf(d.optString("text"), d.optString("url")).filter { it.isNotBlank() }.joinToString("\n")
