@@ -57,6 +57,7 @@ const T = {
     focusSteps: "١. افتح تطبيق «الاختصارات» ← «الأتمتة» ← «أتمتة جديدة»<br>٢. اختر «تطبيق» ← وهج ← «عند الفتح»<br>٣. اختر «تشغيل فوري»<br>٤. أضف إجراء «تعيين التركيز» ← «عدم الإزعاج» ← تشغيل<br><br>الآن كل مرة تفتح وهج يتفعّل عدم الإزعاج تلقائياً ✓",
     openShortcuts: "فتح الاختصارات", errs: { bad_handle: "اسم المستخدم: ٣–٢٠ حرفاً إنجليزياً أو أرقام", weak_password: "كلمة المرور ٦ أحرف على الأقل", taken: "الاسم محجوز", bad_login: "بيانات الدخول غير صحيحة", rate: "محاولات كثيرة، انتظر قليلاً", net: "تعذّر الاتصال", auth: "سجّل الدخول أولاً", not_invited: "لم تتم دعوتك", login: "سجّل الدخول للمشاركة", slow: "انتظر لحظة", guests_full: "اكتمل عدد الضيوف (٣)", bad_email: "البريد الإلكتروني غير صحيح", email_taken: "هذا البريد مسجّل مسبقاً", bad_code: "الرمز غير صحيح أو منتهي", mail_off: "إرسال البريد غير مفعّل في السيرفر بعد", bad_link: "الرابط غير صحيح", no_points: "نقاطك غير كافية ⭐", need_text: "اكتب رسالتك أولاً", too_many: "الحد ١٢ مكافأة", no_coins: "رصيدك غير كافٍ 🪙", vip_only: "خاص بمشتركي VIP 👑", owned: "تملكه مسبقاً", self: "لا يمكنك إهداء نفسك", pay_off: "الدفع غير مفعّل بعد", pay_fail: "تعذّر إنشاء الدفع", forbidden: "غير مسموح", not_found: "غير موجود", bad_old: "كلمة المرور الحالية غير صحيحة", bad_image: "الصورة غير مدعومة", fx_off: "البثّاث أوقف المؤثرات", ch_off: "البثّاث أوقف التحديات", co_off: "البثّاث لا يقبل طلبات البث المشترك", bad_ytkey: "مفتاح يوتيوب غير صحيح" },
     sentFx: "أرسل", hypeTrain: "قطار الحماس 🚀", latency: "تأخير", guestsN: "ضيوف", layoutSplit: "شاشة مقسومة", layoutFocus: "تركيز",
+    fxs: "المؤثرات", fxLocked: "هذا المؤثر يُشترى من المتجر", preview: "معاينة", owned2: "تملكه",
     ranks: "ترتيب الستريمرز", rankMonth: "هذا الشهر", rankAll: "كل الوقت", rankYou: "مركزك", rankNone: "لم تدخل الترتيب بعد — ابدأ البث!", rankEnds: "ينتهي الموسم بعد {n}", days: "يوم",
     sLevel: "مستوى الستريمر", sRankM: "مركزه هذا الشهر", sRankA: "مركزه العام", sNext: "{n} XP للمستوى التالي", sLevelUp: "{n} وصل مستوى ستريمر {l} 🎉", sLevelUpMe: "مستواك كستريمر صار {l}!",
     topPerks: "مزايا الثلاثة الأوائل", topYou: "أنت #{n} هذا الشهر 🏆", sharePct: "أرباحك من الهدايا والاشتراكات: {n}%",
@@ -125,6 +126,7 @@ const T = {
     focusSteps: "1. Open Shortcuts → Automation → New Automation<br>2. Choose App → Wahj → Is Opened<br>3. Choose Run Immediately<br>4. Add action Set Focus → Do Not Disturb → On<br><br>Now Do Not Disturb turns on automatically every time you open Wahj ✓",
     openShortcuts: "Open Shortcuts", errs: { bad_handle: "Username: 3–20 latin letters/digits", weak_password: "Password needs 6+ characters", taken: "Username taken", bad_login: "Wrong username or password", rate: "Too many attempts, wait a bit", net: "Connection failed", auth: "Sign in first", not_invited: "You were not invited", login: "Sign in to take part", slow: "Slow down a moment", guests_full: "Guest slots are full (3)", bad_email: "Invalid email address", email_taken: "Email already registered", bad_code: "Wrong or expired code", mail_off: "Email sending isn't enabled on the server yet", bad_link: "Invalid link", no_points: "Not enough points ⭐", need_text: "Write your message first", too_many: "Max 12 rewards", no_coins: "Not enough coins 🪙", vip_only: "VIP only 👑", owned: "Already owned", self: "You can't gift yourself", pay_off: "Payments aren't enabled yet", pay_fail: "Couldn't start the payment", forbidden: "Not allowed", not_found: "Not found", bad_old: "Current password is wrong", bad_image: "Unsupported image", fx_off: "The streamer turned effects off", ch_off: "The streamer turned challenges off", co_off: "The streamer isn't accepting co-stream requests", bad_ytkey: "Invalid YouTube stream key" },
     sentFx: "sent", hypeTrain: "HYPE TRAIN 🚀", latency: "Delay", guestsN: "guests", layoutSplit: "Split screen", layoutFocus: "Focus",
+    fxs: "Effects", fxLocked: "Get this effect in the shop", preview: "Preview", owned2: "Owned",
     ranks: "Streamer ranking", rankMonth: "This month", rankAll: "All time", rankYou: "Your rank", rankNone: "Not ranked yet — go live!", rankEnds: "Season ends in {n}", days: "days",
     sLevel: "Streamer level", sRankM: "Rank this month", sRankA: "Overall rank", sNext: "{n} XP to next level", sLevelUp: "{n} reached streamer level {l} 🎉", sLevelUpMe: "Your streamer level is now {l}!",
     topPerks: "Top 3 perks", topYou: "You're #{n} this month 🏆", sharePct: "Your share of gifts & subs: {n}%",
@@ -246,7 +248,41 @@ function confirmBox(q, yes) {
   sheet(`<h3>${esc(q)}</h3><div class="row" style="margin-top:8px"><button class="btn g" data-n>${t("no")}</button><button class="btn d" data-y>${t("yes")}</button></div>`,
     (sh, close) => { $("[data-n]", sh).onclick = close; $("[data-y]", sh).onclick = () => { close(); yes(); }; });
 }
-const BADGE_E = { star: "⭐", flame: "🔥", diamond: "💎", crown: "👑", gamer: "🎮" };
+/* SVG badges — [path, colorA, colorB, rarity] */
+const BADGES = {
+  star: ["M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7L12 17.3 5.8 20.9l1.6-7L2 9.2l7.1-.6z", "#ffe259", "#ffa751", "c"],
+  flame: ["M12 2c1 4 5 5.5 5 11a5 5 0 0 1-10 0c0-2.5 1.2-4 2.5-5 .2 2 1 3 2 3.5C11 9 10.5 5 12 2z", "#ff9a3d", "#ff2e63", "c"],
+  diamond: ["M6 3h12l4 6-10 12L2 9zm1.2 2L5 8.5h4.2L10.6 5zm5.9 0l1.4 3.5H19L16.8 5zM5.4 10.5l5.6 6.8-2.3-6.8zm7.6 0l-1 6.8 5.6-6.8z", "#7fe7ff", "#5b6cff", "e"],
+  crown: ["M3 18h18l-1.5-10-4.5 4-3-7-3 7-4.5-4zm0 2h18v2H3z", "#ffd700", "#ff8c00", "l"],
+  gamer: ["M7 8h10a5 5 0 0 1 4.6 7l-1 2.3a2 2 0 0 1-3.4.4L15 16H9l-2.2 1.7a2 2 0 0 1-3.4-.4l-1-2.3A5 5 0 0 1 7 8zm0 3v1.2H5.8v1.6H7V15h1.6v-1.2h1.2v-1.6H8.6V11zm9.5 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-2 2a1 1 0 1 0 0 2 1 1 0 0 0 0-2z", "#2ee59d", "#00a3ff", "c"],
+  bolt: ["M13 2L4 14h7l-1 8 9-12h-7z", "#fff200", "#ff9f00", "c"],
+  shield: ["M12 2l8 3v6c0 5-3.4 9.3-8 11-4.6-1.7-8-6-8-11V5zm-1 13.5l6-6-1.4-1.4-4.6 4.6-2.1-2.1L7.5 12z", "#4facfe", "#2b5bff", "r"],
+  skull: ["M12 2a8 8 0 0 0-8 8c0 3 1.5 5 3 6v3h2v-2h2v2h2v-2h2v2h2v-3c1.5-1 3-3 3-6a8 8 0 0 0-8-8zm-3 7a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm6 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4z", "#e0e0e0", "#6a6a8a", "r"],
+  sword: ["M21 2l-1 5-9.5 9.5-3-3L17 4zM6 13l5 5-1.5 1.5-1.5-1.5-3 3-2-2 3-3-1.5-1.5z", "#c9d6ff", "#6c7bff", "r"],
+  heart: ["M12 21l-1.5-1.3C5 15 2 12.2 2 8.5 2 5.5 4.4 3 7.4 3c1.7 0 3.4.8 4.6 2.1C13.2 3.8 14.9 3 16.6 3 19.6 3 22 5.5 22 8.5c0 3.7-3 6.5-8.5 11.2z", "#ff6fb5", "#ff1e56", "c"],
+  crosshair: ["M11 2h2v3.1A7 7 0 0 1 18.9 11H22v2h-3.1A7 7 0 0 1 13 18.9V22h-2v-3.1A7 7 0 0 1 5.1 13H2v-2h3.1A7 7 0 0 1 11 5.1zm1 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm0 3a2 2 0 1 1 0 4 2 2 0 0 1 0-4z", "#ff5f6d", "#c31432", "r"],
+  headset: ["M12 3a9 9 0 0 0-9 9v6a3 3 0 0 0 3 3h2v-8H5v-1a7 7 0 0 1 14 0v1h-3v8h2a3 3 0 0 0 3-3v-6a9 9 0 0 0-9-9z", "#b06ab3", "#4568dc", "c"],
+  trophy: ["M7 3h10v2h4v3a5 5 0 0 1-4.6 5A5 5 0 0 1 13 15.9V18h3v3H8v-3h3v-2.1A5 5 0 0 1 7.6 13 5 5 0 0 1 3 8V5h4zm-2 4v1a3 3 0 0 0 2 2.8V7zm14 0h-2v3.8A3 3 0 0 0 19 8z", "#fceabb", "#f8b500", "e"],
+  rocket: ["M12 2c4 2 6 6 6 11l2 3-3 1-1 3h-1l-1-3h-2l-1 3h-1l-1-3-3-1 2-3c0-5 2-9 6-11zm0 6a2 2 0 1 0 0 4 2 2 0 0 0 0-4z", "#f953c6", "#b91d73", "e"],
+  ghost: ["M12 2a8 8 0 0 0-8 8v12l2.7-2 2.6 2 2.7-2 2.7 2 2.6-2L20 22V10a8 8 0 0 0-8-8zm-3 7a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm6 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z", "#e0c3fc", "#8ec5fc", "r"],
+  wings: ["M12 10c-2-4-6-6-10-6 1 3 2 5 4 6-2 0-3 1-4 2 2 1 4 1 6 0-1 2-1 4 0 6 2-2 4-4 4-8zm0 0c2-4 6-6 10-6-1 3-2 5-4 6 2 0 3 1 4 2-2 1-4 1-6 0 1 2 1 4 0 6-2-2-4-4-4-8z", "#ffffff", "#a1c4fd", "l"],
+  moon: ["M15 2a10 10 0 1 0 7 15A8 8 0 0 1 15 2z", "#fdfbfb", "#a18cd1", "r"],
+  gem: ["M12 2l9 5v10l-9 5-9-5V7zm0 2.3L5 8.2v7.6l7 3.9 7-3.9V8.2z", "#43e97b", "#38f9d7", "e"],
+  eye: ["M12 5C6 5 2 12 2 12s4 7 10 7 10-7 10-7-4-7-10-7zm0 3a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm0 2.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z", "#00f2fe", "#4facfe", "e"],
+  note: ["M9 3v11.3A3.5 3.5 0 1 0 11 17V8h6V3z", "#fa709a", "#fee140", "c"],
+  leaf: ["M20 3C9 3 4 9 4 16c0 2 .5 3.5 1 5 1-5 5-9 10-11-4 3-7 6-8 11 7 0 13-5 13-18z", "#a8ff78", "#11998e", "c"],
+  bomb: ["M10 7a7.5 7.5 0 1 0 4.5 1.4L16 7l-1.5-1.5L13 7a7.5 7.5 0 0 0-3 0zM18 2l1 2 2 1-2 1-1 2-1-2-2-1 2-1z", "#636fa4", "#e8cbc0", "r"],
+  paw: ["M8 4a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm8 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM4.5 9a2 2 0 1 1 0 4 2 2 0 0 1 0-4zm15 0a2 2 0 1 1 0 4 2 2 0 0 1 0-4zM12 11c3 0 6 4 6 7a3 3 0 0 1-3 3c-1.2 0-2-.6-3-.6s-1.8.6-3 .6a3 3 0 0 1-3-3c0-3 3-7 6-7z", "#f6d365", "#fda085", "c"],
+  verified: ["M12 2l2.4 1.8 3-.2.9 2.9 2.5 1.7-1 2.8 1 2.8-2.5 1.7-.9 2.9-3-.2L12 22l-2.4-1.8-3 .2-.9-2.9-2.5-1.7 1-2.8-1-2.8 2.5-1.7.9-2.9 3 .2zm-1.2 13.2l5.6-5.6-1.4-1.4-4.2 4.2-2-2-1.4 1.4z", "#00c6ff", "#0072ff", "l"],
+  dragon: ["M21 3c-3 0-5 1-6.5 2.5L13 4l-1 3-3-1 1 3c-3 1-6 4-7 9l3-1 1 4 3-3 2 2 1-4c3 0 6-2 7-5l-3-1 2-2-2-1c2-1 3-2 4-4z", "#f00000", "#ff9a00", "l"],
+  phoenix: ["M12 22c-1-3-4-4-4-8 0-2 1-3 2-4-2 0-4-1-6-3 3 0 5 0 7 1-1-2-1-4 0-6 1 2 2 3 2 5 0-2 1-3 2-5 1 2 1 4 0 6 2-1 4-1 7-1-2 2-4 3-6 3 1 1 2 2 2 4 0 4-3 5-4 8z", "#ff512f", "#f09819", "l"],
+  planet: ["M12 6a6 6 0 0 1 5.7 4.1c2.9-.6 4.6-.4 4.9.5.4 1.3-3.3 3.6-8.6 5.3-5.3 1.7-9.8 2-10.2.7-.3-.9 1.2-2.2 3.8-3.5A6 6 0 0 1 12 6zm6 6.4c-1.8 1-4.1 2-6.8 2.9-1.4.4-2.6.7-3.7.9A6 6 0 0 0 18 12.4z", "#c471f5", "#fa71cd", "e"],
+  controller: ["M4 6h16a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2zm2 4v1.5H4.5v1.5H6v1.5h1.5V13H9v-1.5H7.5V10zm10 0a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4zm2.5 2.5a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 0 0 0-2.4z", "#00dbde", "#fc00ff", "r"],
+  sniper: ["M2 11h3l1-2h9l1 2h6v2h-6l-1 2h-2l-1 3H9l1-3H6l-1-2H2zm11-1v2h2v-2z", "#d4fc79", "#96e6a1", "e"],
+  ninja: ["M12 2a9 9 0 0 1 9 9v2H3v-2a9 9 0 0 1 9-9zM3 14h18v1a7 7 0 0 1-7 7h-4a7 7 0 0 1-7-7zm5-4.5L10 11l-2 .5zm8 0l-2 1.5 2 .5z", "#434343", "#8e2de2", "e"],
+};
+const RARITY = { c: ["عادي", "Common"], r: ["نادر", "Rare"], e: ["ملحمي", "Epic"], l: ["أسطوري", "Legendary"] };
+const badgeSvg = (id) => { const b = BADGES[id]; if (!b) return ""; return `<span class="bx r-${b[3]}" style="--a:${b[1]};--b:${b[2]}"><svg viewBox="0 0 24 24"><path fill-rule="evenodd" d="${b[0]}"/></svg></span>`; };
 const MEDAL = { 1: "🥇", 2: "🥈", 3: "🥉" };
 const topHtml = (n) => (n >= 1 && n <= 3 ? `<span class="bdg top${n}">${MEDAL[n]} TOP ${n}</span>` : "");
 function badgeHtml(L) {
@@ -257,9 +293,9 @@ function badgeHtml0(L) {
   if (!L || !L.badge) return "";
   if (L.badge === "vip") return `<span class="bdg bdg-vip">VIP</span>`;
   if (L.badge === "founder") return `<span class="bdg bdg-founder">${S.lang === "ar" ? "المؤسس" : "FOUNDER"}</span>`;
-  return `<span class="bdg bdg-${esc(L.badge)}">${BADGE_E[L.badge] || ""}</span>`;
+  return badgeSvg(L.badge);
 }
-const uname = (u, tag = "b") => { const L = (u && u.look) || {}; return `${badgeHtml(L)}<${tag} class="un ${L.name ? "un-" + esc(L.name) : ""}" style="color:${esc((u && u.color) || "#fff")}">${esc((u && u.name) || "")}</${tag}>`; };
+const uname = (u, tag = "b") => { const L = (u && u.look) || {}; return `${badgeHtml(L)}<${tag} class="un ${L.name ? "un-" + esc(L.name) : ""}" style="color:${esc((u && u.color) || "#fff")}" data-t="${esc((u && u.name) || "")}">${esc((u && u.name) || "")}</${tag}>`; };
 const lvlHtml = (l) => { l = l | 0; if (!l) return ""; const tier = l >= 30 ? 5 : l >= 20 ? 4 : l >= 10 ? 3 : l >= 5 ? 2 : 1; return `<span class="lvl t${tier}">${l}</span>`; };
 const sTier = (l) => (l >= 50 ? 6 : l >= 35 ? 5 : l >= 20 ? 4 : l >= 10 ? 3 : l >= 5 ? 2 : 1);
 const sLvlHtml = (l) => { l = l | 0; if (!l) return ""; const k = sTier(l); return `<span class="slvl st${k}">🎙 ${l} · ${t("tier" + k)}</span>`; };
@@ -450,6 +486,18 @@ const FX = window.FX = {
     { id: "boo", e: "👻", ar: "أشباح", en: "Ghosts" },
     { id: "fireworks", e: "🎆", ar: "ألعاب نارية", en: "Fireworks", vip: true },
     { id: "meteor", e: "☄️", ar: "نيازك", en: "Meteors", vip: true },
+    { id: "rain", e: "🌧️", ar: "مطر وموج ماء", en: "Rain & ripples", shop: true },
+    { id: "snow", e: "❄️", ar: "عاصفة ثلج", en: "Blizzard", shop: true },
+    { id: "aurora", e: "🌌", ar: "شفق قطبي", en: "Aurora", shop: true },
+    { id: "warp", e: "🚀", ar: "قفزة فضائية", en: "Hyperspace", shop: true },
+    { id: "matrix", e: "💻", ar: "ماتريكس", en: "Matrix", shop: true },
+    { id: "bubbles", e: "🫧", ar: "فقاعات", en: "Bubbles", shop: true },
+    { id: "petals", e: "🌸", ar: "بتلات ساكورا", en: "Sakura", shop: true },
+    { id: "lasers", e: "🔦", ar: "ليزر حفلة", en: "Laser show", shop: true },
+    { id: "rings", e: "⭕", ar: "حلقات نيون", en: "Neon rings", shop: true },
+    { id: "blackhole", e: "🕳️", ar: "ثقب أسود", en: "Black hole", shop: true },
+    { id: "tornado", e: "🌪️", ar: "إعصار", en: "Tornado", shop: true },
+    { id: "stars", e: "✨", ar: "شهب ونجوم", en: "Starfall", shop: true },
   ],
   ac: null,
   audio() { try { this.ac = this.ac || new (window.AudioContext || window.webkitAudioContext)(); if (this.ac.state === "suspended") this.ac.resume(); return this.ac; } catch (e) { return null; } },
@@ -768,6 +816,206 @@ const FX = window.FX = {
     });
     [0, 0.15, 0.3, 0.45].forEach((d) => this.tone([1318, 1567], 0.25, "triangle", 0.05, d));
   },
+  /* ===== premium effects (shop) ===== */
+  rain(canvas) {
+    this.start(canvas, 5200, (ctx, p, W, H, s, ms) => {
+      const e = this.env(p, 0.1, 0.78);
+      ctx.fillStyle = `rgba(8,24,60,${0.45 * e})`; ctx.fillRect(0, 0, W, H);
+      const lvl = H - H * 0.22 * this.ease(Math.min(1, p / 0.5)) * e;
+      if (!s.d) { s.d = []; s.sp = []; s.rp = []; }
+      if (p < 0.8) for (let i = 0; i < 9; i++) s.d.push({ x: Math.random() * W * 1.2 - W * 0.1, y: -20, v: 14 + Math.random() * 8, l: 14 + Math.random() * 18 });
+      ctx.strokeStyle = `rgba(170,215,255,${0.75 * e})`; ctx.lineWidth = 1.4; ctx.beginPath();
+      s.d = s.d.filter((d) => { d.y += d.v; d.x -= d.v * 0.18; if (d.y > lvl) { if (Math.random() < 0.5) s.rp.push({ x: d.x, y: lvl + Math.random() * (H - lvl), r: 0 }); for (let k = 0; k < 2; k++) s.sp.push({ x: d.x, y: lvl, vx: (Math.random() - 0.5) * 4, vy: -2 - Math.random() * 3 }); return false; } ctx.moveTo(d.x, d.y); ctx.lineTo(d.x + d.l * 0.18, d.y - d.l); return true; });
+      ctx.stroke();
+      // water body
+      const g = ctx.createLinearGradient(0, lvl, 0, H); g.addColorStop(0, `rgba(60,170,255,${0.55 * e})`); g.addColorStop(1, `rgba(0,40,120,${0.85 * e})`);
+      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, H);
+      for (let x = 0; x <= W + 8; x += 8) ctx.lineTo(x, lvl + Math.sin(x * 0.03 + ms * 0.004) * 5 + Math.sin(x * 0.011 - ms * 0.002) * 7);
+      ctx.lineTo(W, H); ctx.fill();
+      ctx.strokeStyle = `rgba(255,255,255,${0.5 * e})`; ctx.lineWidth = 1.2;
+      s.rp = s.rp.filter((r) => { r.r += 1.4; if (r.r > 46) return false; ctx.globalAlpha = (1 - r.r / 46) * e; ctx.beginPath(); ctx.ellipse(r.x, r.y, r.r, r.r * 0.3, 0, 0, 7); ctx.stroke(); return true; });
+      ctx.globalAlpha = e; ctx.fillStyle = "rgba(200,235,255,.9)";
+      s.sp = s.sp.filter((q) => { q.vy += 0.35; q.x += q.vx; q.y += q.vy; if (q.y > lvl + 4) return false; ctx.fillRect(q.x, q.y, 2, 2); return true; });
+    });
+    this.noise(4.6, 0.16, 2500);
+  },
+  snow(canvas) {
+    this.start(canvas, 5000, (ctx, p, W, H, s, ms) => {
+      const e = this.env(p, 0.1, 0.75);
+      ctx.fillStyle = `rgba(200,225,255,${0.18 * e})`; ctx.fillRect(0, 0, W, H);
+      if (!s.f) s.f = Array.from({ length: 260 }, () => ({ x: Math.random() * W, y: -Math.random() * H, r: 1 + Math.random() * 4, v: 1.5 + Math.random() * 3.5, w: Math.random() * 6 }));
+      ctx.fillStyle = `rgba(255,255,255,${0.95 * e})`;
+      s.f.forEach((f) => { f.y += f.v; f.x += Math.sin(ms * 0.002 + f.w) * 1.2 + 2.2; if (f.y > H) { f.y = -10; f.x = Math.random() * W; } if (f.x > W) f.x = 0; ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 7); ctx.fill(); });
+      const g = ctx.createLinearGradient(0, H * 0.9, 0, H); g.addColorStop(0, "rgba(255,255,255,0)"); g.addColorStop(1, `rgba(255,255,255,${0.75 * e * Math.min(1, p * 2)})`);
+      ctx.fillStyle = g; ctx.fillRect(0, H * 0.9, W, H * 0.1);
+    });
+    this.noise(4, 0.08, 900);
+  },
+  aurora(canvas) {
+    this.start(canvas, 5600, (ctx, p, W, H, s, ms) => {
+      const e = this.env(p, 0.15, 0.75);
+      ctx.fillStyle = `rgba(4,8,30,${0.55 * e})`; ctx.fillRect(0, 0, W, H);
+      if (!s.st) s.st = Array.from({ length: 90 }, () => [Math.random() * W, Math.random() * H * 0.7, Math.random() * 1.6]);
+      ctx.fillStyle = `rgba(255,255,255,${0.8 * e})`; s.st.forEach(([x, y, r]) => { ctx.globalAlpha = e * (0.4 + 0.6 * Math.abs(Math.sin(ms * 0.003 + x))); ctx.fillRect(x, y, r, r); });
+      ctx.globalAlpha = 1; ctx.globalCompositeOperation = "lighter";
+      [["0,255,170", 0.28, 1], ["120,90,255", 0.36, 1.4], ["0,200,255", 0.22, 0.8], ["255,80,200", 0.42, 1.7]].forEach(([c, yb, sp], i) => {
+        for (let x = 0; x < W; x += 6) {
+          const y = H * yb + Math.sin(x * 0.008 + ms * 0.0012 * sp + i) * 40 + Math.sin(x * 0.02 - ms * 0.002) * 14;
+          const h = 120 + Math.sin(x * 0.01 + ms * 0.002 + i) * 60;
+          const g = ctx.createLinearGradient(0, y - h, 0, y + 20); g.addColorStop(0, `rgba(${c},0)`); g.addColorStop(0.8, `rgba(${c},${0.22 * e})`); g.addColorStop(1, `rgba(${c},0)`);
+          ctx.fillStyle = g; ctx.fillRect(x, y - h, 7, h + 20);
+        }
+      });
+    });
+    this.tone([220, 277, 330], 2.5, "sine", 0.05); this.tone([330, 415, 494], 2.5, "sine", 0.04, 1.4);
+  },
+  warp(canvas) {
+    this.start(canvas, 4200, (ctx, p, W, H, s) => {
+      const e = this.env(p, 0.1, 0.8), sp = 1 + this.ease(Math.min(1, p / 0.6)) * 18;
+      ctx.fillStyle = `rgba(0,0,12,${0.75 * e})`; ctx.fillRect(0, 0, W, H);
+      const cx = W / 2, cy = H / 2;
+      if (!s.s) s.s = Array.from({ length: 320 }, () => ({ a: Math.random() * 7, d: Math.random() * 40, c: Math.random() < 0.3 ? "150,200,255" : Math.random() < 0.5 ? "255,255,255" : "200,140,255" }));
+      ctx.lineCap = "round";
+      s.s.forEach((q) => {
+        const d0 = q.d; q.d += sp * (0.4 + q.d / 120); if (q.d > Math.max(W, H)) q.d = Math.random() * 20;
+        ctx.strokeStyle = `rgba(${q.c},${Math.min(1, q.d / 120) * e})`; ctx.lineWidth = Math.min(3, 0.5 + q.d / 160);
+        ctx.beginPath(); ctx.moveTo(cx + Math.cos(q.a) * d0, cy + Math.sin(q.a) * d0); ctx.lineTo(cx + Math.cos(q.a) * q.d, cy + Math.sin(q.a) * q.d); ctx.stroke();
+      });
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, 120); g.addColorStop(0, `rgba(180,200,255,${0.6 * e})`); g.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    });
+    this.tone([110, 220], 3, "sawtooth", 0.04); this.noise(3, 0.12, 300);
+  },
+  matrix(canvas) {
+    const ch = "アカサタナハマヤラワ0123456789ABCDEFｦｧｨｩｪｫｬｭｮｯ";
+    this.start(canvas, 5000, (ctx, p, W, H, s) => {
+      const e = this.env(p, 0.08, 0.8), fs = 16, cols = Math.ceil(W / fs);
+      if (!s.y) s.y = Array.from({ length: cols }, () => -Math.random() * H);
+      ctx.fillStyle = `rgba(0,10,0,${0.6 * e})`; ctx.fillRect(0, 0, W, H);
+      ctx.font = `bold ${fs}px monospace`;
+      s.y.forEach((y, i) => {
+        for (let k = 0; k < 14; k++) { const yy = y - k * fs; if (yy < 0 || yy > H) continue; ctx.fillStyle = k === 0 ? `rgba(220,255,220,${e})` : `rgba(0,255,90,${(1 - k / 14) * e})`; ctx.fillText(ch[(Math.random() * ch.length) | 0], i * fs, yy); }
+        s.y[i] = y + 6 + (i % 3) * 2; if (s.y[i] - 14 * fs > H) s.y[i] = -Math.random() * 200;
+      });
+    });
+    this.tone([880, 660, 990], 0.25, "square", 0.03);
+  },
+  bubbles(canvas) {
+    this.start(canvas, 4800, (ctx, p, W, H, s, ms) => {
+      const e = this.env(p, 0.1, 0.78);
+      if (!s.b) s.b = Array.from({ length: 70 }, () => ({ x: Math.random() * W, y: H + Math.random() * H, r: 8 + Math.random() * 34, v: 1 + Math.random() * 3, w: Math.random() * 6, hue: Math.random() * 360 }));
+      s.b.forEach((b) => {
+        b.y -= b.v; const x = b.x + Math.sin(ms * 0.002 + b.w) * 12;
+        if (b.y < -b.r) { b.y = H + b.r; }
+        const g = ctx.createRadialGradient(x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.1, x, b.y, b.r);
+        g.addColorStop(0, `rgba(255,255,255,${0.5 * e})`); g.addColorStop(0.7, `hsla(${b.hue + ms * 0.05},90%,70%,${0.12 * e})`); g.addColorStop(1, `hsla(${b.hue + 60},90%,75%,${0.55 * e})`);
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, b.y, b.r, 0, 7); ctx.fill();
+        ctx.strokeStyle = `rgba(255,255,255,${0.35 * e})`; ctx.lineWidth = 1; ctx.stroke();
+      });
+    });
+    [0, 0.3, 0.7, 1.1, 1.6].forEach((d) => this.tone([600 + Math.random() * 500], 0.12, "sine", 0.05, d));
+  },
+  petals(canvas) {
+    this.start(canvas, 5200, (ctx, p, W, H, s, ms) => {
+      const e = this.env(p, 0.1, 0.78);
+      ctx.fillStyle = `rgba(255,150,200,${0.1 * e})`; ctx.fillRect(0, 0, W, H);
+      if (!s.q) s.q = Array.from({ length: 110 }, () => ({ x: Math.random() * W, y: -Math.random() * H, r: Math.random() * 7, vr: (Math.random() - 0.5) * 0.08, v: 1 + Math.random() * 2.2, sz: 6 + Math.random() * 9, f: Math.random() * 6 }));
+      s.q.forEach((q) => {
+        q.y += q.v; q.x += Math.sin(ms * 0.0015 + q.f) * 1.5 + 0.8; q.r += q.vr; q.f += 0.05; if (q.y > H + 20) { q.y = -20; q.x = Math.random() * W; }
+        ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(q.r); ctx.scale(1, Math.abs(Math.cos(q.f)) * 0.7 + 0.3);
+        const g = ctx.createLinearGradient(-q.sz, 0, q.sz, 0); g.addColorStop(0, `rgba(255,200,225,${e})`); g.addColorStop(1, `rgba(255,110,170,${e})`);
+        ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(0, -q.sz); ctx.quadraticCurveTo(q.sz, -q.sz * 0.2, 0, q.sz); ctx.quadraticCurveTo(-q.sz, -q.sz * 0.2, 0, -q.sz); ctx.fill(); ctx.restore();
+      });
+    });
+    this.tone([659, 784, 988], 1.2, "sine", 0.04); this.tone([523, 659, 784], 1.2, "sine", 0.035, 1.2);
+  },
+  lasers(canvas) {
+    const cols = ["255,0,90", "0,255,200", "120,80,255", "255,220,0", "0,160,255"];
+    this.start(canvas, 4800, (ctx, p, W, H, s, ms) => {
+      const e = this.env(p, 0.08, 0.82);
+      ctx.fillStyle = `rgba(5,0,20,${0.55 * e})`; ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = "lighter";
+      const src = [[0, H], [W, H], [W / 2, H * 1.05], [0, H * 0.55], [W, H * 0.55]];
+      src.forEach(([x, y], i) => {
+        for (let k = 0; k < 3; k++) {
+          const a = -Math.PI / 2 + Math.sin(ms * 0.0016 * (1 + i * 0.2) + k * 1.3 + i) * 0.9 + (x === 0 ? 0.5 : x === W ? -0.5 : 0);
+          const L = Math.max(W, H) * 1.4, c = cols[(i + k) % cols.length];
+          for (const [w, al] of [[10, 0.12], [4, 0.35], [1.5, 0.95]]) { ctx.strokeStyle = `rgba(${c},${al * e})`; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * L, y + Math.sin(a) * L); ctx.stroke(); }
+        }
+      });
+      if (!s.hz) s.hz = Array.from({ length: 40 }, () => [Math.random() * W, Math.random() * H, 20 + Math.random() * 60]);
+      s.hz.forEach(([x, y, r]) => { const g = ctx.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `rgba(160,120,255,${0.05 * e})`); g.addColorStop(1, "rgba(0,0,0,0)"); ctx.fillStyle = g; ctx.fillRect(x - r, y - r, r * 2, r * 2); });
+    });
+    [0, 0.5, 1, 1.5, 2, 2.5, 3].forEach((d) => this.tone([d % 1 ? 110 : 82], 0.18, "square", 0.06, d));
+  },
+  rings(canvas) {
+    const cols = ["#ff2e9a", "#00e5ff", "#7c5cff", "#2ee59d", "#ffd700"];
+    this.start(canvas, 4200, (ctx, p, W, H, s, ms) => {
+      const e = this.env(p, 0.06, 0.8), cx = W / 2, cy = H * 0.45, M = Math.hypot(W, H) * 0.6;
+      ctx.fillStyle = `rgba(0,0,0,${0.35 * e})`; ctx.fillRect(0, 0, W, H);
+      for (let i = 0; i < 14; i++) {
+        const q = (ms / 1600 - i * 0.16); if (q < 0) continue; const k = q % 1;
+        ctx.save(); ctx.strokeStyle = cols[i % cols.length]; ctx.shadowColor = cols[i % cols.length]; ctx.shadowBlur = 24; ctx.globalAlpha = (1 - k) * e; ctx.lineWidth = 6 * (1 - k) + 1;
+        ctx.beginPath(); ctx.arc(cx, cy, k * M, 0, 7); ctx.stroke(); ctx.restore();
+      }
+    });
+    [0, 0.32, 0.64, 0.96].forEach((d, i) => this.tone([330 * (1 + i * 0.25)], 0.3, "sine", 0.06, d));
+  },
+  blackhole(canvas) {
+    this.start(canvas, 5000, (ctx, p, W, H, s, ms) => {
+      const e = this.env(p, 0.12, 0.8), cx = W / 2, cy = H * 0.45, R = Math.min(W, H) * 0.12 * this.ease(Math.min(1, p / 0.3));
+      ctx.fillStyle = `rgba(0,0,0,${0.6 * e})`; ctx.fillRect(0, 0, W, H);
+      if (!s.ps) s.ps = Array.from({ length: 500 }, () => ({ a: Math.random() * 7, d: Math.max(W, H) * (0.2 + Math.random() * 0.6), c: Math.random() }));
+      ctx.globalCompositeOperation = "lighter";
+      s.ps.forEach((q) => {
+        q.a += 2.4 / Math.max(30, q.d) * 6; q.d *= 0.992; if (q.d < R * 1.05) { q.d = Math.max(W, H) * (0.5 + Math.random() * 0.3); }
+        const x = cx + Math.cos(q.a) * q.d, y = cy + Math.sin(q.a) * q.d * 0.45;
+        ctx.fillStyle = q.c < 0.5 ? `rgba(255,${150 + q.c * 200},60,${0.8 * e})` : `rgba(160,120,255,${0.8 * e})`; ctx.fillRect(x, y, 2, 2);
+      });
+      ctx.globalCompositeOperation = "source-over";
+      const g = ctx.createRadialGradient(cx, cy, R * 0.6, cx, cy, R * 2.2); g.addColorStop(0, "rgba(0,0,0,1)"); g.addColorStop(0.45, `rgba(255,150,40,${0.6 * e})`); g.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R * 2.2, 0, 7); ctx.fill();
+      ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.fill();
+    });
+    this.tone([55, 58], 4, "sawtooth", 0.06); this.noise(4, 0.1, 200);
+  },
+  tornado(canvas, stage) {
+    this.start(canvas, 4600, (ctx, p, W, H, s, ms) => {
+      const e = this.env(p, 0.1, 0.8);
+      ctx.fillStyle = `rgba(30,35,50,${0.45 * e})`; ctx.fillRect(0, 0, W, H);
+      const cx = W / 2 + Math.sin(ms * 0.0012) * W * 0.18;
+      if (!s.ps) s.ps = Array.from({ length: 700 }, () => ({ h: Math.random(), a: Math.random() * 7, s: 0.6 + Math.random() * 0.8 }));
+      s.ps.forEach((q) => {
+        q.a += 0.12 * q.s; q.h -= 0.003 * q.s; if (q.h < 0) q.h = 1;
+        const y = H * (0.05 + q.h * 0.95), r = 14 + (1 - q.h) * W * 0.32;
+        const x = cx + Math.cos(q.a) * r + Math.sin(q.h * 8 + ms * 0.002) * 20;
+        const z = Math.sin(q.a);
+        ctx.fillStyle = `rgba(${200 + z * 40},${205 + z * 40},${220 + z * 30},${(0.35 + z * 0.3) * e})`; ctx.fillRect(x, y, 3, 3);
+      });
+    });
+    if (!P.reduceFx && stage) { stage.classList.remove("shake"); void stage.offsetWidth; stage.classList.add("shake"); }
+    this.noise(4.2, 0.25, 500);
+  },
+  stars(canvas) {
+    this.start(canvas, 4600, (ctx, p, W, H, s) => {
+      const e = this.env(p, 0.08, 0.8);
+      ctx.fillStyle = `rgba(10,5,40,${0.4 * e})`; ctx.fillRect(0, 0, W, H);
+      if (!s.m) s.m = [];
+      if (p < 0.8) for (let i = 0; i < 2; i++) s.m.push({ x: Math.random() * W * 1.4, y: -20, v: 7 + Math.random() * 7, l: 60 + Math.random() * 90, hue: 180 + Math.random() * 120 });
+      ctx.globalCompositeOperation = "lighter";
+      s.m = s.m.filter((m) => {
+        m.x -= m.v * 0.6; m.y += m.v; if (m.y > H + 100) return false;
+        const g = ctx.createLinearGradient(m.x, m.y, m.x + m.l * 0.6, m.y - m.l); g.addColorStop(0, `hsla(${m.hue},100%,85%,${e})`); g.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.strokeStyle = g; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(m.x, m.y); ctx.lineTo(m.x + m.l * 0.6, m.y - m.l); ctx.stroke();
+        ctx.fillStyle = `rgba(255,255,255,${e})`; ctx.beginPath(); ctx.arc(m.x, m.y, 2.2, 0, 7); ctx.fill();
+        return true;
+      });
+      if (!s.tw) s.tw = Array.from({ length: 60 }, () => [Math.random() * W, Math.random() * H, Math.random() * 6]);
+      s.tw.forEach(([x, y, k]) => { const a = Math.max(0, Math.sin(p * 20 + k)) * e; ctx.fillStyle = `rgba(255,255,220,${a})`; ctx.fillRect(x - 3, y, 7, 1); ctx.fillRect(x, y - 3, 1, 7); });
+    });
+    [0, 0.4, 0.8, 1.2, 1.6].forEach((d, i) => this.tone([1046 + i * 120], 0.25, "triangle", 0.04, d));
+  },
+
   play(id, root, stage, canvas) {
     if (!canvas || !this[id] || typeof this[id] !== "function") return;
     this[id](canvas, stage);
@@ -1125,10 +1373,10 @@ function giftSheet(send) {
     });
   });
 }
-VIEWS.wallet = (root) => {
+VIEWS.wallet = (root, arg = {}) => {
   if (!S.token) return go("auth");
-  let tab = "names";
-  root.innerHTML = `<div class="view"><div class="top"><button class="ibtn" id="wb">${ic("back")}</button><div class="h1">${t("wallet")}</div></div>
+  let tab = arg.tab || "names";
+  root.innerHTML = `<div class="view"><div class="top"><button class="ibtn" id="wb">${ic("back")}</button><div class="h1">${t("wallet")}</div></div><canvas id="fx" class="fxfix"></canvas>
   <div class="scroll" id="wsc" style="padding-bottom:calc(30px + var(--sb))"><div style="height:200px;position:relative"><div class="spin"></div></div></div></div>`;
   $("#wb").onclick = () => go("me");
   let polling = null;
@@ -1136,12 +1384,15 @@ VIEWS.wallet = (root) => {
     const [d, r] = await Promise.all([shopData(), refreshMe()]);
     const u = S.user; if (!u) return;
     const vip = u.vipUntil > Date.now();
-    const items = Object.entries(d.shop).filter(([id, it]) => it.kind === tab.slice(0, -1) && !(it.admin && !u.admin));
+    const RO = { c: 0, r: 1, e: 2, l: 3 };
+    const items = Object.entries(d.shop).filter(([id, it]) => it.kind === tab.slice(0, -1) && !(it.admin && !u.admin))
+      .sort((a, b) => (RO[b[1].rarity] ?? 4) - (RO[a[1].rarity] ?? 4) || b[1].price - a[1].price);
     const owns = (id, it) => it.admin ? u.admin : it.vip ? vip : (vip && it.kind === "name") || (u.owned || []).includes(id);
     const prev = (id) => {
       const [k, v] = id.split(":");
       if (k === "name") return `<b class="un un-${v}" style="font-size:20px">${esc(u.name)}</b>`;
-      if (k === "badge") return badgeHtml({ badge: v }) + `<b>${esc(u.name)}</b>`;
+      if (k === "badge") return `<div class="bxbig">${badgeHtml({ badge: v })}</div><b>${esc(u.name)}</b>`;
+      if (k === "fx") { const f = FX.list.find((x) => x.id === v) || {}; return `<div class="fxpv fxpv-${v}"></div><b style="font-size:13px">${esc(S.lang === "ar" ? f.ar || v : f.en || v)}</b>`; }
       return `<div class="frm frm-${v}">${avatar0(u, "md")}</div>`;
     };
     $("#wsc").innerHTML = `
@@ -1152,10 +1403,13 @@ VIEWS.wallet = (root) => {
       <div class="packs">${Object.entries(d.packs).map(([id, p], i) => `<button class="pack ${i === 2 ? "best" : ""}" data-pack="${id}">${coinHtml(p.coins)}<span class="pr">$${p.usd}</span></button>`).join("")}</div>
       <div class="vipcard"><h3>👑 ${t("vip")}</h3><p style="margin:8px 0 12px;line-height:1.7;color:#ffe9a8;font-size:14px">${t("vipD")}</p>
         <button class="btn" id="vbuy" style="background:linear-gradient(120deg,#ffd700,#ff9a3d);color:#2b1600">${t("vipBuy")} · ${coinHtml(d.vip)}</button></div>
-      <div class="seg" id="wt" style="margin-top:18px">${["names", "badges", "frames"].map((k) => `<button class="${k === tab ? "on" : ""}" data-t="${k}">${t(k)}</button>`).join("")}</div>
+      <div class="seg" id="wt" style="margin-top:18px">${["names", "badges", "frames", "fxs"].map((k) => `<button class="${k === tab ? "on" : ""}" data-t="${k}">${t(k)}</button>`).join("")}</div>
       <div class="shopg" style="margin-top:12px">${items.map(([id, it]) => {
         const own = owns(id, it), on = (u.equip || {})[it.kind] === id;
-        return `<div class="item ${on ? "on" : ""}"><div class="pv">${prev(id)}</div>
+        const rr = it.rarity ? `<span class="rar rar-${it.rarity}">${RARITY[it.rarity][S.lang === "ar" ? 0 : 1]}</span>` : "";
+        const pvb = it.kind === "fx" ? `<button class="mini" data-pv="${id.slice(3)}">${t("preview")}</button>` : "";
+        if (it.kind === "fx") return `<div class="item r-${it.rarity || ""}">${rr}<div class="pv">${prev(id)}</div><div class="row" style="gap:6px;justify-content:center">${pvb}${own ? `<span class="small" style="color:var(--ok)">✓ ${t("owned2")}</span>` : `<button class="mini p" data-buy="${id}">${coinHtml(it.price)}</button>`}</div></div>`;
+        return `<div class="item r-${it.rarity || ""} ${on ? "on" : ""}">${rr}<div class="pv">${prev(id)}</div>
           ${own ? `<button class="mini ${on ? "" : "p"}" data-eq="${id}" data-k="${it.kind}">${on ? t("unequip") : t("equip")}</button>`
                 : it.vip ? `<span class="small" style="color:#ffd700">${t("vipOnly")}</span>` : `<button class="mini p" data-buy="${id}">${t("buy")} ${coinHtml(it.price)}</button>`}</div>`;
       }).join("")}</div>
@@ -1164,6 +1418,7 @@ VIEWS.wallet = (root) => {
         <button class="btn p" id="ag2" style="margin-top:10px">${t("grant")}</button></div>` : ""}
       <div class="h2">${t("history")}</div><div class="sl">${(r.tx || []).map((x) => `<div class="sm"><div class="tx">${esc(x.kind)} <span class="mut small">${esc(x.ref)}</span><br><span class="mut small">${new Date(x.t).toLocaleString(S.lang)}</span></div><b style="color:${x.delta > 0 ? "var(--ok)" : "#ff7b88"}">${x.delta > 0 ? "+" : ""}${x.delta}</b></div>`).join("")}</div>`;
     $$("#wt button").forEach((b) => (b.onclick = () => { tab = b.dataset.t; render(); }));
+    $$("[data-pv]").forEach((b) => (b.onclick = () => { FX.audio(); FX.play(b.dataset.pv, null, $("#wsc"), $("#fx")); haptic("medium"); }));
     $$("[data-buy]").forEach((b) => (b.onclick = async () => { const x = await api("/api/buy", { item: b.dataset.buy }); if (x.error) return toast(terr(x.error)); S.user = { ...S.user, ...x.user }; store.set("user", S.user); haptic("success"); toast(t("saved")); render(); }));
     $$("[data-eq]").forEach((b) => (b.onclick = async () => { const on = (S.user.equip || {})[b.dataset.k] === b.dataset.eq; const x = await api("/api/equip", { kind: b.dataset.k, item: on ? "" : b.dataset.eq }); if (x.error) return toast(terr(x.error)); S.user = { ...S.user, ...x.user }; store.set("user", S.user); haptic(); render(); }));
     $("#vbuy").onclick = () => confirmBox(`${t("vipBuy")} — ${d.vip} ${t("coins")}?`, async () => { const x = await api("/api/vip", {}); if (x.error) return toast(terr(x.error)); S.user = { ...S.user, ...x.user }; store.set("user", S.user); haptic("success"); FX.play("fireworks", null, null, null); toast("👑 VIP"); render(); });
@@ -1561,7 +1816,7 @@ VIEWS.watch = (root, id) => {
   $("#we").onclick = () => {
     FX.audio();
     sheet(`<h3>${t("react")}</h3><div class="emoji">${["❤️", "🔥", "😂", "👏", "😮", "💯", "🏆"].map((e) => `<button data-e="${e}">${e}</button>`).join("")}</div>
-      <h3>${t("effects")}</h3><div class="fxgrid">${FX.list.map((f) => `<button class="fxb" data-fx="${f.id}" ${f.vip ? 'style="border-color:rgba(255,215,0,.5)"' : ""}>${f.e}<small>${f.vip ? "👑 " : ""}${S.lang === "ar" ? f.ar : f.en}</small></button>`).join("")}</div>
+      <h3>${t("effects")}</h3><div class="fxgrid">${FX.list.map((f) => { const lock = f.shop && !((S.user && S.user.look && S.user.look.fx) || []).includes(f.id); return `<button class="fxb ${f.shop ? "fxs" : ""} ${lock ? "lock" : ""}" data-fx="${f.id}" ${f.vip ? 'style="border-color:rgba(255,215,0,.5)"' : ""}>${f.e}<small>${f.vip ? "👑 " : ""}${S.lang === "ar" ? f.ar : f.en}</small>${lock ? `<i class="lk">${ic("lock")}</i>` : ""}</button>`; }).join("")}</div>
       <button class="btn g" style="margin-top:16px" id="sch">${ic("trophy")} ${t("challenge")}</button>`,
       (sh, close) => {
         $$("[data-e]", sh).forEach((b) => (b.onclick = () => { FX.floaty($("#wfx"), b.dataset.e, 3); ws.send({ t: "react", e: b.dataset.e }); haptic(); }));
@@ -1569,6 +1824,7 @@ VIEWS.watch = (root, id) => {
           if (!S.token) return toast(terr("login"));
           const f = FX.list.find((x) => x.id === b.dataset.fx);
           if (f && f.vip && !(S.user && S.user.look && S.user.look.vip)) { close(); return toast(t("vipOnly")); }
+          if (b.classList.contains("lock")) { close(); toast(t("fxLocked")); return go("wallet", { tab: "fxs" }); }
           ws.send({ t: "effect", id: b.dataset.fx }); haptic("medium"); close();
         }));
         $("#sch", sh).onclick = () => { close(); challengeSheet(); };
@@ -1969,7 +2225,9 @@ VIEWS.me = (root) => {
 };
 function editProfile() {
   const u = S.user;
-  const cols = ["#7C5CFF", "#FF4D8D", "#00D1FF", "#FFB800", "#2EE59D", "#FF6B3D", "#B26BFF", "#3DDCFF"];
+  const cols = ["#7C5CFF", "#9D7BFF", "#B26BFF", "#D16BFF", "#FF4DD8", "#FF4D8D", "#FF2E63", "#FF5F6D", "#FF6B3D", "#FF9A3D", "#FFB800", "#FFD700",
+    "#F6E05E", "#C6F432", "#7CFF6B", "#2EE59D", "#00F5A0", "#00E5C3", "#00D1FF", "#3DDCFF", "#4FACFE", "#2B7BFF", "#5B6CFF", "#A1C4FD",
+    "#FFFFFF", "#E0E0E0", "#FFC3E1", "#FFD8B0", "#B5FFFC", "#E0C3FC", "#FDA085", "#C9A227"];
   let col = u.color;
   sheet(`<h3>${t("editProfile")}</h3>
     <div class="row" style="gap:14px;margin-bottom:8px">${avatar(u, "lg", "width:72px;height:72px;font-size:28px")}
@@ -1980,7 +2238,7 @@ function editProfile() {
     <div class="field"><label>${t("bio")}</label><textarea class="inp" id="eb" maxlength="140" rows="3" style="resize:none">${esc(u.bio || "")}</textarea></div>
     <div class="field"><label>${t("link")}</label><input class="inp" id="el" value="${esc(u.link || "")}" maxlength="200" autocapitalize="none" autocorrect="off" dir="ltr" placeholder="youtube.com/@…"></div>
     <div class="field"><label>${t("email")}</label><input class="inp" id="em" type="email" inputmode="email" value="${esc(u.email || "")}" autocapitalize="none" autocorrect="off" dir="ltr"></div>
-    <div class="field"><label>${t("color")}</label><div class="row" style="flex-wrap:wrap">${cols.map((c) => `<button data-c="${c}" style="width:40px;height:40px;border-radius:50%;background:${c};box-shadow:${c === col ? "0 0 0 3px #fff" : "none"}"></button>`).join("")}</div></div>
+    <div class="field"><label>${t("color")}</label><div class="colgrid">${cols.map((c) => `<button data-c="${c}" style="width:34px;height:34px;border-radius:50%;background:${c};box-shadow:${c === col ? "0 0 0 3px #fff" : "none"}"></button>`).join("")}</div></div>
     <button class="btn p" id="es" style="margin-top:8px">${t("save")}</button>`, (sh, close) => {
     $("#eph", sh).onclick = () => { close(); pickPhoto(uploadPhoto); };
     if ($("#erm", sh)) $("#erm", sh).onclick = () => { close(); uploadPhoto(""); };

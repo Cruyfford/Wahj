@@ -452,18 +452,25 @@ const PACKS = {
 };
 const VIP_PRICE = 900; // coins / 30 days
 const SUB_PRICE = 500; // channel subscription, coins / 30 days
-const SHOP = {
-  // animated name styles
-  "name:rainbow": { kind: "name", price: 300 }, "name:fire": { kind: "name", price: 300 }, "name:neon": { kind: "name", price: 250 },
-  "name:gold": { kind: "name", price: 400 }, "name:galaxy": { kind: "name", price: 500 }, "name:ice": { kind: "name", price: 250 },
-  // badges
-  "badge:star": { kind: "badge", price: 150 }, "badge:flame": { kind: "badge", price: 200 }, "badge:diamond": { kind: "badge", price: 400 },
-  "badge:crown": { kind: "badge", price: 600 }, "badge:gamer": { kind: "badge", price: 250 }, "badge:vip": { kind: "badge", price: 0, vip: true },
-  "badge:founder": { kind: "badge", price: 0, admin: true },
-  // avatar frames
-  "frame:neon": { kind: "frame", price: 300 }, "frame:gold": { kind: "frame", price: 400 }, "frame:fire": { kind: "frame", price: 500 },
-  "frame:rainbow": { kind: "frame", price: 450 },
+// ---- cosmetics catalog (rarity → price). Old ids kept so past purchases stay valid. ----
+const RARITY_PRICE = {
+  name: { c: 200, r: 400, e: 700, l: 1200 }, badge: { c: 150, r: 350, e: 700, l: 1500 },
+  frame: { c: 250, r: 450, e: 800, l: 1500 }, fx: { r: 400, e: 650, l: 1000 },
 };
+const CATALOG = {
+  name: { rainbow: "r", fire: "e", neon: "r", gold: "e", galaxy: "e", ice: "r", water: "l", lava: "e", electric: "l", glitch: "l", holo: "l", chrome: "e",
+    aurora: "e", toxic: "r", candy: "c", sunset: "c", ocean: "c", matrix: "e", sakura: "r", blood: "r", emerald: "c", sapphire: "c", ruby: "c", amethyst: "c",
+    glitter: "l", shadow: "r", outline: "r", plasma: "l", frost: "e", royal: "e", cyber: "e", mint: "c", peach: "c", smoke: "e", thunder: "l", pixel: "r" },
+  badge: { star: "c", flame: "c", diamond: "e", crown: "l", gamer: "c", bolt: "c", shield: "r", skull: "r", sword: "r", heart: "c", crosshair: "r", headset: "c",
+    trophy: "e", rocket: "e", ghost: "r", wings: "l", moon: "r", gem: "e", eye: "e", note: "c", leaf: "c", bomb: "r", paw: "c", verified: "l",
+    dragon: "l", phoenix: "l", planet: "e", controller: "r", sniper: "e", ninja: "e" },
+  frame: { neon: "r", gold: "e", fire: "e", rainbow: "r", water: "l", electric: "l", orbit: "e", twin: "e", ice: "r", toxic: "r", galaxy: "l", aurora: "e",
+    lava: "e", sakura: "r", cyber: "e", glitch: "l", pulse: "r", dash: "c", gear: "r", hex: "e", plasma: "l", mint: "c", sunset: "c", ocean: "c", ruby: "c",
+    royal: "e", shadow: "r", holo: "l", bubbles: "l", thunder: "l" },
+  fx: { rain: "e", snow: "r", aurora: "e", warp: "l", matrix: "e", bubbles: "r", petals: "r", lasers: "l", rings: "r", blackhole: "l", tornado: "l", stars: "r" },
+};
+const SHOP = { "badge:vip": { kind: "badge", price: 0, vip: true }, "badge:founder": { kind: "badge", price: 0, admin: true } };
+for (const [kind, items] of Object.entries(CATALOG)) for (const [id, r] of Object.entries(items)) SHOP[kind + ":" + id] = { kind, price: RARITY_PRICE[kind][r], rarity: r };
 const GIFTS = {
   rose: { price: 10, e: "🌹" }, heart: { price: 30, e: "💖" }, controller: { price: 99, e: "🎮" }, car: { price: 299, e: "🏎️" },
   lion: { price: 499, e: "🦁" }, crown: { price: 999, e: "👑" }, rocket: { price: 1999, e: "🚀" },
@@ -649,6 +656,8 @@ export class Hub {
     if (!u) return {};
     const e = this.jobj(u.equip), out = { vip: this.isVip(u) };
     for (const k of ["name", "badge", "frame"]) if (e[k] && this.ownsItem(u, e[k])) out[k] = e[k].split(":")[1];
+    const fx = this.jarr(u.owned).filter((x) => x.startsWith("fx:")).map((x) => x.slice(3));
+    if (fx.length) out.fx = fx;
     if (!out.badge && this.isAdmin(u)) out.badge = "founder";
     const tp = this.top3()[u.id || u.uid]; if (tp) out.top = tp;
     return out;
@@ -1496,7 +1505,8 @@ export class Room {
         if (me.anon) return this.send(ws, { t: "err", e: "login" });
         if (this.pref("allowFx") === false && !host) return this.send(ws, { t: "err", e: "fx_off" });
         if (VIP_FX.has(m.id) && !(me.look && me.look.vip)) return this.send(ws, { t: "err", e: "vip_only" });
-        if (!(EFFECTS.has(m.id) || VIP_FX.has(m.id)) || !this.allowed("e:" + me.uid, 4000)) return this.send(ws, { t: "err", e: "slow" });
+        if (CATALOG.fx[m.id] && !((me.look && me.look.fx) || []).includes(m.id)) return this.send(ws, { t: "err", e: "not_owned" });
+        if (!(EFFECTS.has(m.id) || VIP_FX.has(m.id) || CATALOG.fx[m.id]) || !this.allowed("e:" + me.uid, 4000)) return this.send(ws, { t: "err", e: "slow" });
         this.bcast({ t: "effect", id: m.id, name: me.name, color: me.color, at: t });
         this.addHype(6);
         return;
