@@ -57,7 +57,7 @@ jobs:
           export CLOUDFLARE_API_TOKEN="$T" CLOUDFLARE_ACCOUNT_ID="$ACC"
           W="npx --yes wrangler@4"
           # Recordings bucket (R2). If R2 isn't enabled on the account, deploy without recordings.
-          $W r2 bucket create wahj-recordings >/dev/null 2>&1 || true
+          $W r2 bucket create wahj-recordings 2>&1 | grep -iE "error|enable|already|created|code" | head -5 || true
           if ! $W r2 bucket list 2>/dev/null | grep -q "wahj-recordings"; then
             echo "::warning::R2 غير مفعّل في حساب Cloudflare — حفظ البثوث معطّل. فعّله من لوحة Cloudflare ← R2"
             python3 - <<'PY'
