@@ -742,26 +742,37 @@ class RoomWS {
 }
 
 /* ================= Effects engine ================= */
-const FX = {
+const FX = window.FX = {
   list: [
-    { id: "confetti", e: "🎉", ar: "احتفال", en: "Confetti" },
-    { id: "hearts", e: "💖", ar: "قلوب", en: "Hearts" },
     { id: "fire", e: "🔥", ar: "نار", en: "Fire" },
-    { id: "shake", e: "💥", ar: "زلزال", en: "Shake" },
-    { id: "lightning", e: "⚡", ar: "صاعقة", en: "Lightning" },
-    { id: "airhorn", e: "📯", ar: "بوق", en: "Airhorn" },
-    { id: "boo", e: "👻", ar: "بووو", en: "Boo" },
+    { id: "hearts", e: "💖", ar: "قلب", en: "Heart" },
     { id: "wave", e: "🌊", ar: "موجة", en: "Wave" },
+    { id: "confetti", e: "🎉", ar: "احتفال", en: "Confetti" },
+    { id: "lightning", e: "⚡", ar: "صاعقة", en: "Lightning" },
+    { id: "shake", e: "💥", ar: "انفجار", en: "Boom" },
+    { id: "airhorn", e: "📯", ar: "بوق", en: "Airhorn" },
+    { id: "boo", e: "👻", ar: "أشباح", en: "Ghosts" },
   ],
   ac: null,
   audio() { try { this.ac = this.ac || new (window.AudioContext || window.webkitAudioContext)(); if (this.ac.state === "suspended") this.ac.resume(); return this.ac; } catch (e) { return null; } },
-  tone(freqs, dur, type = "sawtooth", vol = 0.12) {
+  tone(freqs, dur, type = "sawtooth", vol = 0.12, delay = 0) {
     if (!P.fxSound) return;
     const ac = this.audio(); if (!ac) return;
+    const t0 = ac.currentTime + delay;
     const g = ac.createGain(); g.connect(ac.destination);
-    g.gain.setValueAtTime(0.0001, ac.currentTime); g.gain.exponentialRampToValueAtTime(vol, ac.currentTime + 0.03);
-    g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur);
-    freqs.forEach((f) => { const o = ac.createOscillator(); o.type = type; o.frequency.value = f; o.connect(g); o.start(); o.stop(ac.currentTime + dur); });
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    freqs.forEach((f) => { const o = ac.createOscillator(); o.type = type; o.frequency.value = f; o.connect(g); o.start(t0); o.stop(t0 + dur); });
+  },
+  noise(dur, vol = 0.15, lp = 800) {
+    if (!P.fxSound) return;
+    const ac = this.audio(); if (!ac) return;
+    const n = ac.sampleRate * dur, b = ac.createBuffer(1, n, ac.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const s = ac.createBufferSource(); s.buffer = b;
+    const f = ac.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = lp;
+    const g = ac.createGain(); g.gain.value = vol;
+    s.connect(f); f.connect(g); g.connect(ac.destination); s.start();
   },
   floaty(root, e, n = 1, opts = {}) {
     for (let i = 0; i < n; i++) setTimeout(() => {
@@ -773,30 +784,211 @@ const FX = {
       root.appendChild(d); setTimeout(() => d.remove(), 2500);
     }, i * (opts.gap || 70));
   },
-  confetti(canvas) {
-    const ctx = canvas.getContext("2d");
-    const W = (canvas.width = canvas.clientWidth * devicePixelRatio), H = (canvas.height = canvas.clientHeight * devicePixelRatio);
-    const cols = ["#7C5CFF", "#FF4D8D", "#00D1FF", "#FFB800", "#2EE59D", "#fff"];
-    const ps = Array.from({ length: 180 }, () => ({ x: W / 2 + (Math.random() - .5) * W * .3, y: H * .35, vx: (Math.random() - .5) * 26, vy: -Math.random() * 26 - 6, s: (Math.random() * 7 + 4) * devicePixelRatio, r: Math.random() * 6, vr: (Math.random() - .5) * .4, c: cols[Math.random() * cols.length | 0] }));
-    let f = 0;
-    const tick = () => {
-      ctx.clearRect(0, 0, W, H);
-      ps.forEach((p) => { p.vy += 0.75; p.vx *= .985; p.x += p.vx; p.y += p.vy; p.r += p.vr; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore(); });
-      if (++f < 150) requestAnimationFrame(tick); else ctx.clearRect(0, 0, W, H);
-    };
-    tick();
+
+  /* -------- full-screen canvas engine -------- */
+  runs: [],
+  canvas: null,
+  start(canvas, dur, draw) {
+    this.canvas = canvas;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const W = canvas.clientWidth, H = canvas.clientHeight;
+    if (canvas.width !== Math.round(W * dpr) || canvas.height !== Math.round(H * dpr)) { canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr); }
+    this.runs.push({ t0: performance.now(), dur, draw, W, H, st: {} });
+    if (!this.looping) { this.looping = true; requestAnimationFrame((t) => this.loop(t)); }
   },
-  play(id, root, stage, canvas, sound = true) {
-    switch (id) {
-      case "confetti": this.confetti(canvas); sound && this.tone([523, 659, 784], 0.5, "triangle", 0.08); break;
-      case "hearts": this.floaty(root, "💖", 18, { spread: true }); break;
-      case "fire": this.floaty(root, "🔥", 22, { spread: true, gap: 45 }); sound && this.tone([90, 120], 0.8, "sawtooth", 0.05); break;
-      case "shake": if (P.reduceFx) { this.floaty(root, "💥", 6, { spread: true }); break; } stage.classList.remove("shake"); void stage.offsetWidth; stage.classList.add("shake"); sound && this.tone([55, 70], 0.6, "square", 0.1); break;
-      case "lightning": { if (P.reduceFx) { this.floaty(root, "⚡", 6, { spread: true, size: 54 }); break; } const f = document.createElement("div"); f.className = "flash"; root.appendChild(f); setTimeout(() => f.remove(), 700); this.floaty(root, "⚡", 6, { spread: true, size: 54 }); sound && this.tone([1800, 60], 0.35, "sawtooth", 0.08); break; }
-      case "airhorn": this.floaty(root, "📯", 4, { size: 60, gap: 200 }); sound && [0, 280, 560].forEach((d) => setTimeout(() => this.tone([466, 470, 932], 0.24, "sawtooth", 0.1), d)); break;
-      case "boo": this.floaty(root, "👻", 10, { spread: true, size: 44 }); sound && this.tone([150, 110], 1, "triangle", 0.12); break;
-      case "wave": this.floaty(root, "🌊", 14, { spread: true, gap: 60 }); sound && this.tone([200, 300], 0.9, "sine", 0.08); break;
-    }
+  loop(now) {
+    const c = this.canvas; if (!c || !c.isConnected) { this.runs = []; this.looping = false; return; }
+    const ctx = c.getContext("2d"); const dpr = c.width / Math.max(1, c.clientWidth);
+    ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, c.width, c.height); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.runs = this.runs.filter((r) => {
+      const p = (now - r.t0) / r.dur; if (p >= 1) return false;
+      ctx.save(); try { r.draw(ctx, p, r.W, r.H, r.st, now - r.t0); } catch (e) {} ctx.restore();
+      return true;
+    });
+    if (this.runs.length) requestAnimationFrame((t) => this.loop(t)); else { this.looping = false; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, c.width, c.height); }
+  },
+  ease: (x) => 1 - Math.pow(1 - x, 3),
+  env: (p, a = 0.12, b = 0.75) => (p < a ? p / a : p > b ? Math.max(0, 1 - (p - b) / (1 - b)) : 1),
+
+  /* fire: a wall of flames rises and covers the screen */
+  fire(canvas) {
+    this.start(canvas, 3600, (ctx, p, W, H, s) => {
+      if (!s.ps) s.ps = [];
+      const e = this.env(p, 0.15, 0.7);
+      const spawn = p < 0.72 ? Math.round(34 * (W / 390)) : 0;
+      for (let i = 0; i < spawn; i++) s.ps.push({ x: Math.random() * W, y: H + 20, vx: (Math.random() - 0.5) * 1.2, vy: -(8 + Math.random() * 10) * (H / 844), r: 34 + Math.random() * 80, life: 0, max: 70 + Math.random() * 50, seed: Math.random() * 6 });
+      // heat glow
+      const g = ctx.createLinearGradient(0, H, 0, H * 0.15);
+      g.addColorStop(0, `rgba(255,90,0,${0.55 * e})`); g.addColorStop(0.5, `rgba(255,40,0,${0.25 * e})`); g.addColorStop(1, "rgba(255,0,0,0)");
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = "lighter";
+      s.ps = s.ps.filter((q) => {
+        q.life++; const k = q.life / q.max; if (k >= 1) return false;
+        q.x += q.vx + Math.sin(q.life * 0.15 + q.seed) * 1.4; q.y += q.vy; q.vy *= 0.998;
+        const r = q.r * (1 - k * 0.65);
+        const gr = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, r);
+        const a = (1 - k) * 0.55 * e;
+        gr.addColorStop(0, `rgba(255,${230 - k * 120},${120 - k * 120},${a})`);
+        gr.addColorStop(0.4, `rgba(255,${120 - k * 80},0,${a * 0.7})`);
+        gr.addColorStop(1, "rgba(200,20,0,0)");
+        ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(q.x, q.y, r, 0, 7); ctx.fill();
+        return true;
+      });
+      // embers
+      ctx.globalCompositeOperation = "source-over";
+      if (!s.emb) s.emb = Array.from({ length: 50 }, () => ({ x: Math.random() * W, y: H + Math.random() * H * 0.4, v: 2 + Math.random() * 4, s: 1 + Math.random() * 2.5 }));
+      ctx.fillStyle = `rgba(255,220,120,${e})`;
+      s.emb.forEach((m) => { m.y -= m.v; m.x += Math.sin(m.y * 0.03) * 0.8; ctx.fillRect(m.x, m.y, m.s, m.s); });
+    });
+    this.noise(2.6, 0.22, 600); this.tone([70, 90], 1.4, "sawtooth", 0.05);
+  },
+
+  /* hearts: one giant beating heart + a swarm */
+  hearts(canvas) {
+    const heart = (ctx, x, y, sz) => {
+      ctx.beginPath(); ctx.moveTo(x, y + sz * 0.3);
+      ctx.bezierCurveTo(x, y, x - sz * 0.5, y - sz * 0.05, x - sz * 0.5, y + sz * 0.3);
+      ctx.bezierCurveTo(x - sz * 0.5, y + sz * 0.6, x, y + sz * 0.8, x, y + sz);
+      ctx.bezierCurveTo(x, y + sz * 0.8, x + sz * 0.5, y + sz * 0.6, x + sz * 0.5, y + sz * 0.3);
+      ctx.bezierCurveTo(x + sz * 0.5, y - sz * 0.05, x, y, x, y + sz * 0.3); ctx.closePath();
+    };
+    this.start(canvas, 3400, (ctx, p, W, H, s) => {
+      const e = this.env(p, 0.08, 0.72);
+      ctx.fillStyle = `rgba(255,40,120,${0.18 * e})`; ctx.fillRect(0, 0, W, H);
+      const beat = 1 + 0.12 * Math.max(0, Math.sin(p * Math.PI * 7)) ;
+      const base = Math.min(W, H) * 0.75 * this.ease(Math.min(1, p / 0.2)) * beat;
+      const cx = W / 2, cy = H * 0.42 - base / 2;
+      ctx.save(); ctx.shadowColor = "rgba(255,60,140,.9)"; ctx.shadowBlur = 60 * e;
+      const g = ctx.createLinearGradient(cx - base / 2, cy, cx + base / 2, cy + base);
+      g.addColorStop(0, `rgba(255,120,190,${e})`); g.addColorStop(1, `rgba(255,30,90,${e})`);
+      ctx.fillStyle = g; heart(ctx, cx, cy, base); ctx.fill();
+      ctx.globalAlpha = 0.35 * e; ctx.fillStyle = "#fff"; heart(ctx, cx - base * 0.18, cy + base * 0.12, base * 0.22); ctx.fill();
+      ctx.restore();
+      // rings
+      for (let i = 0; i < 3; i++) { const q = (p * 3 - i * 0.35) % 1; if (q < 0) continue; ctx.strokeStyle = `rgba(255,120,180,${(1 - q) * 0.6 * e})`; ctx.lineWidth = 6 * (1 - q); ctx.beginPath(); ctx.arc(W / 2, H * 0.42, q * Math.max(W, H) * 0.6, 0, 7); ctx.stroke(); }
+      if (!s.hs) s.hs = Array.from({ length: 40 }, () => ({ x: Math.random() * W, y: H + Math.random() * H, v: 2 + Math.random() * 5, sz: 14 + Math.random() * 34, w: Math.random() * 6 }));
+      s.hs.forEach((h) => { h.y -= h.v; ctx.fillStyle = `rgba(255,${60 + h.sz * 3},${140 + h.sz},${0.85 * e})`; heart(ctx, h.x + Math.sin(h.y * 0.02 + h.w) * 14, h.y, h.sz); ctx.fill(); });
+    });
+    [0, 0.42, 0.84, 1.26].forEach((d) => this.tone([523, 659], 0.35, "sine", 0.07, d));
+  },
+
+  /* wave: layered ocean waves sweep across the screen */
+  wave(canvas) {
+    this.start(canvas, 4200, (ctx, p, W, H, s, ms) => {
+      const rise = p < 0.35 ? this.ease(p / 0.35) : p > 0.7 ? 1 - this.ease((p - 0.7) / 0.3) : 1;
+      const layers = [["rgba(0,120,255,.55)", 0.62, 1.0, 26], ["rgba(0,190,255,.55)", 0.55, 1.4, 34], ["rgba(120,230,255,.6)", 0.48, 1.9, 22]];
+      layers.forEach(([col, lvl, sp, amp], i) => {
+        const top = H - (H * (1 - lvl) + H * 0.25) * rise;
+        ctx.beginPath(); ctx.moveTo(0, H);
+        for (let x = 0; x <= W + 10; x += 8) ctx.lineTo(x, top + Math.sin(x * 0.012 + ms * 0.004 * sp + i) * amp + Math.sin(x * 0.03 - ms * 0.006 * sp) * amp * 0.35);
+        ctx.lineTo(W, H); ctx.closePath();
+        const g = ctx.createLinearGradient(0, top - amp, 0, H); g.addColorStop(0, col); g.addColorStop(1, "rgba(0,40,120,.85)");
+        ctx.fillStyle = g; ctx.fill();
+        // foam crest
+        ctx.strokeStyle = `rgba(255,255,255,${0.55 * rise})`; ctx.lineWidth = 3; ctx.beginPath();
+        for (let x = 0; x <= W + 10; x += 8) { const y = top + Math.sin(x * 0.012 + ms * 0.004 * sp + i) * amp + Math.sin(x * 0.03 - ms * 0.006 * sp) * amp * 0.35; x ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+        ctx.stroke();
+      });
+      if (!s.b) s.b = Array.from({ length: 40 }, () => ({ x: Math.random() * W, y: H * (0.6 + Math.random() * 0.5), r: 2 + Math.random() * 6, v: 0.6 + Math.random() * 1.8 }));
+      ctx.strokeStyle = `rgba(255,255,255,${0.6 * rise})`; ctx.lineWidth = 1.5;
+      s.b.forEach((b) => { b.y -= b.v; if (b.y < H * 0.35) b.y = H; ctx.beginPath(); ctx.arc(b.x + Math.sin(b.y * 0.05) * 6, b.y, b.r, 0, 7); ctx.stroke(); });
+    });
+    this.noise(3.5, 0.18, 400);
+  },
+
+  /* confetti: two cannons */
+  confetti(canvas) {
+    const cols = ["#7C5CFF", "#FF4D8D", "#00D1FF", "#FFB800", "#2EE59D", "#ffffff"];
+    this.start(canvas, 3800, (ctx, p, W, H, s) => {
+      if (!s.ps) {
+        s.ps = [];
+        for (const side of [0, 1]) for (let i = 0; i < 160; i++) {
+          const a = (side ? -Math.PI * 0.62 : -Math.PI * 0.38) + (Math.random() - 0.5) * 0.5, sp = 14 + Math.random() * 16;
+          s.ps.push({ x: side ? W : 0, y: H * 0.9, vx: Math.cos(a) * sp * (W / 390), vy: Math.sin(a) * sp * (H / 844) * 1.25, r: Math.random() * 6, vr: (Math.random() - 0.5) * 0.4, w: 6 + Math.random() * 8, c: cols[i % cols.length], f: Math.random() * 6 });
+        }
+      }
+      s.ps.forEach((q) => {
+        q.vy += 0.45; q.vx *= 0.985; q.vy *= 0.985; q.x += q.vx; q.y += q.vy; q.r += q.vr; q.f += 0.2;
+        ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(q.r); ctx.scale(1, Math.abs(Math.cos(q.f)));
+        ctx.globalAlpha = 1 - Math.max(0, (p - 0.8) / 0.2); ctx.fillStyle = q.c; ctx.fillRect(-q.w / 2, -q.w / 4, q.w, q.w / 2); ctx.restore();
+      });
+    });
+    this.noise(0.25, 0.3, 2000); this.tone([523, 659, 784, 1046], 0.6, "triangle", 0.07, 0.1);
+  },
+
+  /* lightning: forked bolts + flashes */
+  lightning(canvas, stage) {
+    const bolt = (x1, y1, x2, y2, d) => {
+      if (d === 0) return [[x1, y1], [x2, y2]];
+      const mx = (x1 + x2) / 2 + (Math.random() - 0.5) * Math.abs(y2 - y1) * 0.35, my = (y1 + y2) / 2;
+      return [...bolt(x1, y1, mx, my, d - 1).slice(0, -1), ...bolt(mx, my, x2, y2, d - 1)];
+    };
+    this.start(canvas, 2600, (ctx, p, W, H, s, ms) => {
+      const k = Math.floor(ms / 280);
+      if (s.k !== k && k < 7) { s.k = k; s.bs = Array.from({ length: 1 + (k % 2) }, () => bolt(W * (0.15 + Math.random() * 0.7), -10, W * Math.random(), H * (0.55 + Math.random() * 0.45), 7)); s.flash = 1; if (!P.reduceFx && stage) { stage.classList.remove("shake"); void stage.offsetWidth; stage.classList.add("shake"); } }
+      s.flash = (s.flash || 0) * 0.82;
+      ctx.fillStyle = `rgba(20,10,60,${0.45 * this.env(p)})`; ctx.fillRect(0, 0, W, H);
+      if (!P.reduceFx) { ctx.fillStyle = `rgba(220,230,255,${s.flash * 0.55})`; ctx.fillRect(0, 0, W, H); }
+      (s.bs || []).forEach((b) => {
+        for (const [w, c] of [[14, "rgba(120,140,255,.25)"], [6, "rgba(170,190,255,.7)"], [2.2, "#fff"]]) {
+          ctx.strokeStyle = c; ctx.lineWidth = w * (0.4 + s.flash); ctx.lineJoin = "round"; ctx.beginPath(); b.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke();
+        }
+      });
+    });
+    [0, 0.28, 0.84, 1.4].forEach((d) => setTimeout(() => this.noise(0.5, 0.35, 1200), d * 1000));
+  },
+
+  /* boom: shockwave rings + debris + screen shake */
+  shake(canvas, stage) {
+    if (!P.reduceFx && stage) { stage.classList.remove("shake"); void stage.offsetWidth; stage.classList.add("shake"); }
+    this.start(canvas, 2400, (ctx, p, W, H, s) => {
+      const cx = W / 2, cy = H * 0.45, R = Math.hypot(W, H);
+      const e = this.env(p, 0.02, 0.6);
+      const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 0.6 * this.ease(Math.min(1, p * 3)));
+      g.addColorStop(0, `rgba(255,255,220,${0.95 * e})`); g.addColorStop(0.2, `rgba(255,170,40,${0.75 * e})`); g.addColorStop(0.5, `rgba(255,60,20,${0.35 * e})`); g.addColorStop(1, "rgba(80,0,0,0)");
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      for (let i = 0; i < 3; i++) { const q = Math.min(1, p * 1.6 - i * 0.15); if (q <= 0) continue; ctx.strokeStyle = `rgba(255,230,180,${(1 - q) * 0.9})`; ctx.lineWidth = 18 * (1 - q); ctx.beginPath(); ctx.arc(cx, cy, q * R * 0.7, 0, 7); ctx.stroke(); }
+      if (!s.d) s.d = Array.from({ length: 70 }, () => { const a = Math.random() * 7, v = 6 + Math.random() * 16; return { x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, s: 3 + Math.random() * 7 }; });
+      s.d.forEach((q) => { q.vy += 0.35; q.x += q.vx; q.y += q.vy; ctx.fillStyle = `rgba(${200 + Math.random() * 55},${90 + Math.random() * 80},20,${1 - p})`; ctx.fillRect(q.x, q.y, q.s, q.s); });
+      ctx.font = `${Math.min(W, H) * 0.45 * this.ease(Math.min(1, p * 4))}px system-ui`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.globalAlpha = e; ctx.fillText("💥", cx, cy);
+    });
+    this.noise(1.6, 0.5, 300); this.tone([45, 60], 0.9, "square", 0.12);
+  },
+
+  /* airhorn: giant horn + sound rings */
+  airhorn(canvas) {
+    this.start(canvas, 2600, (ctx, p, W, H, s, ms) => {
+      const e = this.env(p, 0.06, 0.75);
+      const pulse = 1 + 0.08 * Math.sin(ms * 0.045);
+      const cx = W / 2, cy = H * 0.45;
+      for (let i = 0; i < 6; i++) { const q = ((ms / 600) + i / 6) % 1; ctx.strokeStyle = `rgba(255,${180 + i * 10},60,${(1 - q) * 0.7 * e})`; ctx.lineWidth = 10 * (1 - q); ctx.beginPath(); ctx.arc(cx, cy, 60 + q * Math.max(W, H) * 0.7, -0.9, 0.9); ctx.stroke(); ctx.beginPath(); ctx.arc(cx, cy, 60 + q * Math.max(W, H) * 0.7, Math.PI - 0.9, Math.PI + 0.9); ctx.stroke(); }
+      ctx.font = `${Math.min(W, H) * 0.5 * pulse * this.ease(Math.min(1, p * 5))}px system-ui`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.globalAlpha = e;
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(Math.sin(ms * 0.03) * 0.12); ctx.fillText("📯", 0, 0); ctx.restore();
+    });
+    [0, 0.3, 0.6, 1.2].forEach((d) => this.tone([466, 470, 932], 0.26, "sawtooth", 0.1, d));
+  },
+
+  /* ghosts: big ghosts fly across a darkened screen */
+  boo(canvas) {
+    this.start(canvas, 3800, (ctx, p, W, H, s, ms) => {
+      const e = this.env(p, 0.1, 0.75);
+      const v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.2, W / 2, H / 2, Math.max(W, H) * 0.75);
+      v.addColorStop(0, `rgba(10,0,30,${0.25 * e})`); v.addColorStop(1, `rgba(0,0,0,${0.85 * e})`); ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+      if (!s.g) s.g = Array.from({ length: 7 }, (_, i) => ({ y: H * (0.12 + i * 0.12), dir: i % 2 ? -1 : 1, sp: 0.18 + Math.random() * 0.2, sz: 60 + Math.random() * 90, ph: Math.random() * 6, d: Math.random() * 0.3 }));
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      s.g.forEach((g) => {
+        const q = (p - g.d) / (1 - g.d); if (q < 0) return;
+        const x = g.dir > 0 ? -100 + q * (W + 200) : W + 100 - q * (W + 200);
+        ctx.globalAlpha = Math.min(1, q * 4) * e * 0.9; ctx.font = `${g.sz}px system-ui`;
+        ctx.save(); ctx.translate(x, g.y + Math.sin(ms * 0.004 + g.ph) * 30); ctx.scale(g.dir, 1); ctx.fillText("👻", 0, 0); ctx.restore();
+      });
+    });
+    this.tone([220, 165], 1.6, "triangle", 0.1); this.tone([330, 247], 1.4, "sine", 0.06, 0.3);
+  },
+
+  play(id, root, stage, canvas) {
+    if (!canvas || !this[id] || typeof this[id] !== "function") return;
+    this[id](canvas, stage);
   },
 };
 
@@ -1020,6 +1212,14 @@ function gamePicker(onPick) {
   });
 }
 
+function countryName(cc) {
+  if (!cc || cc.length !== 2) return "–";
+  const flag = String.fromCodePoint(...[...cc.toUpperCase()].map((c) => 127397 + c.charCodeAt(0)));
+  let name = cc;
+  try { name = new Intl.DisplayNames([S.lang === "ar" ? "ar" : "en"], { type: "region" }).of(cc.toUpperCase()) || cc; } catch (e) {}
+  return flag + " " + name;
+}
+
 /* ---------- speed test ---------- */
 VIEWS.speed = (root) => {
   const R = 100, C = 2 * Math.PI * R, ARC = C * 0.75;
@@ -1035,7 +1235,7 @@ VIEWS.speed = (root) => {
       <div class="kpi"><span class="small">${t("down")}</span><br><b id="rd">–</b> <span class="small">${t("mbps")}</span></div>
       <div class="kpi"><span class="small">${t("up")}</span><br><b id="ru">–</b> <span class="small">${t("mbps")}</span></div>
     </div>
-    <div class="tile row" style="margin-top:12px">${ic("globe")}<span class="mut">${t("server")}</span><span class="sp"></span><b id="rs" dir="ltr">–</b></div>
+    <div class="tile row" style="margin-top:12px">${ic("globe")}<span class="mut">${t("server")}</span><span class="sp"></span><b id="rs">–</b></div>
     <div id="sv"></div>
     <button class="btn p" id="sgo" style="margin-top:16px">${ic("gauge")} ${t("sStart")}</button>
   </div></div>`;
@@ -1052,10 +1252,10 @@ VIEWS.speed = (root) => {
       const t0 = performance.now();
       const r = await fetch("/api/speed/ping?r=" + Math.random(), { cache: "no-store" }).then((x) => x.json()).catch(() => null);
       const dt = performance.now() - t0;
-      if (r) { colo = r.colo + (r.country ? " · " + r.country : ""); if (i > 1) pings.push(dt); setG(dt, 300, t("ms")); }
+      if (r) { colo = r.country || ""; if (i > 1) pings.push(dt); setG(dt, 300, t("ms")); }
     }
     const ping = Math.min(...pings), jit = pings.length > 1 ? pings.slice(1).reduce((a, x, i) => a + Math.abs(x - pings[i]), 0) / (pings.length - 1) : 0;
-    $("#rp").textContent = Math.round(ping); $("#rj").textContent = Math.round(jit); $("#rs").textContent = "Cloudflare " + colo;
+    $("#rp").textContent = Math.round(ping); $("#rj").textContent = Math.round(jit); $("#rs").textContent = countryName(colo);
     // download (parallel streams, ~8s)
     $("#gs").textContent = t("sDown");
     let got = 0; const tD = performance.now(); let stop = false;
@@ -1179,6 +1379,7 @@ VIEWS.watch = (root, id) => {
   };
   const chatHtml = (m) => `${m.host ? `<span class="tag">${t("hostTag")}</span>` : m.guest ? `<span class="tag" style="background:var(--grad2)">${t("guestTag")}</span>` : ""}<b style="color:${esc(m.color)}">${esc(m.name)}</b>${esc(m.text)}`;
   const offline = (txt) => {
+    $$(".wtop .badge.red").forEach((b) => (b.parentElement.style.display = "none"));
     if ($(".offline", stageEl)) return;
     const o = document.createElement("div"); o.className = "offline";
     o.innerHTML = `<div style="font-size:56px">📴</div><b style="color:#fff;font-size:18px">${txt}</b><button class="btn g" style="width:auto;padding:12px 24px;margin-top:10px">${t("back")}</button>`;
@@ -1222,16 +1423,16 @@ VIEWS.watch = (root, id) => {
       case "chat": addChat(chatHtml(m)); break;
       case "react": if (m.uid !== me.uid) FX.floaty($("#wfx"), m.e); break;
       case "effect":
-        FX.play(m.id, $("#wfx"), stageEl, $("#fx"), true);
+        FX.play(m.id, $("#wfx"), stageEl, $("#fx"));
         addChat(`<b style="color:${esc(m.color)}">${esc(m.name)}</b>${t("sentFx")} ${(FX.list.find((x) => x.id === m.id) || {}).e || "✨"}`, "fx");
         break;
-      case "hype": setHype(m.v, m.lvl); if (m.train) { const d = document.createElement("div"); d.className = "train"; d.textContent = t("hypeTrain") + " x" + m.lvl; $("#watch").appendChild(d); setTimeout(() => d.remove(), 2700); FX.confetti($("#fx")); } break;
+      case "hype": setHype(m.v, m.lvl); if (m.train) { const d = document.createElement("div"); d.className = "train"; d.textContent = t("hypeTrain") + " x" + m.lvl; $("#watch").appendChild(d); setTimeout(() => d.remove(), 2700); FX.play("confetti", null, null, $("#fx")); } break;
       case "poll": if (!poll || poll.id !== m.poll.id) myVote = null; poll = m.poll; renderPoll(); break;
       case "challenges":
         if (m.changed && hostInfo) {
           const c = m.changed, hn = esc(hostInfo.name);
           if (c.state === "accepted") banner(`🏆 ${hn} ${t("chAccepted")}<br><span style="font-weight:500">${esc(c.text)}</span>`);
-          if (c.state === "done") { banner(`🎉 ${hn} ${t("chDone")}`); FX.confetti($("#fx")); }
+          if (c.state === "done") { banner(`🎉 ${hn} ${t("chDone")}`); FX.play("confetti", null, null, $("#fx")); }
           if (c.state === "failed") banner(`😅 ${hn} ${t("chFailed")}`);
         }
         root._ch = m.list;
