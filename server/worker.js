@@ -43,6 +43,28 @@ function bearer(req) {
 }
 
 // ---------- email (Resend API, optional) ----------
+// ---- YouTube simulcast over HLS ingest (same fMP4 segments the phone already uploads) ----
+async function ytForward(env, room, n, buf, yt) {
+  const base = "https://a.upload.youtube.com/http_upload_hls?cid=" + encodeURIComponent(yt.key) + "&copy=0&file=";
+  const init = "init" + yt.init + ".mp4";
+  const put = (file, body, type) => fetch(base + file, { method: "PUT", body, headers: { "content-type": type } });
+  let ok = true, code = 0, msg = "";
+  try {
+    const r = await put(n < 0 ? init : "s" + yt.init + "_" + n + ".m4s", buf, n < 0 ? "video/mp4" : "video/iso.segment");
+    code = r.status; ok = r.ok;
+    if (!ok) msg = (await r.text().catch(() => "")).slice(0, 200);
+    if (ok && n >= 0 && yt.segs.length) {
+      const td = Math.ceil(Math.max(...yt.segs.map((x) => x.dur), 2));
+      let m = `#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-TARGETDURATION:${td}\n#EXT-X-MEDIA-SEQUENCE:${yt.segs[0].n}\n#EXT-X-DISCONTINUITY-SEQUENCE:${yt.init}\n#EXT-X-INDEPENDENT-SEGMENTS\n#EXT-X-MAP:URI="${init}"\n`;
+      for (const sg of yt.segs) m += `#EXTINF:${(+sg.dur).toFixed(3)},\ns${yt.init}_${sg.n}.m4s\n`;
+      const p = await put("live.m3u8", m, "application/vnd.apple.mpegurl");
+      if (!p.ok) { ok = false; code = p.status; msg = "playlist " + (await p.text().catch(() => "")).slice(0, 200); }
+    }
+  } catch (e) { ok = false; msg = String(e).slice(0, 200); }
+  // tell the studio (first segment, and on every failure)
+  if (!ok || n === 0 || (n > 0 && n % 10 === 0)) await hub(env, "/yt-stat", { room, ok, code, msg }).catch(() => {});
+}
+
 async function sendMail(env, to, subject, html) {
   if (!env.RESEND_API_KEY || !to) return false;
   try {
@@ -144,6 +166,8 @@ export default {
         const r = await hub(env, "/rec-seg", { pub, room: mr[1], n, dur, bytes: buf.byteLength,
           w: +url.searchParams.get("w") || 0, h: +url.searchParams.get("h") || 0 });
         if (!r.ok) return J(r, r.error === "auth" ? 401 : 409);
+        if (r.yt) ctx.waitUntil(ytForward(env, mr[1], n, buf, r.yt));
+        if (r.store === false) return J({ ok: true });
         await env.REC.put(`rec/${mr[1]}/${n < 0 ? "init.mp4" : n + ".m4s"}`, buf, { httpMetadata: { contentType: n < 0 ? "video/mp4" : "video/iso.segment" } });
         return J({ ok: true });
       }
@@ -251,11 +275,28 @@ export default {
         return new Response(r.body, { headers: { "content-type": "image/jpeg", "cache-control": "public, max-age=86400", ...CORS } });
       }
       // ---- economy ----
-      if (p === "/api/shop") return J({ packs: PACKS, vip: VIP_PRICE, shop: SHOP, gifts: GIFTS, pay: !!(env.PAYPAL_CLIENT_ID && env.PAYPAL_SECRET), mode: env.PAYPAL_MODE || "sandbox" });
+      if (p === "/api/sub" && req.method === "POST") {
+        const b = await req.json().catch(() => ({}));
+        const r = await hub(env, "/sub", { ...b, token: bearer(req) });
+        return J(r, r.error ? 400 : 200);
+      }
+      if (p === "/api/shop") return J({ packs: PACKS, vip: VIP_PRICE, sub: SUB_PRICE, shop: SHOP, gifts: GIFTS, pay: !!(env.PAYPAL_CLIENT_ID && env.PAYPAL_SECRET), mode: env.PAYPAL_MODE || "sandbox" });
       if (["/api/buy", "/api/equip", "/api/vip", "/api/wallet", "/api/admin/grant"].includes(p) && req.method === "POST") {
         const b = await req.json().catch(() => ({}));
         const r = await hub(env, p.replace("/api", "").replace("/admin/grant", "/grant"), { ...b, token: bearer(req) });
         return J(r, r.error ? 400 : 200);
+      }
+      if (p === "/api/rewards" && req.method === "POST") {
+        const b = await req.json().catch(() => ({}));
+        return J(await hub(env, "/rewards-set", { ...b, token: bearer(req) }));
+      }
+      if (p === "/api/streamers") {
+        return J(await hub(env, "/streamers", { mode: url.searchParams.get("mode") || "month", token: bearer(req) }));
+      }
+      if (p === "/api/fans") {
+        const u = await hub(env, "/user", { handle: url.searchParams.get("u") || "" });
+        if (!u.user) return J({ top: [] });
+        return J(await hub(env, "/loy-top", { host: u.user.id }));
       }
       if (p === "/api/pay/create" && req.method === "POST") {
         if (!env.PAYPAL_CLIENT_ID || !env.PAYPAL_SECRET) return J({ error: "pay_off" }, 400);
@@ -378,6 +419,7 @@ export default {
             u.searchParams.set("color", me.user.color || "");
             u.searchParams.set("handle", me.user.handle);
             u.searchParams.set("look", JSON.stringify(me.user.look || {}));
+            u.searchParams.set("av", me.user.avatar || "");
           }
           u.searchParams.set("room", room);
           u.searchParams.set("pub", url.searchParams.get("pub") === "1" ? "1" : "");
@@ -409,6 +451,7 @@ const PACKS = {
   p1200: { coins: 1200, usd: "9.99" }, p2600: { coins: 2600, usd: "19.99" }, p7000: { coins: 7000, usd: "49.99" },
 };
 const VIP_PRICE = 900; // coins / 30 days
+const SUB_PRICE = 500; // channel subscription, coins / 30 days
 const SHOP = {
   // animated name styles
   "name:rainbow": { kind: "name", price: 300 }, "name:fire": { kind: "name", price: 300 }, "name:neon": { kind: "name", price: 250 },
@@ -427,6 +470,21 @@ const GIFTS = {
 };
 const VIP_FX = new Set(["fireworks", "meteor"]);
 const STREAMER_SHARE = 0.7;
+// ---- streamer levels & monthly ranking ----
+// streamer XP: +2/min live, +1 per viewer-minute watched, +25 per new follower (once per follower),
+// +250 per subscription received, +1 per 2 coins of gifts received.
+const sLevelOf = (xp) => Math.floor(Math.sqrt(Math.max(0, xp) / 200)) + 1;   // L2=200, L5=3200, L10=16200, L20=72200, L50=480200
+const sXpFor = (l) => 200 * (l - 1) * (l - 1);
+const TOP_SHARE = { 1: 0.85, 2: 0.8, 3: 0.75 };  // top-3 of the month keep more of every gift/sub
+const monthKey = (t) => new Date(t + 3 * 3600000).toISOString().slice(0, 7);
+// ---------------- channel loyalty (per streamer): XP, levels, points ----------------
+const levelOf = (xp) => Math.floor(Math.sqrt(Math.max(0, xp) / 50)) + 1;   // L2=50, L5=800, L10=4050, L20=18050
+const xpFor = (lvl) => 50 * (lvl - 1) * (lvl - 1);
+const DEFAULT_REWARDS = [
+  { id: "highlight", cost: 100, ar: "تمييز رسالتي", en: "Highlight my message", text: true },
+  { id: "goldrain", cost: 250, ar: "مطر ذهبي على البث", en: "Golden rain on stream" },
+  { id: "pin", cost: 400, ar: "تثبيت رسالتي دقيقة", en: "Pin my message for 1 min", text: true },
+];
 
 async function paypal(env, method, path, body) {
   const base = env.PAYPAL_MODE === "live" ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
@@ -488,6 +546,18 @@ export class Hub {
     for (const c of ["coins INTEGER DEFAULT 0", "vipUntil INTEGER DEFAULT 0", "owned TEXT DEFAULT '[]'", "equip TEXT DEFAULT '{}'", "earned INTEGER DEFAULT 0"]) {
       try { this.sql.exec("ALTER TABLE users ADD COLUMN " + c); } catch (e) {}
     }
+    try { this.sql.exec("ALTER TABLE users ADD COLUMN ytkey TEXT DEFAULT ''"); } catch (e) {}
+    for (const c of ["sxp INTEGER DEFAULT 0", "mxp INTEGER DEFAULT 0", "mkey TEXT DEFAULT ''", "lmrank INTEGER DEFAULT 0"]) {
+      try { this.sql.exec("ALTER TABLE users ADD COLUMN " + c); } catch (e) {}
+    }
+    this.sql.exec("CREATE TABLE IF NOT EXISTS fxp(uid TEXT, target TEXT, PRIMARY KEY(uid, target))");
+    try { this.sql.exec("ALTER TABLE streams ADD COLUMN yt INTEGER DEFAULT 0"); } catch (e) {}
+    try { this.sql.exec("ALTER TABLE streams ADD COLUMN ytinit INTEGER DEFAULT 0"); } catch (e) {}
+    this.sql.exec("CREATE TABLE IF NOT EXISTS ytsegs(room TEXT, n INTEGER, dur REAL, PRIMARY KEY(room, n))");
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS chan(uid TEXT, host TEXT, xp INTEGER DEFAULT 0, points INTEGER DEFAULT 0, day TEXT DEFAULT '',
+      streak INTEGER DEFAULT 0, watch INTEGER DEFAULT 0, PRIMARY KEY(uid, host))`);
+    this.sql.exec("CREATE TABLE IF NOT EXISTS subs(uid TEXT, host TEXT, until INTEGER, since INTEGER, months INTEGER DEFAULT 0, PRIMARY KEY(uid, host))");
+    this.sql.exec("CREATE TABLE IF NOT EXISTS rewards(id TEXT PRIMARY KEY, host TEXT, title TEXT, cost INTEGER, t INTEGER)");
     this.sql.exec("CREATE TABLE IF NOT EXISTS tx(id INTEGER PRIMARY KEY AUTOINCREMENT, uid TEXT, delta INTEGER, kind TEXT, ref TEXT, t INTEGER)");
     this.sql.exec("CREATE TABLE IF NOT EXISTS orders(id TEXT PRIMARY KEY, uid TEXT, pack TEXT, coins INTEGER, usd TEXT, status TEXT, t INTEGER)");
     this.sql.exec("CREATE TABLE IF NOT EXISTS diag(id INTEGER PRIMARY KEY AUTOINCREMENT, t INTEGER, ip TEXT, ua TEXT, src TEXT, room TEXT, msg TEXT)");
@@ -504,6 +574,46 @@ export class Hub {
   user(token) {
     if (!token) return null;
     return this.one("SELECT u.* FROM tokens t JOIN users u ON u.id=t.uid WHERE t.token=? AND u.deleted=0", token);
+  }
+  subOf(uid, host) {
+    const r = this.one("SELECT * FROM subs WHERE uid=? AND host=?", uid, host);
+    return r && r.until > now() ? { until: r.until, months: r.months, since: r.since } : null;
+  }
+  chanRow(uid, host) {
+    uid = String(uid); host = String(host);
+    let c = this.one("SELECT * FROM chan WHERE uid=? AND host=?", uid, host);
+    if (!c) { this.sql.exec("INSERT OR IGNORE INTO chan(uid, host) VALUES(?,?)", uid, host); c = this.one("SELECT * FROM chan WHERE uid=? AND host=?", uid, host); }
+    return c;
+  }
+  loyOut(c) {
+    const level = levelOf(c.xp);
+    return { xp: c.xp, level, points: c.points, cur: xpFor(level), next: xpFor(level + 1), streak: c.streak, watchMin: Math.round(c.watch / 60) };
+  }
+  addSxp(uid, xp) {
+    xp = Math.floor(xp); if (!uid || xp <= 0) return null;
+    const u = this.one("SELECT sxp, mkey FROM users WHERE id=?", String(uid)); if (!u) return null;
+    const mk = monthKey(now()), before = sLevelOf(u.sxp | 0);
+    if (u.mkey !== mk) this.sql.exec("UPDATE users SET mxp=0, mkey=? WHERE id=?", mk, String(uid));
+    this.sql.exec("UPDATE users SET sxp=sxp+?, mxp=mxp+? WHERE id=?", xp, xp, String(uid));
+    this.topC = null;
+    const level = sLevelOf((u.sxp | 0) + xp);
+    return { level, levelUp: level > before };
+  }
+  top3() {
+    const t = now();
+    if (this.topC && t - this.topC.t < 60000) return this.topC.m;
+    const m = {};
+    this.all("SELECT id FROM users WHERE mkey=? AND mxp>0 AND deleted=0 ORDER BY mxp DESC, sxp DESC LIMIT 3", monthKey(t)).forEach((r, i) => (m[r.id] = i + 1));
+    this.topC = { t, m };
+    return m;
+  }
+  shareFor(uid) { return TOP_SHARE[this.top3()[uid]] || STREAMER_SHARE; }
+  streamerOf(u) {
+    const xp = u.sxp | 0, level = sLevelOf(xp), mk = monthKey(now());
+    const mxp = u.mkey === mk ? u.mxp | 0 : 0;
+    const mrank = mxp > 0 ? this.one("SELECT COUNT(*) n FROM users WHERE mkey=? AND deleted=0 AND (mxp>? OR (mxp=? AND sxp>?))", mk, mxp, mxp, xp).n + 1 : 0;
+    const rank = xp > 0 ? this.one("SELECT COUNT(*) n FROM users WHERE deleted=0 AND sxp>?", xp).n + 1 : 0;
+    return { xp, level, cur: sXpFor(level), next: sXpFor(level + 1), mxp, mrank, rank, top: this.top3()[u.id] || 0, share: Math.round(this.shareFor(u.id) * 100) };
   }
   recTotal() { return (this.one("SELECT SUM(bytes) b FROM recs WHERE deleted=0") || {}).b || 0; }
   prefsOf(u) { try { return JSON.parse(u.prefs || "{}") || {}; } catch (e) { return {}; } }
@@ -523,6 +633,7 @@ export class Hub {
     const e = this.jobj(u.equip), out = { vip: this.isVip(u) };
     for (const k of ["name", "badge", "frame"]) if (e[k] && this.ownsItem(u, e[k])) out[k] = e[k].split(":")[1];
     if (!out.badge && this.isAdmin(u)) out.badge = "founder";
+    const tp = this.top3()[u.id || u.uid]; if (tp) out.top = tp;
     return out;
   }
   addCoins(uid, delta, kind, ref) {
@@ -533,7 +644,8 @@ export class Hub {
     return u && { id: u.id, handle: u.handle, name: u.name, color: u.color, bio: u.bio || "", link: u.link || "", look: this.lookOf(u),
       avatar: u.av ? "/api/avatar/" + u.id + "?v=" + u.av : "", created: u.created,
       ...(self ? { email: u.email || "", notify: u.notify !== 0, prefs: this.prefsOf(u), coins: u.coins | 0, vipUntil: u.vipUntil || 0,
-        owned: this.jarr(u.owned), equip: this.jobj(u.equip), earned: u.earned | 0, admin: this.isAdmin(u) } : {}) };
+        owned: this.jarr(u.owned), equip: this.jobj(u.equip), earned: u.earned | 0, admin: this.isAdmin(u),
+        yt: u.ytkey ? "••••" + u.ytkey.slice(-4) : "", streamer: this.streamerOf(u) } : {}) };
   }
   limited(k, max, win) {
     const r = this.one("SELECT * FROM hits WHERE k=?", k);
@@ -651,6 +763,12 @@ export class Hub {
         if (link && !/^https?:\/\//i.test(link)) link = "https://" + link;
         if (link && !/^https?:\/\/[^\s<>"']+\.[^\s<>"']+$/i.test(link)) return J2({ error: "bad_link" });
       }
+      if (b.ytkey !== undefined) {
+        const k = String(b.ytkey).trim();
+        if (k && !/^[A-Za-z0-9_-]{8,64}$/.test(k)) return J2({ error: "bad_ytkey" });
+        this.sql.exec("UPDATE users SET ytkey=? WHERE id=?", k, u.id);
+        u.ytkey = k;
+      }
       let prefs = this.prefsOf(u);
       if (b.prefs && typeof b.prefs === "object") {
         const P = b.prefs;
@@ -677,7 +795,9 @@ export class Hub {
         return o;
       });
       const games = this.all("SELECT game, MAX(gameIcon) icon, COUNT(*) n FROM streams WHERE uid=? AND game<>'' GROUP BY lower(game) ORDER BY n DESC LIMIT 8", u.id);
-      return J2({ user: this.pubUser(u), followers, following, streamsCount: st.n || 0, bestPeak: st.p || 0, hours: Math.round((st.d || 0) / 360000) / 10, games: games.map((g) => ({ name: g.game, icon: g.icon === "local" ? "" : g.icon, n: g.n })), streams: past });
+      const viewer = b.token ? this.user(b.token) : null;
+      const subsCount = this.one("SELECT COUNT(*) n FROM subs WHERE host=? AND until>?", u.id, t).n;
+      return J2({ streamer: this.streamerOf(u), mySub: viewer ? this.subOf(viewer.id, u.id) : null, subsCount, user: this.pubUser(u), followers, following, streamsCount: st.n || 0, bestPeak: st.p || 0, hours: Math.round((st.d || 0) / 360000) / 10, games: games.map((g) => ({ name: g.game, icon: g.icon === "local" ? "" : g.icon, n: g.n })), streams: past });
     }
     if (p === "/password") {
       const u = this.user(b.token);
@@ -723,7 +843,12 @@ export class Hub {
     if (p === "/follow") {
       const u = this.user(b.token);
       if (!u) return J2({ error: "auth" });
-      if (b.on) this.sql.exec("INSERT OR IGNORE INTO follows VALUES(?,?)", u.id, String(b.target));
+      if (b.on) {
+        this.sql.exec("INSERT OR IGNORE INTO follows VALUES(?,?)", u.id, String(b.target));
+        if (String(b.target) !== u.id && !this.one("SELECT 1 x FROM fxp WHERE uid=? AND target=?", u.id, String(b.target))) {
+          this.sql.exec("INSERT INTO fxp VALUES(?,?)", u.id, String(b.target)); this.addSxp(b.target, 25);
+        }
+      }
       else this.sql.exec("DELETE FROM follows WHERE uid=? AND target=?", u.id, String(b.target));
       return J2({ ok: true });
     }
@@ -731,7 +856,9 @@ export class Hub {
       const u = this.user(b.token);
       const rows = this.all("SELECT * FROM streams WHERE ended=0 AND beat>? ORDER BY viewers DESC, started DESC LIMIT 100", t - 90000);
       const fol = u ? new Set(this.all("SELECT target FROM follows WHERE uid=?", u.id).map((r) => r.target)) : new Set();
-      return J2({ streams: rows.map((s) => ({ ...this.streamOut(s), followed: fol.has(s.uid) })) });
+      const tp = this.top3();
+      rows.sort((a, c) => (tp[a.uid] || 9) - (tp[c.uid] || 9));
+      return J2({ streams: rows.map((s) => ({ ...this.streamOut(s), followed: fol.has(s.uid), top: tp[s.uid] || 0 })) });
     }
     if (p === "/stream") {
       return J2({ stream: this.streamOut(this.one("SELECT * FROM streams WHERE id=?", String(b.id))) });
@@ -756,6 +883,7 @@ export class Hub {
         const title = String(b.title || "").trim().slice(0, 80) || (u.name + " Live");
         this.sql.exec("INSERT INTO streams(id,uid,title,game,cat,started,beat,gameIcon) VALUES(?,?,?,?,?,?,?,?)",
           room, u.id, title, String(b.game || "").slice(0, 60), String(b.cat || "").slice(0, 20), t, t, String(b.gameIcon || "").slice(0, 300));
+        if (b.youtube && u.ytkey) this.sql.exec("UPDATE streams SET yt=1 WHERE id=?", room);
         await this.env.ROOM.get(this.env.ROOM.idFromName("r:" + room)).fetch("https://room/init", {
           method: "POST",
           body: JSON.stringify({ room, host: u.id, hostName: u.name, title, prefs: this.prefsOf(u),
@@ -777,6 +905,9 @@ export class Hub {
         privacy: b.privacy || {}, at: t,
         rec: role === "host" && !!this.env.REC && this.prefsOf(u).rec !== false && this.recTotal() < REC_LIMIT,
       };
+      // YouTube simulcast rides on the same HLS segments (no second encoder on the phone)
+      job.save = job.rec;
+      if (role === "host" && b.youtube && u.ytkey && this.env.REC) { job.yt = true; job.rec = true; }
       if (b.device) this.sql.exec("INSERT OR REPLACE INTO pending VALUES(?,?,?)", String(b.device), JSON.stringify(job), t);
       this.sql.exec("DELETE FROM pending WHERE created<?", t - 3600000);
       return J2({ ok: true, job, stream: this.streamOut(this.one("SELECT * FROM streams WHERE id=?", room)) });
@@ -802,10 +933,28 @@ export class Hub {
       const r = this.one("SELECT * FROM pubs WHERE pub=? AND room=?", String(b.pub), String(b.room));
       if (!r || r.role !== "host") return J2({ ok: false, error: "auth" });
       const u = this.one("SELECT * FROM users WHERE id=?", r.uid);
-      if (this.prefsOf(u).rec === false) return J2({ ok: false, error: "rec_disabled" });
+      const st = this.one("SELECT * FROM streams WHERE id=?", r.room) || {};
+      let yt = null;
+      if (st.yt && u.ytkey && !st.ended) {
+        if (b.n < 0) {
+          // new init segment (encoder restarted / orientation change) → fresh playlist after a discontinuity
+          this.sql.exec("UPDATE streams SET ytinit=ytinit+1 WHERE id=?", r.room);
+          this.sql.exec("DELETE FROM ytsegs WHERE room=?", r.room);
+          st.ytinit = (st.ytinit | 0) + 1;
+        } else {
+          this.sql.exec("INSERT OR REPLACE INTO ytsegs VALUES(?,?,?)", r.room, b.n, +b.dur || 0);
+          this.sql.exec("DELETE FROM ytsegs WHERE room=? AND n<?", r.room, b.n - 6);
+        }
+        yt = { key: u.ytkey, init: st.ytinit | 0, segs: this.all("SELECT n, dur FROM ytsegs WHERE room=? ORDER BY n DESC LIMIT 5", r.room).reverse() };
+      }
       let rec = this.one("SELECT * FROM recs WHERE id=?", r.room);
-      if (rec && rec.deleted) return J2({ ok: false, error: "deleted" });
-      if (this.recTotal() + (b.bytes | 0) > REC_LIMIT) return J2({ ok: false, error: "rec_full" });
+      let store = this.prefsOf(u).rec !== false && !(rec && rec.deleted) && this.recTotal() + (b.bytes | 0) <= REC_LIMIT;
+      if (!store) {
+        this.sql.exec("UPDATE pubs SET beat=? WHERE pub=?", t, r.pub);
+        if (yt) return J2({ ok: true, store: false, yt });
+        if (this.prefsOf(u).rec === false) return J2({ ok: false, error: "rec_disabled" });
+        return J2({ ok: false, error: rec && rec.deleted ? "deleted" : "rec_full" });
+      }
       if (!rec) {
         const s = this.one("SELECT * FROM streams WHERE id=?", r.room) || {};
         this.sql.exec("INSERT INTO recs(id,uid,title,game,gameIcon,started) VALUES(?,?,?,?,?,?)", r.room, r.uid, s.title || "", s.game || "", s.gameIcon === "local" ? "/api/gameicon/" + r.room : s.gameIcon || "", s.started || t);
@@ -818,6 +967,12 @@ export class Hub {
         this.sql.exec("UPDATE recs SET segs=segs+?, dur=dur+?, bytes=bytes+? WHERE id=?", ex ? 0 : 1, (+b.dur || 0) - (ex ? ex.dur : 0), (b.bytes | 0) - (ex ? ex.bytes : 0), r.room);
       }
       this.sql.exec("UPDATE pubs SET beat=? WHERE pub=?", t, r.pub);
+      return J2({ ok: true, store: true, yt });
+    }
+    if (p === "/yt-stat") {
+      const s = this.one("SELECT uid FROM streams WHERE id=?", String(b.room));
+      if (s) await this.env.ROOM.get(this.env.ROOM.idFromName("r:" + b.room)).fetch("https://room/yt", { method: "POST", body: JSON.stringify({ ok: !!b.ok, code: b.code | 0 }) }).catch(() => {});
+      if (!b.ok) this.sql.exec("INSERT INTO diag(t,ip,ua,src,room,msg) VALUES(?,?,?,?,?,?)", t, "", "", "yt", String(b.room), ("youtube code " + b.code + " " + (b.msg || "")).slice(0, 400));
       return J2({ ok: true });
     }
     if (p === "/rec-get") {
@@ -902,10 +1057,99 @@ export class Hub {
       const cost = g.price * n;
       if ((from.coins | 0) < cost) return J2({ error: "no_coins" });
       this.addCoins(from.id, -cost, "gift", b.gift + "x" + n + ">" + b.to);
-      const share = Math.floor(cost * STREAMER_SHARE);
+      const share = Math.floor(cost * this.shareFor(String(b.to)));
+      const lv = this.addSxp(b.to, cost / 2);
       this.addCoins(String(b.to), share, "gift_in", b.gift + "x" + n + "<" + from.id);
       this.sql.exec("UPDATE users SET earned=earned+? WHERE id=?", share, String(b.to));
-      return J2({ ok: true, coins: (from.coins | 0) - cost, cost, share, n });
+      return J2({ ok: true, coins: (from.coins | 0) - cost, cost, share, n, host: lv });
+    }
+    // ---- loyalty ----
+    if (p === "/sub") {
+      const u = this.user(b.token); if (!u) return J2({ error: "auth" });
+      const h = this.one("SELECT * FROM users WHERE (id=? OR handle=?) AND deleted=0", String(b.host || ""), String(b.host || "").toLowerCase());
+      if (!h) return J2({ error: "not_found" });
+      if (h.id === u.id) return J2({ error: "self" });
+      if ((u.coins | 0) < SUB_PRICE) return J2({ error: "no_coins" });
+      this.addCoins(u.id, -SUB_PRICE, "sub", h.handle);
+      const share = Math.floor(SUB_PRICE * this.shareFor(h.id));
+      this.addSxp(h.id, 250);
+      this.addCoins(h.id, share, "sub_in", u.handle);
+      this.sql.exec("UPDATE users SET earned=earned+? WHERE id=?", share, h.id);
+      const cur = this.one("SELECT * FROM subs WHERE uid=? AND host=?", u.id, h.id);
+      const until = Math.max(cur ? cur.until : 0, t) + 30 * 86400000;
+      if (cur) this.sql.exec("UPDATE subs SET until=?, months=months+1 WHERE uid=? AND host=?", until, u.id, h.id);
+      else this.sql.exec("INSERT INTO subs VALUES(?,?,?,?,1)", u.id, h.id, until, t);
+      this.chanRow(u.id, h.id); this.sql.exec("UPDATE chan SET xp=xp+100, points=points+300 WHERE uid=? AND host=?", u.id, h.id);
+      return J2({ ok: true, sub: this.subOf(u.id, h.id), user: this.pubUser(this.one("SELECT * FROM users WHERE id=?", u.id), true) });
+    }
+    if (p === "/sub-get") {
+      return J2({ sub: this.subOf(String(b.uid), String(b.host)) });
+    }
+    if (p === "/loy-get") {
+      const c = this.chanRow(b.uid, b.host);
+      const rewards = [...DEFAULT_REWARDS, ...this.all("SELECT id, title, cost FROM rewards WHERE host=? ORDER BY cost", String(b.host)).map((r) => ({ ...r, custom: true }))];
+      return J2({ ...this.loyOut(c), rewards, sub: this.subOf(String(b.uid), String(b.host)) });
+    }
+    if (p === "/loy-daily") {
+      const c = this.chanRow(b.uid, b.host);
+      const today = new Date(t + 3 * 3600000).toISOString().slice(0, 10); // Gulf day
+      if (c.day === today) return J2({ ...this.loyOut(c), daily: false });
+      const yesterday = new Date(t + 3 * 3600000 - 86400000).toISOString().slice(0, 10);
+      const streak = c.day === yesterday ? Math.min(30, c.streak + 1) : 1;
+      const pts = 50 + Math.min(7, streak - 1) * 10, xp = 25 + Math.min(7, streak - 1) * 5;
+      this.sql.exec("UPDATE chan SET day=?, streak=?, points=points+?, xp=xp+? WHERE uid=? AND host=?", today, streak, pts, xp, c.uid, c.host);
+      return J2({ ...this.loyOut(this.chanRow(b.uid, b.host)), daily: true, gotPts: pts, gotXp: xp, streak });
+    }
+    if (p === "/loy-add") {
+      // batch: [{uid, xp, pts, watch}]
+      const out = {};
+      for (const e of (b.list || []).slice(0, 500)) {
+        if (!e.uid || e.uid === b.host) continue;
+        const c = this.chanRow(e.uid, b.host);
+        const before = levelOf(c.xp);
+        this.sql.exec("UPDATE chan SET xp=xp+?, points=points+?, watch=watch+? WHERE uid=? AND host=?", Math.max(0, e.xp | 0), Math.max(0, e.pts | 0), Math.max(0, e.watch | 0), e.uid, b.host);
+        const o = this.loyOut(this.chanRow(e.uid, b.host));
+        if (o.level > before) o.levelUp = true;
+        out[e.uid] = o;
+      }
+      const host = b.hostXp > 0 ? this.addSxp(b.host, b.hostXp) : null;
+      return J2({ users: out, host: host && { ...host, top: this.top3()[b.host] || 0 } });
+    }
+    if (p === "/loy-spend") {
+      const c = this.chanRow(b.uid, b.host);
+      const cost = Math.max(0, b.cost | 0);
+      if (c.points < cost) return J2({ error: "no_points" });
+      this.sql.exec("UPDATE chan SET points=points-? WHERE uid=? AND host=?", cost, b.uid, b.host);
+      return J2({ ok: true, ...this.loyOut(this.chanRow(b.uid, b.host)) });
+    }
+    if (p === "/loy-reward") {
+      const r = DEFAULT_REWARDS.find((x) => x.id === b.id) || this.one("SELECT id, title, cost FROM rewards WHERE id=? AND host=?", String(b.id), String(b.host));
+      return J2({ reward: r || null, custom: !!(r && !DEFAULT_REWARDS.includes(r)) });
+    }
+    if (p === "/streamers") {
+      const t2 = now(), mk = monthKey(t2), month = b.mode !== "all";
+      const rows = month
+        ? this.all("SELECT * FROM users WHERE mkey=? AND mxp>0 AND deleted=0 ORDER BY mxp DESC, sxp DESC LIMIT 50", mk)
+        : this.all("SELECT * FROM users WHERE sxp>0 AND deleted=0 ORDER BY sxp DESC LIMIT 50");
+      const liveSet = new Set(this.all("SELECT uid FROM streams WHERE ended=0 AND beat>?", t2 - 90000).map((r) => r.uid));
+      const me = this.user(b.token);
+      const ends = new Date(Date.UTC(+mk.slice(0, 4), +mk.slice(5, 7), 1) - 3 * 3600000).getTime();
+      return J2({ month: mk, ends, list: rows.map((u, i) => ({ rank: i + 1, ...this.pubUser(u), level: sLevelOf(u.sxp), xp: month ? u.mxp : u.sxp, live: liveSet.has(u.id) })),
+        me: me ? this.streamerOf(me) : null, shares: TOP_SHARE, base: STREAMER_SHARE });
+    }
+    if (p === "/loy-top") {
+      const rows = this.all("SELECT c.uid, c.xp, u.name, u.color, u.handle, u.av, u.vipUntil, u.equip, u.owned FROM chan c JOIN users u ON u.id=c.uid WHERE c.host=? AND u.deleted=0 ORDER BY c.xp DESC LIMIT 20", String(b.host));
+      return J2({ top: rows.map((r) => ({ uid: r.uid, xp: r.xp, level: levelOf(r.xp), name: r.name, color: r.color, handle: r.handle, avatar: r.av ? "/api/avatar/" + r.uid + "?v=" + r.av : "", look: this.lookOf(r) })) });
+    }
+    if (p === "/rewards-set") {
+      const u = this.user(b.token); if (!u) return J2({ error: "auth" });
+      if (b.del) this.sql.exec("DELETE FROM rewards WHERE id=? AND host=?", String(b.del), u.id);
+      if (b.title) {
+        const n = this.one("SELECT COUNT(*) n FROM rewards WHERE host=?", u.id).n;
+        if (n >= 12) return J2({ error: "too_many" });
+        this.sql.exec("INSERT INTO rewards VALUES(?,?,?,?,?)", "c" + rid(8), u.id, String(b.title).trim().slice(0, 50), Math.max(10, Math.min(100000, b.cost | 0)), t);
+      }
+      return J2({ rewards: this.all("SELECT id, title, cost FROM rewards WHERE host=? ORDER BY cost", u.id) });
     }
     if (p === "/order-new") {
       this.sql.exec("INSERT OR REPLACE INTO orders VALUES(?,?,?,?,?,?,?)", b.id, b.uid, b.pack, b.coins, b.usd, "created", t);
@@ -982,6 +1226,9 @@ export class Room {
       this.challenges = (await state.storage.get("challenges")) || [];
       this.hype = (await state.storage.get("hype")) || { v: 0, t: now(), lvl: 1 };
       this.pinned = (await state.storage.get("pinned")) || null;
+      this.redeems = (await state.storage.get("redeems")) || [];
+      this.wt = (await state.storage.get("wt")) || {};
+      this.lastTick = (await state.storage.get("lastTick")) || 0;
     });
     this.throttle = new Map();
   }
@@ -1077,8 +1324,14 @@ export class Room {
       this.meta = { room: body.room, host: body.host, hostName: body.hostName, title: body.title, started: now(), ended: false,
         prefs: body.prefs || {}, followers: (body.followers || []).slice(0, 5000) };
       this.history = []; this.pubs = {}; this.guests = []; this.requests = []; this.poll = null; this.challenges = [];
-      this.hype = { v: 0, t: now(), lvl: 1 }; this.pinned = null;
+      this.hype = { v: 0, t: now(), lvl: 1 }; this.pinned = null; this.redeems = []; this.wt = {}; this.lastTick = 0;
       await this.state.storage.put({ meta: this.meta, history: [], pubs: {}, guests: [], requests: [], poll: null, challenges: [], hype: this.hype, pinned: null });
+      return R({ ok: true });
+    }
+    if (p === "/yt") {
+      const was = this.yt;
+      this.yt = { ok: !!body.ok, code: body.code | 0 };
+      if (!was || was.ok !== this.yt.ok) this.bcast({ t: "yt", ...this.yt });
       return R({ ok: true });
     }
     if (p === "/state") {
@@ -1148,22 +1401,38 @@ export class Room {
         handle: url.searchParams.get("handle") || "", anon: !uid, id: rid(6),
         pub: url.searchParams.get("pub") === "1",
         look: (() => { try { return JSON.parse(url.searchParams.get("look") || "{}"); } catch (e) { return {}; } })(),
+        av: (url.searchParams.get("av") || "").slice(0, 200),
       };
       this.state.acceptWebSocket(server);
       server.serializeAttachment(att);
       const h = this.hypeNow();
       this.send(server, {
-        t: "hello", me: att, meta: this.meta && { room: this.meta.room, host: this.meta.host, hostName: this.meta.hostName, title: this.meta.title, started: this.meta.started, ended: this.meta.ended }, history: this.history, publishers: this.publishers(),
+        t: "hello", yt: this.yt || null, me: att, meta: this.meta && { room: this.meta.room, host: this.meta.host, hostName: this.meta.hostName, title: this.meta.title, started: this.meta.started, ended: this.meta.ended }, history: this.history, publishers: this.publishers(),
         viewers: this.counts(), poll: this.pollOut(), hype: { v: Math.round(h.v), lvl: h.lvl },
         challenges: this.challenges, pinned: this.pinned, guests: this.guests,
         requests: this.isHost(uid) ? this.requests : undefined,
+        redeems: this.isHost(uid) ? this.redeems || [] : undefined,
         host: this.isHost(uid),
         rules: this.meta ? { allowFx: this.pref("allowFx") !== false, allowCh: this.pref("allowCh") !== false, coStream: this.pref("coStream") || "all", slow: this.pref("slow") | 0 } : null,
       });
       this.state.waitUntil(this.syncHub());
-      if (att.look && att.look.vip && !att.pub && this.allowed("enter:" + uid, 60000)) {
-        this.bcast({ t: "enter", name: att.name, color: att.color, look: att.look });
+      if (uid && !att.pub && this.meta && uid !== this.meta.host) {
+        this.state.waitUntil((async () => {
+          try {
+            const d = await this.hubPost("/loy-daily", { uid, host: this.meta.host });
+            const g = await this.hubPost("/loy-get", { uid, host: this.meta.host });
+            this.setLvl(uid, g.level);
+            const a2 = this.info(server); a2.sub = g.sub ? g.sub.months : 0; try { server.serializeAttachment(a2); } catch (e) {}
+            this.send(server, { t: "loy", ...g, daily: d.daily, gotPts: d.gotPts, gotXp: d.gotXp });
+            if ((g.sub || (att.look && att.look.vip)) && this.allowed("enter:" + uid, 60000)) {
+              this.bcast({ t: "enter", uid, name: att.name, color: att.color, look: att.look || {}, avatar: att.av, level: g.level, sub: g.sub ? g.sub.months : 0, handle: att.handle });
+            }
+            const s = this.wt && this.wt[uid]; if (s && s.chestReady) this.send(server, { t: "chest" });
+          } catch (e) {}
+        })());
       }
+      if (!(await this.state.storage.getAlarm())) await this.state.storage.setAlarm(now() + 30000);
+
       return new Response(null, { status: 101, webSocket: client });
     }
     return R({ error: "unknown" }, 404);
@@ -1191,7 +1460,9 @@ export class Room {
         const slow = host ? 0 : ((this.meta && this.meta.prefs && this.meta.prefs.slow) | 0) * 1000;
         if (!text) return;
         if (!this.allowed("c:" + me.uid, Math.max(700, slow))) return slow ? this.send(ws, { t: "err", e: "slow" }) : undefined;
-        const msg = { t: "chat", id: rid(8), uid: me.uid, name: me.name, color: me.color, text, at: t, host, guest: this.guests.includes(me.uid), look: me.look || {} };
+        const msg = { t: "chat", id: rid(8), uid: me.uid, name: me.name, color: me.color, text, at: t, host, guest: this.guests.includes(me.uid), look: me.look || {}, lvl: host ? 0 : me.lvl || 1, sub: me.sub || 0 };
+        const ws0 = (this.wt = this.wt || {})[me.uid] = (this.wt || {})[me.uid] || { ms: 0, chest: 0, chat: 0, chestReady: false };
+        if (ws0.chat < 30) { ws0.chat += 2; this.addXp(me.uid, 2); }
         this.pushHistory(msg);
         this.bcast(msg);
         this.addHype(1);
@@ -1224,9 +1495,56 @@ export class Room {
         this.send(ws, { t: "coins", coins: r.coins });
         const ev = { t: "gift", id: rid(6), gift: m.gift, n: r.n, uid: me.uid, name: me.name, color: me.color, look: me.look || {}, to, value: r.cost, at: t };
         this.giftTotal = (this.giftTotal || 0) + r.cost;
+        this.addXp(me.uid, Math.round(r.cost / 2));
+        this.state.waitUntil(this.flushLoyalty());
         this.pushHistory({ t: "chat", id: ev.id, uid: me.uid, name: me.name, color: me.color, look: me.look || {}, text: `🎁 ${GIFTS[m.gift].e} ×${r.n}`, at: t, gift: true });
         this.bcast(ev);
+        if (r.host && r.host.levelUp && to === this.meta.host) this.bcast({ t: "slevelup", uid: to, name: this.meta.hostName, level: r.host.level });
         this.addHype(Math.min(60, 5 + r.cost / 20));
+        return;
+      }
+      case "claim": {
+        const s = this.wt && this.wt[me.uid];
+        if (!s || !s.chestReady) return;
+        s.chestReady = false; s.chest = 0;
+        this.addXp(me.uid, 0, 50);
+        await this.flushLoyalty();
+        this.send(ws, { t: "claimed", pts: 50 });
+        return;
+      }
+      case "redeem": {
+        if (me.anon || host) return;
+        if (!this.allowed("rd:" + me.uid, 2000)) return this.send(ws, { t: "err", e: "slow" });
+        const rr = await this.hubPost("/loy-reward", { id: m.id, host: this.meta.host });
+        const rw = rr.reward; if (!rw) return;
+        const text = String(m.text || "").trim().slice(0, 150);
+        if ((rw.text || m.id === "highlight" || m.id === "pin") && !text) return this.send(ws, { t: "err", e: "need_text" });
+        const sp = await this.hubPost("/loy-spend", { uid: me.uid, host: this.meta.host, cost: rw.cost });
+        if (sp.error) return this.send(ws, { t: "err", e: sp.error });
+        this.send(ws, { t: "loy", ...sp });
+        const base = { id: rid(8), uid: me.uid, name: me.name, color: me.color, look: me.look || {}, lvl: me.lvl || 1, at: t };
+        if (m.id === "highlight" || m.id === "pin") {
+          const msg = { t: "chat", ...base, text, hl: true };
+          this.pushHistory(msg); this.bcast(msg);
+          if (m.id === "pin") { this.pinned = { ...msg, until: t + 60000 }; await this.state.storage.put("pinned", this.pinned); this.bcast({ t: "pinned", msg: this.pinned }); await this.state.storage.setAlarm(Math.min((await this.state.storage.getAlarm()) || Infinity, t + 60200)); }
+        } else if (m.id === "goldrain") {
+          this.bcast({ t: "effect", id: "goldrain", name: me.name, color: me.color, at: t });
+        } else {
+          this.redeems = (this.redeems || []).concat({ ...base, rid: rw.id, title: rw.title, cost: rw.cost, text, state: "new" }).slice(-30);
+          await this.state.storage.put("redeems", this.redeems);
+          this.bcast({ t: "redeems", list: this.redeems }, (i) => this.isHost(i.uid));
+          this.bcast({ t: "redeemed", ...base, title: rw.title, text });
+        }
+        this.addHype(4);
+        return;
+      }
+      case "redeem-set": {
+        if (!host) return;
+        const it = (this.redeems || []).find((x) => x.id === m.id); if (!it || it.state !== "new") return;
+        it.state = m.state === "refund" ? "refund" : "done";
+        if (it.state === "refund") { this.addXp(it.uid, 0, it.cost); await this.flushLoyalty(); }
+        await this.state.storage.put("redeems", this.redeems);
+        this.bcast({ t: "redeems", list: this.redeems }, (i) => this.isHost(i.uid));
         return;
       }
       case "vote": {
@@ -1350,6 +1668,63 @@ export class Room {
     }
   }
   pref(k) { return this.meta && this.meta.prefs ? this.meta.prefs[k] : undefined; }
+  hubPost(path, body) {
+    return this.env.HUB.get(this.env.HUB.idFromName("hub")).fetch("https://hub" + path, { method: "POST", body: JSON.stringify(body) }).then((r) => r.json());
+  }
+  socketsOf(uid) { return this.sockets().filter((w) => this.info(w).uid === uid); }
+  setLvl(uid, lvl) { for (const w of this.socketsOf(uid)) { const a = this.info(w); if (a.lvl !== lvl) { a.lvl = lvl; try { w.serializeAttachment(a); } catch (e) {} } } }
+  addXp(uid, xp, pts = 0) {
+    if (!uid || !this.meta || uid === this.meta.host) return;
+    this.pend = this.pend || {};
+    const p = (this.pend[uid] = this.pend[uid] || { xp: 0, pts: 0, watch: 0 });
+    p.xp += xp; p.pts += pts;
+  }
+  /** Called every ~30 s: watch time, 5-minute rewards, bonus chest, then one batched write to the hub. */
+  async loyaltyTick(t) {
+    if (!this.meta || this.meta.ended) return;
+    const live = this.publishers().length > 0;
+    const dt = Math.min(60000, t - (this.lastTick || t));
+    this.lastTick = t;
+    this.wt = this.wt || {};
+    const seen = new Set();
+    for (const w of this.sockets()) {
+      const a = this.info(w);
+      if (!a.uid || a.pub || a.uid === this.meta.host || seen.has(a.uid)) continue;
+      seen.add(a.uid);
+      if (!live || !dt) continue;
+      this.hxp = (this.hxp || 0) + dt / 60000;          // +1 per viewer-minute
+      const s = (this.wt[a.uid] = this.wt[a.uid] || { ms: 0, chest: 0, chat: 0, chestReady: false });
+      s.ms += dt; s.chest += dt;
+      (this.pend = this.pend || {})[a.uid] = this.pend[a.uid] || { xp: 0, pts: 0, watch: 0 };
+      this.pend[a.uid].watch += Math.round(dt / 1000);
+      while (s.ms >= 300000) { s.ms -= 300000; this.addXp(a.uid, 10, a.sub ? 15 : 10); s.chat = 0; }
+      if (s.chest >= 900000 && !s.chestReady) { s.chestReady = true; for (const x of this.socketsOf(a.uid)) this.send(x, { t: "chest" }); }
+    }
+    if (live && dt) this.hxp = (this.hxp || 0) + 2 * dt / 60000;  // +2 per minute live
+    await this.flushLoyalty();
+    await this.state.storage.put({ wt: this.wt, lastTick: this.lastTick });
+  }
+  async flushLoyalty() {
+    const pend = this.pend || {};
+    const list = Object.entries(pend).filter(([, v]) => v.xp || v.pts || v.watch).map(([uid, v]) => ({ uid, ...v }));
+    this.pend = {};
+    const hostXp = Math.floor(this.hxp || 0);
+    if ((!list.length && !hostXp) || !this.meta) return;
+    this.hxp = (this.hxp || 0) - hostXp;
+    const r = await this.hubPost("/loy-add", { host: this.meta.host, list, hostXp });
+    if (r.host) {
+      for (const w of this.socketsOf(this.meta.host)) this.send(w, { t: "slevel", ...r.host });
+      if (r.host.levelUp) this.bcast({ t: "slevelup", uid: this.meta.host, name: this.meta.hostName, level: r.host.level });
+    }
+    for (const [uid, o] of Object.entries(r.users || {})) {
+      this.setLvl(uid, o.level);
+      for (const w of this.socketsOf(uid)) this.send(w, { t: "loy", ...o });
+      if (o.levelUp) {
+        const a = this.socketsOf(uid)[0]; const info = a ? this.info(a) : {};
+        this.bcast({ t: "levelup", uid, name: info.name || "", color: info.color, look: info.look || {}, level: o.level });
+      }
+    }
+  }
   chOut(c) {
     return { id: c.id, name: c.name, color: c.color, text: c.text, state: c.state, up: c.up, at: c.at };
   }
@@ -1370,8 +1745,11 @@ export class Room {
       this.bcast({ t: "poll", poll: this.pollOut() });
     }
     await this.syncHub();
+    try { await this.loyaltyTick(t); } catch (e) {}
+    if (this.pinned && this.pinned.until && t > this.pinned.until) { this.pinned = null; await this.state.storage.put("pinned", null); this.bcast({ t: "pinned", msg: null }); }
     const next = [];
     if (this.poll && !this.poll.done) next.push(this.poll.ends);
+    if (this.pinned && this.pinned.until) next.push(this.pinned.until + 200);
     if (this.sockets().length) next.push(t + 30000);
     if (next.length) await this.state.storage.setAlarm(Math.min(...next));
   }

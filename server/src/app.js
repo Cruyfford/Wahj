@@ -55,8 +55,23 @@ const T = {
     unfollow: "متابَع", followers: "متابِع", past: "بثوث سابقة", edit: "تعديل الملف", save: "حفظ", bio: "نبذة", color: "لون الحساب",
     settings: "الإعدادات", language: "اللغة", logout: "تسجيل الخروج", focusGuide: "دليل إخفاء الإشعارات في آيفون",
     focusSteps: "١. افتح تطبيق «الاختصارات» ← «الأتمتة» ← «أتمتة جديدة»<br>٢. اختر «تطبيق» ← وهج ← «عند الفتح»<br>٣. اختر «تشغيل فوري»<br>٤. أضف إجراء «تعيين التركيز» ← «عدم الإزعاج» ← تشغيل<br><br>الآن كل مرة تفتح وهج يتفعّل عدم الإزعاج تلقائياً ✓",
-    openShortcuts: "فتح الاختصارات", errs: { bad_handle: "اسم المستخدم: ٣–٢٠ حرفاً إنجليزياً أو أرقام", weak_password: "كلمة المرور ٦ أحرف على الأقل", taken: "الاسم محجوز", bad_login: "بيانات الدخول غير صحيحة", rate: "محاولات كثيرة، انتظر قليلاً", net: "تعذّر الاتصال", auth: "سجّل الدخول أولاً", not_invited: "لم تتم دعوتك", login: "سجّل الدخول للمشاركة", slow: "انتظر لحظة", guests_full: "اكتمل عدد الضيوف (٣)", bad_email: "البريد الإلكتروني غير صحيح", email_taken: "هذا البريد مسجّل مسبقاً", bad_code: "الرمز غير صحيح أو منتهي", mail_off: "إرسال البريد غير مفعّل في السيرفر بعد", bad_link: "الرابط غير صحيح", no_coins: "رصيدك غير كافٍ 🪙", vip_only: "خاص بمشتركي VIP 👑", owned: "تملكه مسبقاً", self: "لا يمكنك إهداء نفسك", pay_off: "الدفع غير مفعّل بعد", pay_fail: "تعذّر إنشاء الدفع", forbidden: "غير مسموح", not_found: "غير موجود", bad_old: "كلمة المرور الحالية غير صحيحة", bad_image: "الصورة غير مدعومة", fx_off: "البثّاث أوقف المؤثرات", ch_off: "البثّاث أوقف التحديات", co_off: "البثّاث لا يقبل طلبات البث المشترك" },
+    openShortcuts: "فتح الاختصارات", errs: { bad_handle: "اسم المستخدم: ٣–٢٠ حرفاً إنجليزياً أو أرقام", weak_password: "كلمة المرور ٦ أحرف على الأقل", taken: "الاسم محجوز", bad_login: "بيانات الدخول غير صحيحة", rate: "محاولات كثيرة، انتظر قليلاً", net: "تعذّر الاتصال", auth: "سجّل الدخول أولاً", not_invited: "لم تتم دعوتك", login: "سجّل الدخول للمشاركة", slow: "انتظر لحظة", guests_full: "اكتمل عدد الضيوف (٣)", bad_email: "البريد الإلكتروني غير صحيح", email_taken: "هذا البريد مسجّل مسبقاً", bad_code: "الرمز غير صحيح أو منتهي", mail_off: "إرسال البريد غير مفعّل في السيرفر بعد", bad_link: "الرابط غير صحيح", no_points: "نقاطك غير كافية ⭐", need_text: "اكتب رسالتك أولاً", too_many: "الحد ١٢ مكافأة", no_coins: "رصيدك غير كافٍ 🪙", vip_only: "خاص بمشتركي VIP 👑", owned: "تملكه مسبقاً", self: "لا يمكنك إهداء نفسك", pay_off: "الدفع غير مفعّل بعد", pay_fail: "تعذّر إنشاء الدفع", forbidden: "غير مسموح", not_found: "غير موجود", bad_old: "كلمة المرور الحالية غير صحيحة", bad_image: "الصورة غير مدعومة", fx_off: "البثّاث أوقف المؤثرات", ch_off: "البثّاث أوقف التحديات", co_off: "البثّاث لا يقبل طلبات البث المشترك", bad_ytkey: "مفتاح يوتيوب غير صحيح" },
     sentFx: "أرسل", hypeTrain: "قطار الحماس 🚀", latency: "تأخير", guestsN: "ضيوف", layoutSplit: "شاشة مقسومة", layoutFocus: "تركيز",
+    ranks: "ترتيب الستريمرز", rankMonth: "هذا الشهر", rankAll: "كل الوقت", rankYou: "مركزك", rankNone: "لم تدخل الترتيب بعد — ابدأ البث!", rankEnds: "ينتهي الموسم بعد {n}", days: "يوم",
+    sLevel: "مستوى الستريمر", sRankM: "مركزه هذا الشهر", sRankA: "مركزه العام", sNext: "{n} XP للمستوى التالي", sLevelUp: "{n} وصل مستوى ستريمر {l} 🎉", sLevelUpMe: "مستواك كستريمر صار {l}!",
+    topPerks: "مزايا الثلاثة الأوائل", topYou: "أنت #{n} هذا الشهر 🏆", sharePct: "أرباحك من الهدايا والاشتراكات: {n}%",
+    perk1: "👑 تاج ذهبي متحرّك بجانب اسمه في كل مكان + إطار ذهبي", perk2: "📌 بثّه يظهر أولاً في الصفحة الرئيسية ببطاقة مميزة", perk3: "💰 أرباح أعلى: الأول 85% • الثاني 80% • الثالث 75% (الباقون 70%)", perk4: "✨ دخول بثّه يظهر بشارة المركز في الشات والبروفايل",
+    xpHow: "كيف يرتفع مستوى الستريمر؟", xpHow1: "+2 XP لكل دقيقة بث", xpHow2: "+1 XP لكل مشاهد مسجّل عن كل دقيقة", xpHow3: "+25 XP لكل متابع جديد", xpHow4: "+250 XP لكل اشتراك ⭐ • +1 XP لكل 2 كوينز هدايا",
+    tier1: "مبتدئ", tier2: "صاعد", tier3: "محترف", tier4: "نجم", tier5: "أسطورة", tier6: "أيقونة",
+    yt: "يوتيوب", ytAlso: "بث على يوتيوب أيضاً", ytAlsoD: "نفس البث يظهر لمتابعيك على قناتك في يوتيوب", ytAdd: "اربط قناة يوتيوب", ytKey: "مفتاح البث (Stream key)", ytKeyPh: "xxxx-xxxx-xxxx-xxxx-xxxx",
+    ytHelp: "افتح YouTube Studio ← إنشاء ← بث مباشر ← البث (Stream) وانسخ «مفتاح البث» والصقه هنا. المفتاح يبقى سرّياً على السيرفر ولا يراه أحد.", ytSave: "حفظ", ytRemove: "إزالة الربط", ytSaved: "تم ربط يوتيوب ✓", ytRemoved: "تمت إزالة الربط",
+    ytLinked: "مربوط {k}", ytNot: "غير مربوط", ytOn: "يوتيوب: يبث ✓", ytWait: "يوتيوب: يتم الإرسال… (يظهر بعد ~20 ثانية)", ytErr: "يوتيوب: فشل ({c}) — تأكد من المفتاح وأن البث مفعّل في YouTube Studio", bad_ytkey: "مفتاح يوتيوب غير صحيح",
+    subscribe: "اشترك ⭐", subscribed: "مشترك ⭐{n}", subTitle: "اشترك في قناة {n}", subD: "دخول مميز بأنيميشن يراه الجميع • شارة المشترك في الشات • نقاط ×1.5 • +300 نقطة فوراً", subBuy: "اشترك 30 يوم", subOk: "أنت الآن مشترك في {n} ⭐",
+    subMonths: "مشترك منذ {n} شهر", enteredGrand: "دخل البث", subsN: "مشترك",
+    points: "نقاط القناة", level: "المستوى", xpTo: "{n} XP للمستوى التالي", streakT: "سلسلة {n} يوم 🔥", watchT: "{n} دقيقة مشاهدة", rewards: "المكافآت", topFans: "أبرز المتابعين",
+    dailyT: "🔥 زيارة يومية · سلسلة {s} · +{p} نقطة +{x} XP", chestT: "اضغط لاستلام +50 نقطة", claimedT: "+{n} نقطة ⭐", levelUpT: "وصل للمستوى {n}", youLevel: "🎉 مستواك الآن {n}",
+    redeemedT: "استبدل", msgPh: "رسالتك…", noPoints: "نقاطك غير كافية", howEarn: "كيف أجمع؟", howEarnD: "مشاهدة ٥ دقائق: +10 نقاط +10 XP • صندوق كل ١٥ دقيقة: +50 • زيارة يومية: +50 (تزيد مع السلسلة) • رسالة: +2 XP • هدية: XP بنصف قيمتها",
+    myRewards: "مكافآت قناتي", addReward: "إضافة مكافأة", rewardTitle: "اسم المكافأة (مثال: غيّر السلاح)", cost: "السعر بالنقاط", redeemQ: "طلبات المكافآت", done2: "تم", refund: "استرجاع", noRedeems: "لا توجد طلبات",
     wallet: "المحفظة", coins: "كوينز", buyCoins: "شراء كوينز", shop: "المتجر", vip: "اشتراك VIP", vipD: "اسم متحرك بكل الألوان • شارة VIP • مؤثرات حصرية • إعلان دخولك للبث", vipBuy: "اشترك 30 يوم", vipUntil: "VIP حتى {d}",
     names: "ألوان الاسم", badges: "الشارات", frames: "إطارات الصورة", buy: "شراء", equip: "استخدام", equipped: "مستخدم ✓", unequip: "إزالة", noCoins: "رصيدك غير كافٍ", gifts: "هدايا", sendGift: "إرسال",
     giftSent: "أرسل", payOpen: "أكمل الدفع في PayPal ثم ارجع إلى وهج", paid: "تمت إضافة {n} كوينز 🎉", payOff: "الدفع غير مفعّل بعد في السيرفر", history: "السجل", earned: "أرباح الهدايا",
@@ -108,8 +123,23 @@ const T = {
     unfollow: "Following", followers: "followers", past: "Past streams", edit: "Edit profile", save: "Save", bio: "Bio", color: "Accent color",
     settings: "Settings", language: "Language", logout: "Sign out", focusGuide: "Hide notifications on iPhone",
     focusSteps: "1. Open Shortcuts → Automation → New Automation<br>2. Choose App → Wahj → Is Opened<br>3. Choose Run Immediately<br>4. Add action Set Focus → Do Not Disturb → On<br><br>Now Do Not Disturb turns on automatically every time you open Wahj ✓",
-    openShortcuts: "Open Shortcuts", errs: { bad_handle: "Username: 3–20 latin letters/digits", weak_password: "Password needs 6+ characters", taken: "Username taken", bad_login: "Wrong username or password", rate: "Too many attempts, wait a bit", net: "Connection failed", auth: "Sign in first", not_invited: "You were not invited", login: "Sign in to take part", slow: "Slow down a moment", guests_full: "Guest slots are full (3)", bad_email: "Invalid email address", email_taken: "Email already registered", bad_code: "Wrong or expired code", mail_off: "Email sending isn't enabled on the server yet", bad_link: "Invalid link", no_coins: "Not enough coins 🪙", vip_only: "VIP only 👑", owned: "Already owned", self: "You can't gift yourself", pay_off: "Payments aren't enabled yet", pay_fail: "Couldn't start the payment", forbidden: "Not allowed", not_found: "Not found", bad_old: "Current password is wrong", bad_image: "Unsupported image", fx_off: "The streamer turned effects off", ch_off: "The streamer turned challenges off", co_off: "The streamer isn't accepting co-stream requests" },
+    openShortcuts: "Open Shortcuts", errs: { bad_handle: "Username: 3–20 latin letters/digits", weak_password: "Password needs 6+ characters", taken: "Username taken", bad_login: "Wrong username or password", rate: "Too many attempts, wait a bit", net: "Connection failed", auth: "Sign in first", not_invited: "You were not invited", login: "Sign in to take part", slow: "Slow down a moment", guests_full: "Guest slots are full (3)", bad_email: "Invalid email address", email_taken: "Email already registered", bad_code: "Wrong or expired code", mail_off: "Email sending isn't enabled on the server yet", bad_link: "Invalid link", no_points: "Not enough points ⭐", need_text: "Write your message first", too_many: "Max 12 rewards", no_coins: "Not enough coins 🪙", vip_only: "VIP only 👑", owned: "Already owned", self: "You can't gift yourself", pay_off: "Payments aren't enabled yet", pay_fail: "Couldn't start the payment", forbidden: "Not allowed", not_found: "Not found", bad_old: "Current password is wrong", bad_image: "Unsupported image", fx_off: "The streamer turned effects off", ch_off: "The streamer turned challenges off", co_off: "The streamer isn't accepting co-stream requests", bad_ytkey: "Invalid YouTube stream key" },
     sentFx: "sent", hypeTrain: "HYPE TRAIN 🚀", latency: "Delay", guestsN: "guests", layoutSplit: "Split screen", layoutFocus: "Focus",
+    ranks: "Streamer ranking", rankMonth: "This month", rankAll: "All time", rankYou: "Your rank", rankNone: "Not ranked yet — go live!", rankEnds: "Season ends in {n}", days: "days",
+    sLevel: "Streamer level", sRankM: "Rank this month", sRankA: "Overall rank", sNext: "{n} XP to next level", sLevelUp: "{n} reached streamer level {l} 🎉", sLevelUpMe: "Your streamer level is now {l}!",
+    topPerks: "Top 3 perks", topYou: "You're #{n} this month 🏆", sharePct: "Your share of gifts & subs: {n}%",
+    perk1: "👑 Animated medal next to their name everywhere + a matching frame", perk2: "📌 Their stream is pinned first on the home page with a featured card", perk3: "💰 Higher earnings: #1 85% • #2 80% • #3 75% (others 70%)", perk4: "✨ Rank badge shown in chat and on the profile",
+    xpHow: "How streamer XP works", xpHow1: "+2 XP per minute live", xpHow2: "+1 XP per signed-in viewer per minute", xpHow3: "+25 XP per new follower", xpHow4: "+250 XP per subscription ⭐ • +1 XP per 2 gift coins",
+    tier1: "Rookie", tier2: "Rising", tier3: "Pro", tier4: "Star", tier5: "Legend", tier6: "Icon",
+    yt: "YouTube", ytAlso: "Also stream to YouTube", ytAlsoD: "The same stream goes live on your YouTube channel", ytAdd: "Link YouTube channel", ytKey: "Stream key", ytKeyPh: "xxxx-xxxx-xxxx-xxxx-xxxx",
+    ytHelp: "Open YouTube Studio → Create → Go live → Stream, copy the “Stream key” and paste it here. It stays secret on the server.", ytSave: "Save", ytRemove: "Unlink", ytSaved: "YouTube linked ✓", ytRemoved: "YouTube unlinked",
+    ytLinked: "Linked {k}", ytNot: "Not linked", ytOn: "YouTube: live ✓", ytWait: "YouTube: sending… (shows up in ~20s)", ytErr: "YouTube: failed ({c}) — check the key and that streaming is enabled in YouTube Studio", bad_ytkey: "Invalid YouTube key",
+    subscribe: "Subscribe ⭐", subscribed: "Subscribed ⭐{n}", subTitle: "Subscribe to {n}", subD: "Grand entrance everyone sees • subscriber badge in chat • ×1.5 points • +300 points now", subBuy: "Subscribe 30 days", subOk: "You're subscribed to {n} ⭐",
+    subMonths: "Subscribed {n} month(s)", enteredGrand: "joined the stream", subsN: "subscribers",
+    points: "Channel points", level: "Level", xpTo: "{n} XP to next level", streakT: "{n}-day streak 🔥", watchT: "{n} min watched", rewards: "Rewards", topFans: "Top fans",
+    dailyT: "🔥 Daily visit · streak {s} · +{p} points +{x} XP", chestT: "Tap to claim +50 points", claimedT: "+{n} points ⭐", levelUpT: "reached level {n}", youLevel: "🎉 You're now level {n}",
+    redeemedT: "redeemed", msgPh: "Your message…", noPoints: "Not enough points", howEarn: "How to earn?", howEarnD: "Watch 5 min: +10 points +10 XP • Chest every 15 min: +50 • Daily visit: +50 (grows with streak) • Message: +2 XP • Gift: XP worth half its value",
+    myRewards: "My channel rewards", addReward: "Add reward", rewardTitle: "Reward name (e.g. switch weapons)", cost: "Cost in points", redeemQ: "Reward requests", done2: "Done", refund: "Refund", noRedeems: "No requests",
     wallet: "Wallet", coins: "coins", buyCoins: "Buy coins", shop: "Shop", vip: "VIP membership", vipD: "Animated name in every style • VIP badge • exclusive effects • entrance announcement", vipBuy: "Subscribe 30 days", vipUntil: "VIP until {d}",
     names: "Name styles", badges: "Badges", frames: "Avatar frames", buy: "Buy", equip: "Use", equipped: "In use ✓", unequip: "Remove", noCoins: "Not enough coins", gifts: "Gifts", sendGift: "Send",
     giftSent: "sent", payOpen: "Finish paying in PayPal, then come back to Wahj", paid: "{n} coins added 🎉", payOff: "Payments aren't enabled on the server yet", history: "History", earned: "Gift earnings",
@@ -217,15 +247,24 @@ function confirmBox(q, yes) {
     (sh, close) => { $("[data-n]", sh).onclick = close; $("[data-y]", sh).onclick = () => { close(); yes(); }; });
 }
 const BADGE_E = { star: "⭐", flame: "🔥", diamond: "💎", crown: "👑", gamer: "🎮" };
+const MEDAL = { 1: "🥇", 2: "🥈", 3: "🥉" };
+const topHtml = (n) => (n >= 1 && n <= 3 ? `<span class="bdg top${n}">${MEDAL[n]} TOP ${n}</span>` : "");
 function badgeHtml(L) {
+  if (!L) return "";
+  return topHtml(L.top) + badgeHtml0(L);
+}
+function badgeHtml0(L) {
   if (!L || !L.badge) return "";
   if (L.badge === "vip") return `<span class="bdg bdg-vip">VIP</span>`;
   if (L.badge === "founder") return `<span class="bdg bdg-founder">${S.lang === "ar" ? "المؤسس" : "FOUNDER"}</span>`;
   return `<span class="bdg bdg-${esc(L.badge)}">${BADGE_E[L.badge] || ""}</span>`;
 }
 const uname = (u, tag = "b") => { const L = (u && u.look) || {}; return `${badgeHtml(L)}<${tag} class="un ${L.name ? "un-" + esc(L.name) : ""}" style="color:${esc((u && u.color) || "#fff")}">${esc((u && u.name) || "")}</${tag}>`; };
+const lvlHtml = (l) => { l = l | 0; if (!l) return ""; const tier = l >= 30 ? 5 : l >= 20 ? 4 : l >= 10 ? 3 : l >= 5 ? 2 : 1; return `<span class="lvl t${tier}">${l}</span>`; };
+const sTier = (l) => (l >= 50 ? 6 : l >= 35 ? 5 : l >= 20 ? 4 : l >= 10 ? 3 : l >= 5 ? 2 : 1);
+const sLvlHtml = (l) => { l = l | 0; if (!l) return ""; const k = sTier(l); return `<span class="slvl st${k}">🎙 ${l} · ${t("tier" + k)}</span>`; };
 const coinHtml = (n) => `<span class="coin"><i></i>${fmtN(n | 0)}</span>`;
-const avatar = (u, cls = "", style = "") => { const a = avatar0(u, cls, style); const f = u && u.look && u.look.frame; return f ? `<div class="frm frm-${esc(f)}">${a}</div>` : a; };
+const avatar = (u, cls = "", style = "") => { const a = avatar0(u, cls, style); const L = (u && u.look) || {}; const f = L.top ? "top" + L.top : L.frame; return f ? `<div class="frm frm-${esc(f)}">${a}</div>` : a; };
 const avatar0 = (u, cls = "", style = "") => (u && u.avatar)
   ? `<div class="av ${cls}" style="background:${esc(u.color || "#7C5CFF")};overflow:hidden;${style}"><img src="${esc(u.avatar)}" alt="" style="width:100%;height:100%;object-fit:cover"></div>`
   : `<div class="av ${cls}" style="background:${esc((u && u.color) || "#7C5CFF")};${style}">${esc(((u && (u.name || u.handle)) || "?").trim().charAt(0).toUpperCase())}</div>`;
@@ -238,10 +277,12 @@ const GAMES = ["PUBG Mobile", "Free Fire", "eFootball", "EA FC Mobile", "Call of
 /* ---------------- router ---------------- */
 let cleanup = null;
 let current = "";
+let prevView = "home", prevArg, curArg;
 function go(view, arg) {
   if (sheetClose) sheetClose();
   if (cleanup) { try { cleanup(); } catch (e) {} cleanup = null; }
-  current = view;
+  if (view === "ranks" && current !== "ranks") { prevView = current; prevArg = curArg; }
+  current = view; curArg = arg;
   const app = $("#app");
   app.innerHTML = "";
   const navViews = ["home", "me"];
@@ -717,6 +758,16 @@ const FX = window.FX = {
     if (tones) this.tone(tones[0], tones[1], id === "lion" || id === "car" ? "sawtooth" : "triangle", 0.09);
   },
 
+  goldrain(canvas) {
+    this.start(canvas, 3600, (ctx, p, W, H, s) => {
+      if (!s.c) s.c = Array.from({ length: 140 }, () => ({ x: Math.random() * W, y: -Math.random() * H, v: 3 + Math.random() * 6, r: Math.random() * 6, s: 10 + Math.random() * 14 }));
+      ctx.fillStyle = `rgba(255,200,0,${0.12 * this.env(p)})`; ctx.fillRect(0, 0, W, H);
+      s.c.forEach((q) => { q.y += q.v; q.r += 0.15; const w = Math.abs(Math.cos(q.r)) * q.s;
+        const g = ctx.createLinearGradient(q.x - w, q.y, q.x + w, q.y); g.addColorStop(0, "#b8860b"); g.addColorStop(0.5, "#fff3a0"); g.addColorStop(1, "#ffd700");
+        ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(q.x, q.y, Math.max(1, w), q.s, 0, 0, 7); ctx.fill(); });
+    });
+    [0, 0.15, 0.3, 0.45].forEach((d) => this.tone([1318, 1567], 0.25, "triangle", 0.05, d));
+  },
   play(id, root, stage, canvas) {
     if (!canvas || !this[id] || typeof this[id] !== "function") return;
     this[id](canvas, stage);
@@ -824,6 +875,7 @@ class Stage {
 
 /* ================= Views ================= */
 const VIEWS = {};
+document.addEventListener("click", (e) => { const el = e.target.closest && e.target.closest("[data-go-ranks]"); if (el) go("ranks"); });
 
 /* ---------- auth ---------- */
 VIEWS.auth = (root) => {
@@ -955,6 +1007,99 @@ let hlsLoading;
 function loadHls() {
   if (window.Hls) return Promise.resolve(window.Hls);
   return (hlsLoading = hlsLoading || new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = "/hls.js"; sc.onload = () => res(window.Hls); sc.onerror = rej; document.head.appendChild(sc); }));
+}
+
+/* ---------- YouTube link ---------- */
+function ytSheet(done) {
+  const u = S.user || {};
+  sheet(`<div style="text-align:center"><div class="ytlogo">▶</div><h3 style="margin-top:10px">${t("ytAdd")}</h3></div>
+    <p class="mut small" style="line-height:1.8;margin:10px 0 14px">${t("ytHelp")}</p>
+    <div class="field"><label>${t("ytKey")}${u.yt ? ` · <span dir="ltr">${esc(u.yt)}</span>` : ""}</label>${pwField("ytk", t("ytKeyPh"), "off")}</div>
+    <button class="btn p" id="yts">${t("ytSave")}</button>${u.yt ? `<button class="btn g" id="ytr" style="margin-top:10px;color:#ff7b88">${t("ytRemove")}</button>` : ""}`, (sh, close) => {
+    bindEyes(sh);
+    const save = async (k) => {
+      const r = await api("/api/profile", { ytkey: k });
+      if (r.error) return toast(terr(r.error));
+      S.user = r.user; store.set("user", r.user); close(); haptic("success"); toast(k ? t("ytSaved") : t("ytRemoved")); done && done();
+    };
+    $("#yts", sh).onclick = () => { const k = $("#ytk", sh).value.trim(); if (!k) return toast(t("ytKey")); save(k); };
+    const rm = $("#ytr", sh); if (rm) rm.onclick = () => save("");
+  });
+}
+
+/* ---------- grand entrance (VIP / channel subscribers) ---------- */
+function grandEntrance(m, canvas) {
+  const d = document.createElement("div"); d.className = "grand";
+  const tags = [m.look && m.look.vip ? `<span class="bdg bdg-vip">VIP</span>` : "", m.sub ? `<span class="bdg bdg-sub">⭐${m.sub}</span>` : "", lvlHtml(m.level)].join("");
+  d.innerHTML = `<div class="gav">${avatar(m, "lg")}</div><div class="gn">${uname(m, "span")}</div>
+    <div class="gs">${tags}${m.sub ? t("subMonths", { n: m.sub }) : ""}</div><div class="gt">👑 ${t("enteredGrand")}</div>`;
+  ($("#app") || document.body).appendChild(d); setTimeout(() => d.remove(), 5300);
+  if (canvas) FX.play(m.look && m.look.vip ? "goldrain" : "confetti", null, null, canvas);
+  FX.tone([784, 988, 1318], 0.5, "triangle", 0.07); FX.tone([1046, 1318, 1568], 0.6, "triangle", 0.05, 0.25);
+}
+function subSheet(host, done) {
+  shopData().then((d) => {
+    sheet(`<div style="text-align:center">${avatar(host, "lg", "margin:0 auto")}<h3 style="margin-top:12px">${esc(t("subTitle", { n: host.name }))}</h3>
+      <p class="mut" style="line-height:1.8;margin-bottom:14px">${t("subD")}</p></div>
+      <button class="btn" id="sbb" style="background:linear-gradient(120deg,#00d1ff,#7c5cff);color:#fff">${t("subBuy")} · ${coinHtml(d.sub)}</button>
+      <p class="small mut" style="text-align:center;margin-top:10px">${t("wallet")}: ${coinHtml(S.user && S.user.coins)}</p>`, (sh, close) => {
+      $("#sbb", sh).onclick = async () => {
+        const r = await api("/api/sub", { host: host.id });
+        if (r.error) { if (r.error === "no_coins") { close(); toast(t("noCoins")); return go("wallet"); } return toast(terr(r.error)); }
+        S.user = { ...S.user, ...r.user }; store.set("user", S.user); close(); haptic("success"); toast(t("subOk", { n: esc(host.name) })); done && done(r.sub);
+      };
+    });
+  });
+}
+
+/* ---------- channel points ---------- */
+const RW_ICON = { highlight: "💬", goldrain: "🪙", pin: "📌" };
+function pointsSheet(loy, host, redeem) {
+  loy = loy || { level: 1, xp: 0, points: 0, cur: 0, next: 50, rewards: [] };
+  const pct = Math.round(((loy.xp - loy.cur) / Math.max(1, loy.next - loy.cur)) * 100);
+  sheet(`<div class="lvring"><div class="lvnum" style="--pct:${pct}%"><span>${loy.level}</span></div>
+      <div style="flex:1"><b style="font-size:17px">${t("level")} ${loy.level}</b> <span class="mut small">· ${esc(host ? host.name : "")}</span>
+      <div class="bar"><i style="width:${pct}%"></i></div><div class="small mut" style="margin-top:6px">${t("xpTo", { n: Math.max(0, loy.next - loy.xp) })}</div></div></div>
+    <div class="row" style="justify-content:space-between;margin:14px 2px 4px"><span class="pt" style="font-size:22px">⭐ ${fmtN(loy.points)}</span>
+      <span class="small mut">${loy.streak ? t("streakT", { n: loy.streak }) + " · " : ""}${t("watchT", { n: loy.watchMin || 0 })}</span></div>
+    <div class="h2">${t("rewards")}</div>
+    <div id="rwl">${(loy.rewards || []).map((r) => `<button class="rw" data-r="${esc(r.id)}" data-t="${r.text || r.id === "highlight" || r.id === "pin" ? 1 : ""}"><span class="ic">${RW_ICON[r.id] || "🎯"}</span>
+      <span style="flex:1;font-weight:600">${esc(r.custom ? r.title : S.lang === "ar" ? r.ar : r.en)}</span><span class="pt">⭐ ${fmtN(r.cost)}</span></button>`).join("")}</div>
+    <div class="h2">${t("topFans")}</div><div id="tfl" class="sl"><div style="height:60px;position:relative"><div class="spin"></div></div></div>
+    <details style="margin-top:14px"><summary class="mut small">${t("howEarn")}</summary><p class="small mut" style="line-height:1.9;margin-top:8px">${t("howEarnD")}</p></details>`, (sh, close) => {
+    $$("[data-r]", sh).forEach((b) => (b.onclick = () => {
+      const r = loy.rewards.find((x) => x.id === b.dataset.r);
+      if (loy.points < r.cost) return toast(t("noPoints"));
+      if (b.dataset.t) {
+        b.outerHTML = `<div class="row" style="margin-top:8px"><input class="inp" id="rwt" maxlength="150" placeholder="${t("msgPh")}"><button class="btn p" style="width:auto;padding:15px 18px" id="rws">${ic("send")}</button></div>`;
+        $("#rwt", sh).focus();
+        $("#rws", sh).onclick = () => { const v = $("#rwt", sh).value.trim(); if (!v) return; redeem(r.id, v); haptic("success"); close(); };
+      } else { redeem(r.id, ""); haptic("success"); close(); }
+    }));
+    if (host) api("/api/fans?u=" + encodeURIComponent(host.handle)).then((d) => {
+      const el = $("#tfl", sh); if (!el) return;
+      el.innerHTML = (d.top || []).slice(0, 10).map((f, i) => `<div class="sm" style="align-items:center"><b style="width:22px;text-align:center;color:${i < 3 ? "#ffd700" : "var(--mut)"}">${i + 1}</b>${avatar(f)}<div class="tx">${lvlHtml(f.level)}${uname(f, "span")}</div><span class="small mut">${fmtN(f.xp)} XP</span></div>`).join("") || `<p class="mut small" style="text-align:center">—</p>`;
+    });
+  });
+}
+function rewardsSheet(st, ws) {
+  const draw = (sh) => {
+    const list = st.redeems || [];
+    $("#rq", sh).innerHTML = list.filter((x) => x.state === "new").length ? list.filter((x) => x.state === "new").map((q) => `<div class="chl"><div class="row">${uname(q, "span")}<span class="sp"></span><span class="pt">⭐ ${q.cost}</span></div>
+      <div style="margin:6px 0 8px;font-weight:700">${esc(q.title)}</div>${q.text ? `<div class="small mut">${esc(q.text)}</div>` : ""}
+      <div class="row" style="margin-top:8px"><button class="mini p" data-ok="${q.id}">${t("done2")}</button><button class="mini" data-rf="${q.id}">${t("refund")}</button></div></div>`).join("") : `<p class="mut small" style="text-align:center;padding:12px">${t("noRedeems")}</p>`;
+    $$("[data-ok]", sh).forEach((b) => (b.onclick = () => { ws.send({ t: "redeem-set", id: b.dataset.ok, state: "done" }); const x = list.find((y) => y.id === b.dataset.ok); if (x) x.state = "done"; draw(sh); }));
+    $$("[data-rf]", sh).forEach((b) => (b.onclick = () => { ws.send({ t: "redeem-set", id: b.dataset.rf, state: "refund" }); const x = list.find((y) => y.id === b.dataset.rf); if (x) x.state = "refund"; draw(sh); }));
+  };
+  sheet(`<h3>⭐ ${t("redeemQ")}</h3><div id="rq"></div><div class="h2">${t("myRewards")}</div><div id="myr"></div>
+    <div class="row" style="margin-top:8px"><input class="inp" id="nrt" maxlength="50" placeholder="${t("rewardTitle")}"><input class="inp" id="nrc" inputmode="numeric" placeholder="${t("cost")}" style="width:110px"></div>
+    <button class="btn p" id="nra" style="margin-top:8px">${t("addReward")}</button>`, (sh) => {
+    draw(sh);
+    const mine = (rows) => { $("#myr", sh).innerHTML = rows.map((r) => `<div class="sm" style="align-items:center"><div class="tx"><b>${esc(r.title)}</b></div><span class="pt">⭐ ${r.cost}</span><button class="mini" data-del="${r.id}" style="color:#ff7b88">${ic("x")}</button></div>`).join("") || `<p class="mut small">—</p>`;
+      $$("[data-del]", sh).forEach((b) => (b.onclick = async () => mine((await api("/api/rewards", { del: b.dataset.del })).rewards || []))); };
+    api("/api/rewards", {}).then((r) => mine(r.rewards || []));
+    $("#nra", sh).onclick = async () => { const title = $("#nrt", sh).value.trim(), cost = +$("#nrc", sh).value || 0; if (!title || cost < 10) return toast(t("cost") + " ≥ 10"); const r = await api("/api/rewards", { title, cost }); if (r.error) return toast(terr(r.error)); $("#nrt", sh).value = ""; $("#nrc", sh).value = ""; mine(r.rewards || []); haptic("success"); };
+  });
 }
 
 /* ---------- economy ---------- */
@@ -1145,7 +1290,7 @@ VIEWS.home = (root) => {
   let cat = "all", tab = "live", data = [], gameF = "";
   root.innerHTML = `<div class="view">
     <div class="top"><div class="brand"><div class="logo">${ic("live")}</div><b>${S.lang === "ar" ? "وهج" : "Wahj"}</b></div><div class="sp"></div>
-      <button class="ibtn" id="hr">${ic("refresh")}</button></div>
+      <button class="ibtn" id="hrk" title="${t("ranks")}">🏆</button><button class="ibtn" id="hr">${ic("refresh")}</button></div>
     <div class="scroll" id="hs">
       <div class="seg" style="margin-top:4px" id="ht"><button class="on" data-t="live">${t("liveNow")}</button><button data-t="fol">${t("following")}</button></div>
       <div id="hg"></div>
@@ -1157,9 +1302,9 @@ VIEWS.home = (root) => {
     const badges = `<div class="live"><span class="badge red">LIVE</span><span class="badge">${ic("eye")} ${fmtN(s.viewers)}</span>${s.guests ? `<span class="badge co">${ic("users")} ${s.guests + 1}</span>` : ""}</div>`;
     const ph = s.gameIcon ? `<div class="thbg" style="background-image:url('${esc(s.gameIcon)}')"></div>${gIcon(s.gameIcon, "gi thic")}` : `<div class="ph">${CAT_EMO[s.cat] || "🎮"}</div>`;
     const gb = s.game ? `<div class="gbadge">${gIcon(s.gameIcon)}<span>${esc(s.game)}</span></div>` : "";
-    if (big) return `<div class="feat" data-id="${s.id}">${ph}<img src="${thumb}" onerror="this.remove()" alt="" style="position:absolute;inset:0">${badges}<div class="ov"><div class="t">${esc(s.title)}</div>
+    if (big) return `<div class="feat ${s.top ? "ftop ftop" + s.top : ""}" data-id="${s.id}">${s.top ? `<div class="fmedal">${MEDAL[s.top]} TOP ${s.top}</div>` : ""}${ph}<img src="${thumb}" onerror="this.remove()" alt="" style="position:absolute;inset:0">${badges}<div class="ov"><div class="t">${esc(s.title)}</div>
       <div class="who">${avatar(s.host)}<span style="font-weight:600">${uname(s.host, "span")}</span></div>${s.game ? `<div class="row" style="gap:8px;margin-top:8px">${gIcon(s.gameIcon, "gi", 22)}<span class="small" style="color:#e6e1ff;font-weight:600">${esc(s.game)}</span></div>` : ""}</div></div>`;
-    return `<div class="card" data-id="${s.id}"><div class="th">${ph}<img src="${thumb}" onerror="this.remove()" alt="" style="position:absolute;inset:0">${badges}${gb}</div>
+    return `<div class="card ${s.top ? "ctop ctop" + s.top : ""}" data-id="${s.id}"><div class="th">${s.top ? `<div class="fmedal sm">${MEDAL[s.top]}</div>` : ""}${ph}<img src="${thumb}" onerror="this.remove()" alt="" style="position:absolute;inset:0">${badges}${gb}</div>
       <div class="meta"><div class="tt">${esc(s.title)}</div><div class="who">${avatar(s.host)}<span class="small" style="font-weight:600">${uname(s.host, "span")}</span></div></div></div>`;
   };
   const render = () => {
@@ -1186,9 +1331,43 @@ VIEWS.home = (root) => {
   $$("#ht button").forEach((b) => (b.onclick = () => { tab = b.dataset.t; $$("#ht button").forEach((x) => x.classList.toggle("on", x === b)); render(); }));
   $$("#hc .chip").forEach((b) => (b.onclick = () => { cat = b.dataset.c; $$("#hc .chip").forEach((x) => x.classList.toggle("on", x === b)); render(); }));
   $("#hr").onclick = () => { haptic(); load(); };
+  $("#hrk").onclick = () => go("ranks");
   load();
   const iv = setInterval(load, 15000);
   return () => clearInterval(iv);
+};
+
+/* ---------- streamer ranking ---------- */
+VIEWS.ranks = (root) => {
+  let mode = "month";
+  root.innerHTML = `<div class="view"><div class="top"><button class="ibtn" id="rb">${ic("back")}</button><div class="h1">🏆 ${t("ranks")}</div></div>
+    <div class="scroll" style="padding-bottom:calc(40px + var(--sb))">
+      <div class="seg" id="rm"><button class="on" data-m="month">${t("rankMonth")}</button><button data-m="all">${t("rankAll")}</button></div>
+      <div id="rl"><div style="height:200px;position:relative"><div class="spin"></div></div></div>
+      <div class="h2">👑 ${t("topPerks")}</div>
+      <div class="tile perks">${[1, 2, 3, 4].map((i) => `<div>${t("perk" + i)}</div>`).join("")}</div>
+      <div class="h2">📈 ${t("xpHow")}</div>
+      <div class="tile perks">${[1, 2, 3, 4].map((i) => `<div>${t("xpHow" + i)}</div>`).join("")}
+        <div class="mut small">${[[1, 1], [5, 2], [10, 3], [20, 4], [35, 5], [50, 6]].map(([l, k]) => `<span class="slvl st${k}" style="margin:3px">${l}+ ${t("tier" + k)}</span>`).join("")}</div></div>
+    </div></div>`;
+  $("#rb").onclick = () => go(prevView && prevView !== "ranks" ? prevView : "home", prevArg);
+  const load = async () => {
+    const r = await api("/api/streamers?mode=" + mode);
+    const el = $("#rl"); if (!el || !r.list) return;
+    const L = r.list, pod = [L[1], L[0], L[2]];
+    const days = Math.max(0, Math.ceil((r.ends - Date.now()) / 86400000));
+    const me = r.me;
+    el.innerHTML = `${mode === "month" ? `<p class="small mut" style="text-align:center;margin:10px 0 0">⏳ ${t("rankEnds", { n: days + " " + t("days") })}</p>` : ""}
+      <div class="podium">${pod.map((u) => u ? `<div class="pd p${u.rank}" data-h="${esc(u.handle)}"><div class="pm">${MEDAL[u.rank]}</div>${avatar(u, "lg")}${u.live ? '<span class="badge red pl">LIVE</span>' : ""}
+        <div class="pn">${uname({ ...u, look: { ...u.look, top: 0 } }, "span")}</div><div class="small">${sLvlHtml(u.level)}</div><div class="px">${fmtN(u.xp)} XP</div><div class="pbase">${u.rank}</div></div>` : `<div class="pd empty"></div>`).join("")}</div>
+      ${me ? `<div class="sm" style="margin-top:12px;align-items:center;border-color:rgba(124,92,255,.5)"><b style="width:44px;text-align:center">${(mode === "month" ? me.mrank : me.rank) ? "#" + (mode === "month" ? me.mrank : me.rank) : "–"}</b><div class="tx"><b>${t("rankYou")}</b><br><span class="small mut">${(mode === "month" ? me.mrank : me.rank) ? fmtN(mode === "month" ? me.mxp : me.xp) + " XP" : t("rankNone")}</span></div>${sLvlHtml(me.level)}</div>` : ""}
+      <div class="sl" style="margin-top:10px">${L.slice(3).map((u) => `<div class="sm" data-h="${esc(u.handle)}" style="align-items:center"><b style="width:34px;text-align:center" class="mut">#${u.rank}</b>${avatar(u, "md")}
+        <div class="tx"><b>${uname(u, "span")}</b> ${u.live ? '<span class="badge red">LIVE</span>' : ""}<br><span class="small mut">${fmtN(u.xp)} XP</span></div>${sLvlHtml(u.level)}</div>`).join("")}</div>
+      ${!L.length ? `<p class="mut" style="text-align:center;padding:30px">${t("rankNone")}</p>` : ""}`;
+    $$("[data-h]", el).forEach((x) => (x.onclick = () => go("user", x.dataset.h)));
+  };
+  $$("#rm button").forEach((b) => (b.onclick = () => { mode = b.dataset.m; $$("#rm button").forEach((x) => x.classList.toggle("on", x === b)); load(); }));
+  load();
 };
 
 /* ---------- watch ---------- */
@@ -1200,7 +1379,7 @@ VIEWS.watch = (root, id) => {
     <div id="wfx" style="position:absolute;inset:0;z-index:8;pointer-events:none;overflow:hidden"></div>
     <div class="wtop"><button class="ibtn" id="wx" style="background:rgba(0,0,0,.4)">${ic("x")}</button>
       <div class="pill" id="wh"><div class="av md" id="wav"></div><div><div class="n" id="wn">…</div><div class="s" id="wg"></div></div></div>
-      <button class="fbtn hide" id="wf">${t("follow")}</button><div class="sp"></div>
+      <button class="fbtn hide" id="wf">${t("follow")}</button><button class="subbtn hide" id="wsub"></button><div class="sp"></div>
       <span class="stat"><span class="badge red" style="padding:2px 7px">LIVE</span></span>
       <span class="stat" id="wv">${ic("eye")} 0</span></div>
     <div class="pinned hide" id="wpin"></div>
@@ -1209,7 +1388,7 @@ VIEWS.watch = (root, id) => {
     <div id="wpoll"></div>
     <div class="wbar">
       <div class="cin"><input id="wi" placeholder="${S.token ? t("chatPh") : t("loginToChat")}" maxlength="200" enterkeyhint="send"><button class="rbtn" id="wsend" style="width:36px;height:36px;background:none">${ic("send")}</button></div>
-      <button class="rbtn" id="wr">❤️</button><button class="rbtn" id="wgf">🎁</button><button class="rbtn hot" id="we">${ic("spark")}</button><button class="rbtn" id="wm">${ic("layers")}</button>
+      <button class="rbtn ptsbtn" id="wpts">⭐</button><button class="rbtn" id="wr">❤️</button><button class="rbtn" id="wgf">🎁</button><button class="rbtn hot" id="we">${ic("spark")}</button><button class="rbtn" id="wm">${ic("layers")}</button>
     </div>
     <div class="stat lat hide" id="wlat" style="position:absolute;z-index:6;top:calc(var(--st) + 64px);inset-inline-start:14px">${ic("zap")}<span></span></div>
   </div>`;
@@ -1229,7 +1408,7 @@ VIEWS.watch = (root, id) => {
     while (chatEl.children.length > 40) chatEl.firstChild.remove();
     if (fade) setTimeout(() => { d.classList.add("fade"); setTimeout(() => d.remove(), 1300); }, 20000);
   };
-  const chatHtml = (m) => `${m.host ? `<span class="tag">${t("hostTag")}</span>` : m.guest ? `<span class="tag" style="background:var(--grad2)">${t("guestTag")}</span>` : ""}${uname(m)} ${esc(m.text)}`;
+  const chatHtml = (m) => `${lvlHtml(m.lvl)}${m.sub ? `<span class="bdg bdg-sub">⭐${m.sub}</span>` : ""}${m.host ? `<span class="tag">${t("hostTag")}</span>` : m.guest ? `<span class="tag" style="background:var(--grad2)">${t("guestTag")}</span>` : ""}${uname(m)} ${esc(m.text)}`;
   const offline = (txt) => {
     $$(".wtop .badge.red").forEach((b) => (b.parentElement.style.display = "none"));
     if ($(".offline", stageEl)) return;
@@ -1262,7 +1441,7 @@ VIEWS.watch = (root, id) => {
         if (!meta) return offline(t("offline"));
         if (meta.ended) return offline(t("endedT"));
         chatEl.innerHTML = "";
-        (m.history || []).slice(-12).forEach((x) => addChat(chatHtml(x)));
+        (m.history || []).slice(-12).forEach((x) => addChat(chatHtml(x), x.hl ? "hl" : ""));
         stage.setPubs(m.publishers); sawPubs = sawPubs || m.publishers.length > 0;
         if (!m.publishers.length) addChat(t("pendingLive"), "sys");
         $("#wv").innerHTML = ic("eye") + " " + fmtN(m.viewers);
@@ -1272,11 +1451,31 @@ VIEWS.watch = (root, id) => {
       case "publishers": stage.setPubs(m.list); sawPubs = true; break;
       case "privacy": stage.setPrivacy(m.uid, m.on, m.reason); break;
       case "viewers": $("#wv").innerHTML = ic("eye") + " " + fmtN(m.n); break;
-      case "chat": addChat(chatHtml(m)); break;
+      case "chat": addChat(chatHtml(m), m.hl ? "hl" : ""); break;
+      case "loy": {
+        root._loy = m; const pb = $("#wpts"); if (pb) pb.innerHTML = `⭐ ${fmtN(m.points)}`;
+        if (m.daily && m.gotPts) toast(t("dailyT", { s: m.streak, p: m.gotPts, x: m.gotXp }), 4500);
+        break;
+      }
+      case "chest": {
+        if ($(".chest", root)) break;
+        const c = document.createElement("button"); c.className = "chest"; c.textContent = "🎁"; c.title = t("chestT");
+        c.onclick = () => { ws.send({ t: "claim" }); c.remove(); haptic("success"); };
+        $("#watch").appendChild(c); break;
+      }
+      case "claimed": toast(t("claimedT", { n: m.pts })); FX.floaty($("#wfx"), "⭐", 10, { spread: true }); break;
+      case "slevelup": sLevelUpFx(m, $("#fx")); addChat(`🎙 ${esc(t("sLevelUp", { n: m.name || "", l: m.level }))}`, "sys"); break;
+      case "levelup": {
+        const mine = S.user && m.uid === S.user.id;
+        if (mine) { const d = document.createElement("div"); d.className = "lvup"; d.innerHTML = `<b>LV ${m.level}</b>${t("youLevel", { n: m.level })}`; $("#watch").appendChild(d); setTimeout(() => d.remove(), 3100); FX.play("confetti", null, null, $("#fx")); }
+        addChat(`🎉 ${uname(m)} ${t("levelUpT", { n: m.level })} ${lvlHtml(m.level)}`, "sys");
+        break;
+      }
+      case "redeemed": banner(`⭐ ${uname(m, "span")} ${t("redeemedT")}: ${esc(m.title)}${m.text ? `<br><span style="font-weight:500">${esc(m.text)}</span>` : ""}`); break;
       case "react": if (m.uid !== me.uid) FX.floaty($("#wfx"), m.e); break;
       case "effect":
         FX.play(m.id, $("#wfx"), stageEl, $("#fx"));
-        addChat(`<b style="color:${esc(m.color)}">${esc(m.name)}</b>${t("sentFx")} ${(FX.list.find((x) => x.id === m.id) || {}).e || "✨"}`, "fx");
+        addChat(`<b style="color:${esc(m.color)}">${esc(m.name)}</b>${t("sentFx")} ${m.id === "goldrain" ? "🪙" : (FX.list.find((x) => x.id === m.id) || {}).e || "✨"}`, "fx");
         break;
       case "hype": setHype(m.v, m.lvl); if (m.train) { const d = document.createElement("div"); d.className = "train"; d.textContent = t("hypeTrain") + " x" + m.lvl; $("#watch").appendChild(d); setTimeout(() => d.remove(), 2700); FX.play("confetti", null, null, $("#fx")); } break;
       case "poll": if (!poll || poll.id !== m.poll.id) myVote = null; poll = m.poll; renderPoll(); break;
@@ -1299,7 +1498,7 @@ VIEWS.watch = (root, id) => {
         break;
       }
       case "coins": if (S.user) { S.user.coins = m.coins; store.set("user", S.user); } break;
-      case "enter": { const d = document.createElement("div"); d.className = "entr"; d.innerHTML = `${badgeHtml(m.look)}${esc(m.name)} ${t("entered")}`; $("#watch").appendChild(d); setTimeout(() => d.remove(), 4200); break; }
+      case "enter": grandEntrance(m, $("#fx")); break;
       case "layout": stage.mode = m.mode; stage.focus = m.focus; stage.layout(); break;
       case "guest-pending": toast(t("reqSent")); break;
       case "guest-ok":
@@ -1331,6 +1530,12 @@ VIEWS.watch = (root, id) => {
       fb.onclick = async () => { isFollowing = !isFollowing; upd(); haptic(); await api("/api/follow", { target: s.uid, on: isFollowing }); isFollowing ? S.following.add(s.uid) : S.following.delete(s.uid); };
     }
     $("#wh").onclick = () => go("user", s.host.handle);
+    if (S.user && S.user.id !== s.uid) {
+      const sb = $("#wsub"); sb.classList.remove("hide");
+      const paint = (sub) => { sb.textContent = sub ? t("subscribed", { n: sub.months }) : t("subscribe"); sb.classList.toggle("on", !!sub); };
+      api("/api/user/" + encodeURIComponent(s.host.handle)).then((r) => paint(r.mySub));
+      sb.onclick = () => subSheet(s.host, paint);
+    }
   });
 
   // stats
@@ -1351,6 +1556,7 @@ VIEWS.watch = (root, id) => {
   $("#wx").onclick = () => go("home");
   let lastR = 0;
   $("#wr").onclick = () => { const e = ["❤️", "🔥", "😂", "👏", "😮", "💯"][Math.random() * 6 | 0]; FX.floaty($("#wfx"), e); if (Date.now() - lastR > 250) { ws.send({ t: "react", e }); lastR = Date.now(); } haptic(); FX.audio(); };
+  $("#wpts").onclick = () => { if (!S.token) return toast(terr("login")); pointsSheet(root._loy, hostInfo, (id, text) => ws.send({ t: "redeem", id, text })); };
   $("#wgf").onclick = () => { FX.audio(); if (!S.token) return toast(terr("login")); giftSheet((g, n) => ws.send({ t: "gift", gift: g, n })); };
   $("#we").onclick = () => {
     FX.audio();
@@ -1424,6 +1630,8 @@ VIEWS.golive = (root, arg = {}) => {
     <div class="tile" style="padding:4px 14px;margin-top:14px">
       <div class="tg"><div class="ic">${ic("mic")}</div><div class="tx"><b>${t("mic")}</b><span>${t("micD")}</span></div>${sw("mic", cfg.mic)}</div>
       ${nat && !joining ? `<div class="tg"><div class="ic">${ic("game")}</div><div class="tx"><b>${t("autoLaunch")}</b><span>${t("autoLaunchD")}</span></div>${sw("autoLaunch", cfg.autoLaunch)}</div>` : ""}
+      ${!joining ? (S.user && S.user.yt ? `<div class="tg"><div class="ic ytic">▶</div><div class="tx"><b>${t("ytAlso")}</b><span>${t("ytAlsoD")}</span></div>${sw("youtube", cfg.youtube)}</div>`
+        : `<div class="tg" id="gyt"><div class="ic ytic">▶</div><div class="tx"><b>${t("ytAdd")}</b><span>${t("ytAlsoD")}</span></div><span class="mut">›</span></div>`) : ""}
     </div>
     <div class="h2">${ic("shield")} ${t("privacy")}</div>
     <div class="tile" style="padding:4px 14px">
@@ -1456,16 +1664,17 @@ VIEWS.golive = (root, arg = {}) => {
   $$("#gf button").forEach((b) => (b.onclick = () => { cfg.fps = +b.dataset.f; $$("#gf button").forEach((x) => x.classList.toggle("on", x === b)); }));
   $$("[data-sw]").forEach((s) => (s.onclick = () => {
     const k = s.dataset.sw; s.classList.toggle("on"); const on = s.classList.contains("on"); haptic();
-    if (k === "mic") cfg.mic = on; else if (k === "autoLaunch") cfg.autoLaunch = on; else cfg.privacy[k] = on;
+    if (k === "mic") cfg.mic = on; else if (k === "autoLaunch") cfg.autoLaunch = on; else if (k === "youtube") cfg.youtube = on; else cfg.privacy[k] = on;
     if (k === "dnd" && on && isAndroid()) Native.post("perm", { kind: "dnd" });
   }));
   const fg = $("#gfg"); if (fg) fg.onclick = focusGuide;
+  const gy = $("#gyt"); if (gy) gy.onclick = () => ytSheet(() => { cfg.youtube = true; store.set("golive", { ...cfg, gameIconData: "" }); go("golive", arg); });
   $("#gs").onclick = async () => {
     if (!joining) cfg.title = $("#gt").value.trim();
     store.set("golive", { ...cfg, gameIconData: "" });
     if (!nat && !webCap) return toast(t("needApp"));
     const b = $("#gs"); b.disabled = true;
-    const r = await api("/api/go-live", { ...cfg, gameIconData: cfg.gameIconData || undefined, joinRoom: arg.joinRoom, device: S.native && S.native.device });
+    const r = await api("/api/go-live", { ...cfg, youtube: !joining && !!cfg.youtube && !!(S.user && S.user.yt), gameIconData: cfg.gameIconData || undefined, joinRoom: arg.joinRoom, device: S.native && S.native.device });
     b.disabled = false;
     if (r.error) return toast(terr(r.error));
     S.live = { ...r.job, title: cfg.title, game: cfg.game, startedAt: Date.now(), launch: !joining && cfg.autoLaunch && cfg.game ? { name: cfg.game, pkg: cfg.gamePkg, appId: cfg.gameId } : null };
@@ -1511,14 +1720,15 @@ VIEWS.studio = (root) => {
   if (!job) return go("home");
   const nat = Native.has();
   const st = { viewers: 0, peak: 0, hype: 0, lvl: 1, chat: [], reqs: [], ch: [], guests: [], pubs: [], privacy: false, overlay: store.get("overlay", true), cam: false, poll: null };
-  root.innerHTML = `<div class="view"><div class="top"><div class="brand" style="font-size:20px"><span class="badge red" id="sb">LIVE</span></div><div class="sp"></div>
+  root.innerHTML = `<div class="view"><div class="top"><div class="brand" style="font-size:20px"><span class="badge red" id="sb">LIVE</span><span id="slv" style="margin-inline-start:8px">${S.user && S.user.streamer ? sLvlHtml(S.user.streamer.level) + (S.user.streamer.top ? " " + topHtml(S.user.streamer.top) : "") : ""}</span></div><div class="sp"></div>
     <button class="ibtn" id="ssh">${ic("share")}</button><button class="ibtn" id="sx" style="color:#ff7b88">${ic("stop")}</button></div>
   <div class="scroll" style="padding-bottom:calc(30px + var(--sb))">
     <div class="lvcard"><div class="row"><div><div class="small" style="color:#d6d1ee">${t("liveFor")}</div><div class="big" id="sd">0:00</div></div><div class="sp"></div>
-      <div style="text-align:end"><div class="small" style="color:#d6d1ee" id="sst">${t("starting")}</div>${job.rec ? `<div class="small" style="color:#ff7b88;margin-top:3px">● ${t("recording")}</div>` : ""}<div style="font-weight:700;margin-top:4px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(job.title || "")}</div></div></div>
+      <div style="text-align:end"><div class="small" style="color:#d6d1ee" id="sst">${t("starting")}</div>${job.rec && job.save !== false ? `<div class="small" style="color:#ff7b88;margin-top:3px">● ${t("recording")}</div>` : ""}<div style="font-weight:700;margin-top:4px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(job.title || "")}</div></div></div>
       <div class="kpis"><div class="kpi"><b id="kv">0</b><span>${t("viewers")}</span></div><div class="kpi"><b id="kp">0</b><span>${t("peak")}</span></div><div class="kpi"><b id="kh">x1</b><span>${t("hypeLvl")}</span></div></div>
     </div>
     <div id="shint"></div>
+    ${job.yt ? `<div class="ytst" id="syt"><span class="ytic">▶</span><span id="sytT">${t("ytWait")}</span></div>` : ""}
     <div class="shield" id="sshield"><div class="ic">${ic("shield")}</div><div style="flex:1"><b id="sshT">${t("shieldOn")}</b><div class="small mut" id="sshD"></div></div></div>
     <div class="acts">
       <button class="act ${st.overlay ? "on" : ""}" id="aov">${ic("chat")}<span>${t("overlay")}</span></button>
@@ -1527,7 +1737,7 @@ VIEWS.studio = (root) => {
       <button class="act" id="ach">${ic("trophy")}<span>${t("challenges")}</span></button>
       <button class="act" id="areq">${ic("users")}<span>${t("costream")}</span></button>
       <button class="act" id="apv">${ic("eye")}<span>${t("preview")}</span></button>
-      <button class="act" id="afg">${ic("bell")}<span>${t("privacy")}</span></button>
+      <button class="act" id="arw">⭐<span>${t("rewards")}</span></button>
       <button class="act" id="aend" style="color:#ff7b88">${ic("stop")}<span>${t("end")}</span></button>
     </div>
     <div class="prev hide" id="spv"><div class="stage" id="spvs" style="position:absolute;inset:0"></div></div>
@@ -1556,11 +1766,17 @@ VIEWS.studio = (root) => {
     $("#sshD").textContent = [isAndroid() && p.dnd ? t("dnd") : "", p.callGuard ? t("callG") : "", isIOS() && p.bannerGuard ? t("bannerG") : ""].filter(Boolean).join(" · ") || t("shieldOff");
   };
   setShield();
+  const ytPaint = (y) => { const e = $("#syt"); if (!e) return; e.classList.toggle("ok", !!y.ok); e.classList.toggle("bad", !y.ok); $("#sytT").textContent = y.ok ? t("ytOn") : t("ytErr", { c: y.code || "net" }); };
   ws.on((m) => {
     switch (m.t) {
+      case "yt": ytPaint(m); break;
+      case "slevel": { const e = $("#slv"); if (e) e.innerHTML = sLvlHtml(m.level) + (m.top ? " " + topHtml(m.top) : ""); break; }
+      case "slevelup": sLevelUpFx(m, null); break;
       case "hello":
+        if (m.yt) ytPaint(m.yt);
         st.chat = m.history || []; renderChat(); st.viewers = m.viewers; st.pubs = m.publishers || [];
         if (m.requests) { st.reqs = m.requests; dot($("#areq"), st.reqs.length); }
+        if (m.redeems) { st.redeems = m.redeems; dot($("#arw"), m.redeems.filter((x) => x.state === "new").length); }
         st.ch = m.challenges || []; dot($("#ach"), st.ch.filter((c) => c.state === "new").length);
         st.hype = m.hype.v; st.lvl = m.hype.lvl; st.guests = m.guests || []; st.poll = m.poll;
         upd(); if (st.pubs.find((p) => p.uid === S.user.id)) setState("live");
@@ -1578,6 +1794,8 @@ VIEWS.studio = (root) => {
         break;
       case "privacy": if (m.uid === S.user.id) { st.privacy = m.on && m.reason !== "app"; setShield(); } previewStage && previewStage.setPrivacy(m.uid, m.on, m.reason); break;
       case "effect": haptic("medium"); break;
+      case "enter": grandEntrance(m, null); haptic("success"); break;
+      case "redeems": st.redeems = m.list; dot($("#arw"), m.list.filter((x) => x.state === "new").length); if (m.list.some((x) => x.state === "new")) haptic(); break;
       case "gift": haptic("success"); toast(`${GIFT_E[m.gift] || "🎁"} ${uname(m, "span")} ${t("giftSent")} ×${m.n} · +${Math.floor(m.value * 0.7)} 🪙`, 4000); st.chat.push({ uid: m.uid, name: m.name, color: m.color, look: m.look, text: `🎁 ${GIFT_E[m.gift] || ""} ×${m.n}` }); renderChat(); break;
       case "bstatus": if (m.uid === S.user.id && m.msg) { toast(esc(m.msg), 6000); if (m.state === "error") setState("error"); } break;
       case "kicked": case "ended": endLive(); break;
@@ -1621,7 +1839,7 @@ VIEWS.studio = (root) => {
   $("#ssh").onclick = () => shareLink(location.origin + "/w/" + job.room, job.title);
   $("#aov").onclick = () => { st.overlay = !st.overlay; store.set("overlay", st.overlay); $("#aov").classList.toggle("on", st.overlay); haptic(); Native.post("overlay", { on: st.overlay, room: job.room, token: S.token, server: location.origin }); };
   if (isAndroid()) $("#acam").onclick = () => { st.cam = !st.cam; $("#acam").classList.toggle("on", st.cam); haptic(); Native.post("camBubble", { on: st.cam }); };
-  $("#afg").onclick = () => (isIOS() ? focusGuide() : Native.post("perm", { kind: "dnd" }));
+  $("#arw").onclick = () => rewardsSheet(st, ws);
   $("#apv").onclick = () => {
     const el = $("#spv"); const on = el.classList.toggle("hide") === false; $("#apv").classList.toggle("on", on);
     if (on) { previewStage = new Stage($("#spvs"), { muted: true }); previewStage.setPubs(st.pubs); } else if (previewStage) { previewStage.destroy(); previewStage = null; }
@@ -1665,6 +1883,23 @@ VIEWS.studio = (root) => {
 };
 
 /* ---------- profiles ---------- */
+function streamerCard(st, self) {
+  if (!st) return "";
+  const pct = st.next > st.cur ? Math.min(100, ((st.xp - st.cur) / (st.next - st.cur)) * 100) : 100;
+  return `<div class="scard ${st.top ? "top" + st.top : ""}" data-go-ranks="1">
+    ${st.top ? `<div class="stop">${MEDAL[st.top]} ${self ? t("topYou", { n: st.top }) : "TOP " + st.top + " · " + t("rankMonth")}</div>` : ""}
+    <div class="row" style="gap:10px"><div style="flex:1;text-align:start"><div class="small mut">${t("sLevel")}</div><div style="margin-top:4px">${sLvlHtml(st.level)}</div></div>
+      <div class="srk"><b>${st.mrank ? "#" + st.mrank : "–"}</b><span>${t("sRankM")}</span></div><div class="srk"><b>${st.rank ? "#" + st.rank : "–"}</b><span>${t("sRankA")}</span></div></div>
+    <div class="bar" style="margin-top:12px"><i style="width:${pct}%"></i></div>
+    <div class="row small mut" style="margin-top:6px"><span>${fmtN(st.xp)} XP</span><div class="sp"></div><span>${t("sNext", { n: fmtN(Math.max(0, st.next - st.xp)) })}</span></div>
+    ${self ? `<div class="small" style="margin-top:8px;color:#ffd36b">💰 ${t("sharePct", { n: st.share })}</div>` : ""}
+  </div>`;
+}
+function sLevelUpFx(m, canvas) {
+  const d = document.createElement("div"); d.className = "lvup slv"; d.innerHTML = `<b>🎙 LV ${m.level}</b>${S.user && m.uid === S.user.id ? t("sLevelUpMe", { l: m.level }) : esc(t("sLevelUp", { n: m.name || "", l: m.level }))}`;
+  ($("#app") || document.body).appendChild(d); setTimeout(() => d.remove(), 3600);
+  FX.play("fireworks", null, null, canvas || $("#fx")); haptic("success");
+}
 function profileHtml(r, self) {
   const u = r.user;
   const since = new Date(u.created || Date.now()).toLocaleDateString(S.lang === "ar" ? "ar" : "en", { year: "numeric", month: "long" });
@@ -1678,9 +1913,10 @@ function profileHtml(r, self) {
     ${u.link ? `<a href="${esc(u.link)}" target="_blank" rel="noopener" class="chip" style="display:inline-flex;gap:6px;margin-top:10px;text-decoration:none;color:#b9a8ff">${ic("globe")} ${esc(u.link.replace(/^https?:\/\/(www\.)?/, "").slice(0, 40))}</a>` : ""}
     <div class="small mut" style="margin-top:8px">${t("joined")} ${esc(since)}</div>
   </div>
+  ${streamerCard(r.streamer, self)}
   <div class="kpis" style="grid-template-columns:repeat(3,1fr);margin-top:16px">
     ${kp(fmtN(r.followers), t("followers"))}${kp(fmtN(r.following), t("followingN"))}${kp(fmtN(r.streamsCount), t("streamsN"))}
-    ${kp(r.hours, t("hoursN"))}${kp(fmtN(r.bestPeak), t("bestPeak"))}${kp(r.games.length, t("gamesPlayed"))}
+    ${kp(r.hours, t("hoursN"))}${kp(fmtN(r.bestPeak), t("bestPeak"))}${kp(fmtN(r.subsCount || 0), t("subsN"))}
   </div>
   <div id="pact"></div>
   ${r.games.length ? `<div class="h2">${ic("game")} ${t("gamesPlayed")}</div><div class="chips">${r.games.map((g) => `<span class="chip gchip">${g.icon ? gIcon(g.icon) : "🎮"}<span>${esc(g.name)}</span><b>${g.n}</b></span>`).join("")}</div>` : ""}
@@ -1794,6 +2030,7 @@ VIEWS.settings = (root) => {
       (isIOS() || !Native.has() ? row("eye", t("bannerG"), t("bannerGD"), sw("bannerGuard", g.privacy.bannerGuard)) : "") +
       (isIOS() ? row("bell", t("focusGuide"), "", `<span class="mut">›</span>`, "xfocus") : "") +
       row("gauge", t("speedTest"), "", `<span class="mut">›</span>`, "xspeed"))}
+    ${u ? sec(t("yt"), row("live", t("ytAdd"), u.yt ? t("ytLinked", { k: `<span dir="ltr">${esc(u.yt)}</span>` }) : t("ytNot"), `<span class="mut">›</span>`, "xyt")) : ""}
     ${u ? sec(t("recordings"),
       row("live", t("recSave"), t("recSaveD"), sw("rec", rp.rec)) +
       row("layers", t("storage"), `<span id="xstor">…</span>`, "") +
@@ -1839,6 +2076,7 @@ VIEWS.settings = (root) => {
   })));
   const on = (id, f) => { const e = $("#" + id); if (e) e.onclick = f; };
   on("xme", () => go("me"));
+  on("xyt", () => ytSheet(() => go("settings")));
   on("xdelall", () => deleteRec("all", () => go("settings")));
   if (u) api("/api/recs").then((r) => { const el = $("#xstor"); if (el) el.textContent = r.myBytes !== undefined ? `${fmtBytes(r.myBytes)} · ${r.recs.length} ${t("recordings")}` : "–"; });
   if (u && !(S.cfg && S.cfg.rec)) api("/api/config").then((c) => { if (!c.rec && $("#xstor")) $("#xstor").textContent = t("recOff"); });
@@ -1869,7 +2107,9 @@ VIEWS.user = (root, handle) => {
     const u = r.user; let fol = S.following.has(u.id);
     $("#us").innerHTML = profileHtml(r, false);
     if (S.user) {
-      $("#pact").innerHTML = `<button class="btn ${fol ? "g" : "p"}" id="uf" style="margin-top:14px">${fol ? t("unfollow") : t("follow")}</button>`;
+      $("#pact").innerHTML = `<div class="row" style="margin-top:14px"><button class="btn ${fol ? "g" : "p"}" id="uf">${fol ? t("unfollow") : t("follow")}</button>
+        <button class="btn" id="usb" style="background:linear-gradient(120deg,#00d1ff,#7c5cff);color:#fff">${r.mySub ? t("subscribed", { n: r.mySub.months }) : t("subscribe")}</button></div>`;
+      $("#usb").onclick = () => subSheet(u, (sub) => { $("#usb").textContent = t("subscribed", { n: sub.months }); });
       $("#uf").onclick = async () => { fol = !fol; const fb = $("#uf"); fb.className = "btn " + (fol ? "g" : "p"); fb.textContent = fol ? t("unfollow") : t("follow"); haptic(); await api("/api/follow", { target: u.id, on: fol }); fol ? S.following.add(u.id) : S.following.delete(u.id); };
     }
     bindStreams($("#us"), r, false);
