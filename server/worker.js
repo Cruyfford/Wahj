@@ -290,6 +290,11 @@ export default {
         const b = await req.json().catch(() => ({}));
         return J(await hub(env, "/rewards-set", { ...b, token: bearer(req) }));
       }
+      if ((p === "/api/mod" || p === "/api/mods") && req.method === "POST") {
+        const b = await req.json().catch(() => ({}));
+        const r = await hub(env, p.slice(4), { ...b, token: bearer(req) });
+        return J(r, r.error ? 400 : 200);
+      }
       if (p === "/api/streamers") {
         return J(await hub(env, "/streamers", { mode: url.searchParams.get("mode") || "month", token: bearer(req) }));
       }
@@ -559,6 +564,8 @@ export class Hub {
       try { this.sql.exec("ALTER TABLE users ADD COLUMN " + c); } catch (e) {}
     }
     this.sql.exec("CREATE TABLE IF NOT EXISTS fxp(uid TEXT, target TEXT, PRIMARY KEY(uid, target))");
+    this.sql.exec("CREATE TABLE IF NOT EXISTS modroles(host TEXT, uid TEXT, role TEXT, by TEXT, t INTEGER, PRIMARY KEY(host, uid))");
+    this.sql.exec("CREATE TABLE IF NOT EXISTS sanctions(host TEXT, uid TEXT, kind TEXT, until INTEGER, by TEXT, t INTEGER, PRIMARY KEY(host, uid, kind))");
     try { this.sql.exec("ALTER TABLE streams ADD COLUMN yt INTEGER DEFAULT 0"); } catch (e) {}
     try { this.sql.exec("ALTER TABLE streams ADD COLUMN ytinit INTEGER DEFAULT 0"); } catch (e) {}
     this.sql.exec("CREATE TABLE IF NOT EXISTS ytsegs(room TEXT, n INTEGER, dur REAL, PRIMARY KEY(room, n))");
@@ -611,6 +618,17 @@ export class Hub {
     this.topC = null;
     const level = sLevelOf((u.sxp | 0) + xp);
     return { level, levelUp: level > before };
+  }
+  roleOf(host, uid) {
+    if (!uid) return "";
+    if (uid === host) return "owner";
+    const r = this.one("SELECT role FROM modroles WHERE host=? AND uid=?", String(host), String(uid));
+    return r ? r.role : "";
+  }
+  sanctionOf(host, uid) {
+    const t = now(), out = {};
+    for (const r of this.all("SELECT kind, until FROM sanctions WHERE host=? AND uid=? AND until>?", String(host), String(uid), t)) out[r.kind] = r.until;
+    return out;
   }
   top3() {
     const t = now();
@@ -1114,7 +1132,7 @@ export class Hub {
     if (p === "/loy-get") {
       const c = this.chanRow(b.uid, b.host);
       const rewards = [...DEFAULT_REWARDS, ...this.all("SELECT id, title, cost FROM rewards WHERE host=? ORDER BY cost", String(b.host)).map((r) => ({ ...r, custom: true }))];
-      return J2({ ...this.loyOut(c), rewards, sub: this.subOf(String(b.uid), String(b.host)) });
+      return J2({ ...this.loyOut(c), rewards, sub: this.subOf(String(b.uid), String(b.host)), role: this.roleOf(b.host, b.uid), sanction: this.sanctionOf(b.host, b.uid) });
     }
     if (p === "/loy-daily") {
       const c = this.chanRow(b.uid, b.host);
@@ -1151,6 +1169,55 @@ export class Hub {
     if (p === "/loy-reward") {
       const r = DEFAULT_REWARDS.find((x) => x.id === b.id) || this.one("SELECT id, title, cost FROM rewards WHERE id=? AND host=?", String(b.id), String(b.host));
       return J2({ reward: r || null, custom: !!(r && !DEFAULT_REWARDS.includes(r)) });
+    }
+    // ---- moderation: owner > mod > vip(promoted) > viewer ----
+    if (p === "/mod") {
+      const me = this.user(b.token); if (!me) return J2({ error: "auth" });
+      const h = b.host ? this.one("SELECT * FROM users WHERE (id=? OR handle=?) AND deleted=0", String(b.host), String(b.host).toLowerCase()) : me;
+      if (!h) return J2({ error: "not_found" });
+      const myRole = this.roleOf(h.id, me.id);
+      if (myRole !== "owner" && myRole !== "mod") return J2({ error: "forbidden" });
+      const act = String(b.action || "");
+      const OWNER_ONLY = ["addmod", "removemod", "demote", "ban", "unban", "unkick", "clear"];
+      if (OWNER_ONLY.includes(act) && myRole !== "owner") return J2({ error: "owner_only" });
+      const apply = { action: act, by: me.name, byUid: me.id };
+      if (act === "del" || act === "clear") {
+        apply.msgId = String(b.msgId || "");
+      } else {
+        const tg = this.one("SELECT * FROM users WHERE (id=? OR handle=?) AND deleted=0", String(b.target || ""), String(b.target || "").toLowerCase());
+        if (!tg) return J2({ error: "not_found" });
+        const tr = this.roleOf(h.id, tg.id);
+        if (tr === "owner") return J2({ error: "forbidden" });
+        if (tr === "mod" && myRole !== "owner") return J2({ error: "forbidden" });
+        Object.assign(apply, { uid: tg.id, name: tg.name });
+        const sanc = (kind, mins) => { const until = t + mins * 60000; this.sql.exec("INSERT OR REPLACE INTO sanctions VALUES(?,?,?,?,?,?)", h.id, tg.id, kind, until, me.id, t); apply.until = until; apply.mins = mins; };
+        const setRole = (role) => { if (role) this.sql.exec("INSERT OR REPLACE INTO modroles VALUES(?,?,?,?,?)", h.id, tg.id, role, me.id, t); else this.sql.exec("DELETE FROM modroles WHERE host=? AND uid=?", h.id, tg.id); apply.role = role; };
+        if (act === "timeout") sanc("timeout", Math.max(1, Math.min(10080, b.mins | 0 || 5)));
+        else if (act === "untimeout") this.sql.exec("DELETE FROM sanctions WHERE host=? AND uid=? AND kind='timeout'", h.id, tg.id);
+        else if (act === "kick") sanc("kick", Math.max(1, Math.min(1440, b.mins | 0 || 10)));
+        else if (act === "ban") sanc("ban", 100 * 365 * 24 * 60);
+        else if (act === "unban" || act === "unkick") this.sql.exec("DELETE FROM sanctions WHERE host=? AND uid=? AND kind IN ('ban','kick','timeout')", h.id, tg.id);
+        else if (act === "promote") { if (tr === "vip") return J2({ error: "already" }); setRole("vip"); }
+        else if (act === "demote") { if (tr !== "vip") return J2({ error: "not_found" }); setRole(""); }
+        else if (act === "addmod") setRole("mod");
+        else if (act === "removemod") { if (tr !== "mod") return J2({ error: "not_found" }); setRole(""); }
+        else return J2({ error: "bad_action" });
+      }
+      const live = this.one("SELECT id FROM streams WHERE uid=? AND ended=0 AND beat>? ORDER BY started DESC", h.id, t - 120000);
+      if (live) await this.env.ROOM.get(this.env.ROOM.idFromName("r:" + live.id)).fetch("https://room/mod-apply", { method: "POST", body: JSON.stringify(apply) }).catch(() => {});
+      return J2({ ok: true, ...apply });
+    }
+    if (p === "/mods") {
+      const me = this.user(b.token); if (!me) return J2({ error: "auth" });
+      const h = b.host ? this.one("SELECT * FROM users WHERE (id=? OR handle=?) AND deleted=0", String(b.host), String(b.host).toLowerCase()) : me;
+      if (!h) return J2({ error: "not_found" });
+      const myRole = this.roleOf(h.id, me.id);
+      if (myRole !== "owner" && myRole !== "mod") return J2({ error: "forbidden" });
+      const U = (r) => { const u = this.one("SELECT * FROM users WHERE id=?", r.uid); return u ? { ...this.pubUser(u), role: r.role, kind: r.kind, until: r.until } : null; };
+      return J2({ myRole,
+        mods: this.all("SELECT uid, role FROM modroles WHERE host=? AND role='mod' ORDER BY t", h.id).map(U).filter(Boolean),
+        vips: this.all("SELECT uid, role FROM modroles WHERE host=? AND role='vip' ORDER BY t", h.id).map(U).filter(Boolean),
+        sanctions: this.all("SELECT uid, kind, until FROM sanctions WHERE host=? AND until>? ORDER BY until DESC LIMIT 200", h.id, t).map(U).filter(Boolean) });
     }
     if (p === "/streamers") {
       const t2 = now(), mk = monthKey(t2), month = b.mode !== "all";
@@ -1354,6 +1421,28 @@ export class Room {
       await this.state.storage.put({ meta: this.meta, history: [], pubs: {}, guests: [], requests: [], poll: null, challenges: [], hype: this.hype, pinned: null });
       return R({ ok: true });
     }
+    if (p === "/mod-apply") {
+      const a = body, t = now();
+      const sys = (key) => { const ev = { t: "modlog", key, name: a.name || "", by: a.by || "", mins: a.mins || 0, at: t }; this.bcast(ev); };
+      const purge = (uid) => { const n = this.history.length; this.history = this.history.filter((m) => m.uid !== uid); if (this.history.length !== n) this.state.storage.put("history", this.history); this.bcast({ t: "purge", uid }); };
+      const patch = (uid, f) => { for (const w of this.socketsOf(uid)) { const x = this.info(w); f(x); try { w.serializeAttachment(x); } catch (e) {} } };
+      switch (a.action) {
+        case "timeout": patch(a.uid, (x) => (x.to = a.until)); purge(a.uid); sys("timeout"); for (const w of this.socketsOf(a.uid)) this.send(w, { t: "timedout", until: a.until }); break;
+        case "untimeout": patch(a.uid, (x) => (x.to = 0)); sys("untimeout"); for (const w of this.socketsOf(a.uid)) this.send(w, { t: "timedout", until: 0 }); break;
+        case "kick": case "ban":
+          purge(a.uid); sys(a.action);
+          for (const w of this.socketsOf(a.uid)) { this.send(w, { t: "kicked", until: a.until, ban: a.action === "ban" }); try { w.close(4003, a.action); } catch (e) {} }
+          this.guests = this.guests.filter((g) => g !== a.uid); break;
+        case "unban": case "unkick": sys("unban"); break;
+        case "promote": case "demote": case "addmod": case "removemod":
+          patch(a.uid, (x) => (x.role = a.role || "")); this.bcast({ t: "role", uid: a.uid, role: a.role || "" }); sys(a.action);
+          for (const w of this.socketsOf(a.uid)) this.send(w, { t: "myrole", role: a.role || "" });
+          break;
+        case "del": { this.history = this.history.filter((m) => m.id !== a.msgId); this.state.storage.put("history", this.history); this.bcast({ t: "delmsg", id: a.msgId }); break; }
+        case "clear": this.history = []; this.state.storage.put("history", []); this.bcast({ t: "clearchat", by: a.by }); break;
+      }
+      return R({ ok: true });
+    }
     if (p === "/yt") {
       const was = this.yt;
       this.yt = { ok: !!body.ok, code: body.code | 0 };
@@ -1448,7 +1537,11 @@ export class Room {
             const d = await this.hubPost("/loy-daily", { uid, host: this.meta.host });
             const g = await this.hubPost("/loy-get", { uid, host: this.meta.host });
             this.setLvl(uid, g.level);
-            const a2 = this.info(server); a2.sub = g.sub ? g.sub.months : 0; try { server.serializeAttachment(a2); } catch (e) {}
+            const sc = g.sanction || {};
+            if (sc.ban || sc.kick) { this.send(server, { t: "kicked", until: sc.ban || sc.kick, ban: !!sc.ban }); try { server.close(4003, "banned"); } catch (e) {} return; }
+            const a2 = this.info(server); a2.sub = g.sub ? g.sub.months : 0; a2.role = g.role || ""; a2.to = sc.timeout || 0; try { server.serializeAttachment(a2); } catch (e) {}
+            if (g.role) this.send(server, { t: "myrole", role: g.role });
+            if (sc.timeout) this.send(server, { t: "timedout", until: sc.timeout });
             this.send(server, { t: "loy", ...g, daily: d.daily, gotPts: d.gotPts, gotXp: d.gotXp });
             if ((g.sub || (att.look && att.look.vip)) && this.allowed("enter:" + uid, 60000)) {
               this.bcast({ t: "enter", uid, name: att.name, color: att.color, look: att.look || {}, avatar: att.av, level: g.level, sub: g.sub ? g.sub.months : 0, handle: att.handle });
@@ -1483,10 +1576,11 @@ export class Room {
       case "chat": {
         if (me.anon) return this.send(ws, { t: "err", e: "login" });
         const text = String(m.text || "").trim().slice(0, 200);
-        const slow = host ? 0 : ((this.meta && this.meta.prefs && this.meta.prefs.slow) | 0) * 1000;
+        if (me.to && me.to > t) return this.send(ws, { t: "timedout", until: me.to });
+        const slow = host || me.role ? 0 : ((this.meta && this.meta.prefs && this.meta.prefs.slow) | 0) * 1000;
         if (!text) return;
         if (!this.allowed("c:" + me.uid, Math.max(700, slow))) return slow ? this.send(ws, { t: "err", e: "slow" }) : undefined;
-        const msg = { t: "chat", id: rid(8), uid: me.uid, name: me.name, color: me.color, text, at: t, host, guest: this.guests.includes(me.uid), look: me.look || {}, lvl: host ? 0 : me.lvl || 1, sub: me.sub || 0 };
+        const msg = { t: "chat", id: rid(8), uid: me.uid, name: me.name, color: me.color, text, at: t, host, guest: this.guests.includes(me.uid), look: me.look || {}, lvl: host ? 0 : me.lvl || 1, sub: me.sub || 0, role: host ? "" : me.role || "" };
         const ws0 = (this.wt = this.wt || {})[me.uid] = (this.wt || {})[me.uid] || { ms: 0, chest: 0, chat: 0, chestReady: false };
         if (ws0.chat < 30) { ws0.chat += 2; this.addXp(me.uid, 2); }
         this.pushHistory(msg);

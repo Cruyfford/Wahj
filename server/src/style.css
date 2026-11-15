@@ -618,3 +618,11 @@ svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-l
 .fxpv-blackhole{background:radial-gradient(circle,#000 0 9px,#ff9628 11px,rgba(160,120,255,.6) 16px,transparent 26px),#0a0014}
 .fxpv-tornado{background:repeating-linear-gradient(160deg,transparent 0 5px,rgba(220,225,240,.5) 5px 7px),radial-gradient(ellipse at 50% 100%,#c8cfe0 0 20%,#2a2f44 70%)}
 .fxpv-stars{background:linear-gradient(225deg,transparent 45%,#fff 48%,transparent 52%),radial-gradient(circle at 70% 70%,#ffd 0 1.5px,transparent 2px),radial-gradient(circle at 25% 40%,#fff 0 1px,transparent 1.5px),linear-gradient(#0a0528,#3b1d7a)}
+/* moderation role tags */
+.rtag{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:900;padding:2px 7px 2px 5px;border-radius:99px;margin-inline-end:5px;vertical-align:1px;white-space:nowrap}
+.rtag svg{width:11px;height:11px;fill:currentColor}
+.rmod{background:linear-gradient(120deg,#00c853,#00e5a0);color:#00210f;box-shadow:0 0 8px rgba(0,229,160,.45)}
+.rvip{background:linear-gradient(120deg,#ff4dd8,#b26bff);color:#fff;box-shadow:0 0 8px rgba(255,77,216,.45)}
+.rowner{background:linear-gradient(120deg,#ff3d6e,#ff9a3d);color:#fff}
+.chatov .cm[data-id]{cursor:pointer}
+#mto button{font-size:12px}
