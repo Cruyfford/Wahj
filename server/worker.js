@@ -630,11 +630,12 @@ export class Hub {
     for (const r of this.all("SELECT kind, until FROM sanctions WHERE host=? AND uid=? AND until>?", String(host), String(uid), t)) out[r.kind] = r.until;
     return out;
   }
+  get noAdm() { const l = String(this.env.ADMIN_HANDLES || "cruyfford").split(",").map((x) => "'" + x.trim().toLowerCase().replace(/[^a-z0-9_]/g, "") + "'").join(","); return ` AND handle NOT IN (${l})`; }
   top3() {
     const t = now();
     if (this.topC && t - this.topC.t < 60000) return this.topC.m;
     const m = {};
-    this.all("SELECT id FROM users WHERE mkey=? AND mxp>0 AND deleted=0 ORDER BY mxp DESC, sxp DESC LIMIT 3", monthKey(t)).forEach((r, i) => (m[r.id] = i + 1));
+    this.all("SELECT id FROM users WHERE mkey=? AND mxp>0 AND deleted=0" + this.noAdm + " ORDER BY mxp DESC, sxp DESC LIMIT 3", monthKey(t)).forEach((r, i) => (m[r.id] = i + 1));
     this.topC = { t, m };
     return m;
   }
@@ -642,8 +643,9 @@ export class Hub {
   streamerOf(u) {
     const xp = u.sxp | 0, level = sLevelOf(xp), mk = monthKey(now());
     const mxp = u.mkey === mk ? u.mxp | 0 : 0;
-    const mrank = mxp > 0 ? this.one("SELECT COUNT(*) n FROM users WHERE mkey=? AND deleted=0 AND (mxp>? OR (mxp=? AND sxp>?))", mk, mxp, mxp, xp).n + 1 : 0;
-    const rank = xp > 0 ? this.one("SELECT COUNT(*) n FROM users WHERE deleted=0 AND sxp>?", xp).n + 1 : 0;
+    const adm = this.isAdmin(u);
+    const mrank = mxp > 0 && !adm ? this.one("SELECT COUNT(*) n FROM users WHERE mkey=? AND deleted=0 AND (mxp>? OR (mxp=? AND sxp>?))" + this.noAdm, mk, mxp, mxp, xp).n + 1 : 0;
+    const rank = xp > 0 && !adm ? this.one("SELECT COUNT(*) n FROM users WHERE deleted=0 AND sxp>?" + this.noAdm, xp).n + 1 : 0;
     return { xp, level, cur: sXpFor(level), next: sXpFor(level + 1), mxp, mrank, rank, top: this.top3()[u.id] || 0, share: Math.round(this.shareFor(u.id) * 100) };
   }
   recTotal() { return (this.one("SELECT SUM(bytes) b FROM recs WHERE deleted=0") || {}).b || 0; }
@@ -657,7 +659,6 @@ export class Hub {
     if ((u.coins | 0) < MAXC) this.sql.exec("UPDATE users SET coins=? WHERE id=?", MAXC, u.id);
     const own = Object.keys(SHOP).filter((k) => !SHOP[k].vip && !SHOP[k].admin);
     this.sql.exec("UPDATE users SET owned=?, vipUntil=?, sxp=MAX(sxp,?) WHERE id=?", JSON.stringify(own), now() + 100 * 365 * 86400000, SX, u.id);
-    if (u.mkey !== mk || (u.mxp | 0) < SX) { this.sql.exec("UPDATE users SET mkey=?, mxp=MAX(CASE WHEN mkey=? THEN mxp ELSE 0 END, ?) WHERE id=?", mk, mk, SX, u.id); this.topC = null; }
     this.sql.exec("UPDATE chan SET xp=MAX(xp,?), points=MAX(points,999999) WHERE uid=?", VX, u.id);
     return this.one("SELECT * FROM users WHERE id=?", u.id);
   }
@@ -1222,13 +1223,13 @@ export class Hub {
     if (p === "/streamers") {
       const t2 = now(), mk = monthKey(t2), month = b.mode !== "all";
       const rows = month
-        ? this.all("SELECT * FROM users WHERE mkey=? AND mxp>0 AND deleted=0 ORDER BY mxp DESC, sxp DESC LIMIT 50", mk)
-        : this.all("SELECT * FROM users WHERE sxp>0 AND deleted=0 ORDER BY sxp DESC LIMIT 50");
+        ? this.all("SELECT * FROM users WHERE mkey=? AND mxp>0 AND deleted=0" + this.noAdm + " ORDER BY mxp DESC, sxp DESC LIMIT 50", mk)
+        : this.all("SELECT * FROM users WHERE sxp>0 AND deleted=0" + this.noAdm + " ORDER BY sxp DESC LIMIT 50");
       const liveSet = new Set(this.all("SELECT uid FROM streams WHERE ended=0 AND beat>?", t2 - 90000).map((r) => r.uid));
       const me = this.user(b.token);
       const ends = new Date(Date.UTC(+mk.slice(0, 4), +mk.slice(5, 7), 1) - 3 * 3600000).getTime();
       return J2({ month: mk, ends, list: rows.map((u, i) => ({ rank: i + 1, ...this.pubUser(u), level: sLevelOf(u.sxp), xp: month ? u.mxp : u.sxp, live: liveSet.has(u.id) })),
-        me: me ? this.streamerOf(me) : null, shares: TOP_SHARE, base: STREAMER_SHARE });
+        me: me && !this.isAdmin(me) ? this.streamerOf(me) : null, shares: TOP_SHARE, base: STREAMER_SHARE });
     }
     if (p === "/loy-top") {
       const rows = this.all("SELECT c.uid, c.xp, u.name, u.color, u.handle, u.av, u.vipUntil, u.equip, u.owned FROM chan c JOIN users u ON u.id=c.uid WHERE c.host=? AND u.deleted=0 ORDER BY c.xp DESC LIMIT 20", String(b.host));
@@ -1589,7 +1590,7 @@ export class Room {
         return;
       }
       case "react": {
-        const e = String(m.e || "❤️").slice(0, 4);
+        const e = String(m.e || "hrt").slice(0, 4);
         if (!this.allowed("r:" + (me.uid || me.id), 250)) return;
         this.bcast({ t: "react", e, uid: me.uid });
         this.addHype(0.6);
@@ -1618,7 +1619,7 @@ export class Room {
         this.giftTotal = (this.giftTotal || 0) + r.cost;
         this.addXp(me.uid, Math.round(r.cost / 2));
         this.state.waitUntil(this.flushLoyalty());
-        this.pushHistory({ t: "chat", id: ev.id, uid: me.uid, name: me.name, color: me.color, look: me.look || {}, text: `🎁 ${GIFTS[m.gift].e} ×${r.n}`, at: t, gift: true });
+        this.pushHistory({ t: "chat", id: ev.id, uid: me.uid, name: me.name, color: me.color, look: me.look || {}, text: `×${r.n}`, at: t, gift: true, giftId: m.gift });
         this.bcast(ev);
         if (r.host && r.host.levelUp && to === this.meta.host) this.bcast({ t: "slevelup", uid: to, name: this.meta.hostName, level: r.host.level });
         this.addHype(Math.min(60, 5 + r.cost / 20));

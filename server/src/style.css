@@ -626,3 +626,46 @@ svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-l
 .rowner{background:linear-gradient(120deg,#ff3d6e,#ff9a3d);color:#fff}
 .chatov .cm[data-id]{cursor:pointer}
 #mto button{font-size:12px}
+
+/* ===== emoji-free icon system ===== */
+.ei{width:1.15em;height:1.15em;vertical-align:-.2em;stroke-width:2.1;flex:none}
+.ei-gold{stroke:url(#g-gold);filter:drop-shadow(0 0 4px rgba(255,200,0,.45))}
+.ei-fire{stroke:url(#g-fire);filter:drop-shadow(0 0 4px rgba(255,90,0,.45))}
+.ei-pink{stroke:url(#g-pink);filter:drop-shadow(0 0 4px rgba(255,46,136,.45))}
+.ei-cyan{stroke:url(#g-cyan);filter:drop-shadow(0 0 4px rgba(0,180,255,.45))}
+.ei-violet{stroke:url(#g-violet);filter:drop-shadow(0 0 4px rgba(124,92,255,.5))}
+.ei-green{stroke:url(#g-green);filter:drop-shadow(0 0 4px rgba(0,200,150,.45))}
+.ei-silver{stroke:url(#g-silver)}.ei-bronze{stroke:url(#g-bronze)}
+.ei-brand{stroke:url(#g-brand);filter:drop-shadow(0 0 4px rgba(255,77,141,.4))}
+.chip .ei{width:18px;height:18px}
+.ph .ei,.ph2 .ei{width:44%;height:44%;max-width:56px;max-height:56px;stroke-width:1.6}
+.ph2 .ei{width:24px;height:24px}
+.ibtn .ei{width:22px;height:22px}
+.h1 .ei{width:30px;height:30px;vertical-align:-5px}
+.h2 .ei{width:20px;height:20px}
+.rbtn .ei{width:22px;height:22px}
+.act .ei{width:22px;height:22px}
+.pd .pm .ei{width:34px;height:34px}.pd.p1 .pm .ei{width:44px;height:44px}
+.fmedal .ei{width:16px;height:16px}
+.fxb .ei{width:30px;height:30px;stroke-width:1.8;display:block;margin:0 auto 4px}
+.emoji button .ei{width:28px;height:28px}
+.floaty .ei{width:34px;height:34px;stroke-width:2.4}
+.chest .ei{width:28px;height:28px}
+.bdg-sub .ei{width:10px;height:10px;stroke:#fff;filter:none;margin-inline-end:2px}
+.slvl .ei{width:12px;height:12px;stroke:currentColor;filter:none}
+.lvup .ei{width:1em;height:1em;stroke:#fff;filter:none}
+.gt .ei{stroke:#2b1600;filter:none}
+.rw .ic .ei{width:24px;height:24px}
+.bigic .ei,.offic .ei{width:64px;height:64px;stroke-width:1.5}
+.bigic,.offic{display:grid;place-items:center;margin:0 auto 8px}
+.art{width:40px;height:40px;object-fit:contain;display:inline-block;vertical-align:middle;filter:drop-shadow(0 4px 10px rgba(0,0,0,.35))}
+.gift .e .art{width:46px;height:46px}
+.art.gi2{width:22px;height:22px;vertical-align:-5px}
+.ge .art{width:34px;height:34px}
+/* empty state radar */
+.radar{position:relative;width:120px;height:120px;margin:0 auto 18px;display:grid;place-items:center}
+.radar i{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,77,141,.55);animation:radar 2.4s ease-out infinite}
+.radar i:nth-child(2){animation-delay:.8s}.radar i:nth-child(3){animation-delay:1.6s}
+.radar .ei{width:46px;height:46px;stroke-width:2.2;position:relative;z-index:1;padding:14px;box-sizing:content-box;border-radius:50%;background:radial-gradient(circle,rgba(124,92,255,.35),rgba(255,77,141,.12) 70%,transparent);animation:radarb 2.4s ease-in-out infinite}
+@keyframes radar{0%{transform:scale(.35);opacity:1}100%{transform:scale(1.15);opacity:0}}
+@keyframes radarb{50%{transform:scale(1.08)}}

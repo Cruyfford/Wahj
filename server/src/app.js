@@ -4,6 +4,26 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const ic = (n, cls = "") => `<svg class="${cls}"><use href="#i-${n}"/></svg>`;
+/* ===== illustrated art (gifts + canvas effects), no emoji ===== */
+const ART = {
+  boom: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="a"><stop offset="0" stop-color="#fff"/><stop offset=".3" stop-color="#fff36b"/><stop offset=".65" stop-color="#ff8a00"/><stop offset="1" stop-color="#ff1e3c"/></radialGradient></defs><path fill="url(#a)" d="M50 2l9 22 20-12-6 23 24 2-19 15 17 17-24-1 3 24-19-14-12 21-6-24-22 9 11-21-21-11 23-6-12-20 22 6z"/></svg>`,
+  horn: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3a0"/><stop offset=".5" stop-color="#ffc400"/><stop offset="1" stop-color="#d47a00"/></linearGradient></defs><path fill="url(#a)" d="M8 44h14l50-28v68L22 56H8z"/><ellipse cx="72" cy="50" rx="8" ry="34" fill="#ffdd55"/><ellipse cx="72" cy="50" rx="4" ry="26" fill="#a85d00"/><rect x="14" y="56" width="10" height="20" rx="4" fill="#d47a00"/><path d="M84 30q10 20 0 40M90 22q16 28 0 56" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" opacity=".8"/></svg>`,
+  ghost: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#c8b6ff"/></linearGradient></defs><path fill="url(#a)" d="M20 92V45a30 30 0 0 1 60 0v47l-10-8-10 8-10-8-10 8-10-8z"/><ellipse cx="39" cy="45" rx="6" ry="9" fill="#1a1033"/><ellipse cx="61" cy="45" rx="6" ry="9" fill="#1a1033"/><ellipse cx="50" cy="65" rx="7" ry="5" fill="#1a1033"/></svg>`,
+  petal: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe0ef"/><stop offset="1" stop-color="#ff6fae"/></linearGradient></defs><path fill="url(#a)" d="M50 6C78 26 84 60 50 94 16 60 22 26 50 6z"/></svg>`,
+  g_rose: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="a" cx=".4" cy=".35"><stop offset="0" stop-color="#ff7a9a"/><stop offset=".6" stop-color="#e8133f"/><stop offset="1" stop-color="#8a0020"/></radialGradient><linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7dff8f"/><stop offset="1" stop-color="#0d8a3a"/></linearGradient></defs><path d="M50 52v44" stroke="#14a04a" stroke-width="5" stroke-linecap="round"/><path fill="url(#b)" d="M50 78c-14-2-22-12-20-20 10 0 18 8 20 20zM50 70c12-4 22-2 24 6-10 4-18 2-24-6z"/><circle cx="50" cy="32" r="26" fill="url(#a)"/><path d="M50 14c8 6 10 16 2 22-6 4-14 0-12-8 1-6 8-6 9-2" stroke="#7a0018" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M30 28c4 12 14 18 22 18M70 26c-2 12-10 18-18 20" stroke="#a5002a" stroke-width="2.5" fill="none" opacity=".7"/></svg>`,
+  g_heart: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9ad5"/><stop offset=".5" stop-color="#ff2e88"/><stop offset="1" stop-color="#c3005a"/></linearGradient></defs><path fill="url(#a)" d="M50 90S8 64 8 34a21 21 0 0 1 42-8 21 21 0 0 1 42 8c0 30-42 56-42 56z"/><ellipse cx="30" cy="30" rx="10" ry="6" fill="#fff" opacity=".55" transform="rotate(-30 30 30)"/></svg>`,
+  g_controller: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b38cff"/><stop offset=".5" stop-color="#7c5cff"/><stop offset="1" stop-color="#00c8ff"/></linearGradient></defs><path fill="url(#a)" d="M28 26h44c14 0 24 12 26 30l2 18c1 10-10 16-18 8l-12-12H30L18 82c-8 8-19 2-18-8l2-18c2-18 12-30 26-30z"/><path fill="#fff" d="M24 44h6v-6h6v6h6v6h-6v6h-6v-6h-6z"/><circle cx="68" cy="42" r="4.5" fill="#ffd700"/><circle cx="78" cy="50" r="4.5" fill="#ff4d8d"/><circle cx="58" cy="50" r="4.5" fill="#2ee59d"/><circle cx="68" cy="58" r="4.5" fill="#00e5ff"/><ellipse cx="40" cy="30" rx="12" ry="3" fill="#fff" opacity=".35"/></svg>`,
+  g_car: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff6a6a"/><stop offset=".55" stop-color="#e00024"/><stop offset="1" stop-color="#7a0010"/></linearGradient></defs><path fill="url(#a)" d="M4 62c0-6 4-9 10-10l16-3 14-11c4-3 9-4 14-4h10c6 0 11 3 15 8l6 8 7 2c3 1 4 4 4 7v6c0 3-2 5-5 5H9c-3 0-5-2-5-5z"/><path fill="#1b1430" d="M46 40h12v12H34zM62 40h6c3 0 6 2 8 5l4 7H62z"/><path d="M8 60h14M84 58h8" stroke="#fff3a0" stroke-width="3" stroke-linecap="round"/><circle cx="26" cy="72" r="11" fill="#14101f"/><circle cx="26" cy="72" r="5" fill="#c9d6ff"/><circle cx="76" cy="72" r="11" fill="#14101f"/><circle cx="76" cy="72" r="5" fill="#c9d6ff"/><path d="M14 54h70" stroke="#fff" stroke-width="1.5" opacity=".45"/></svg>`,
+  g_lion: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="a"><stop offset=".5" stop-color="#ffb02e"/><stop offset="1" stop-color="#c25400"/></radialGradient><radialGradient id="b" cx=".5" cy=".4"><stop offset="0" stop-color="#ffe9b0"/><stop offset="1" stop-color="#f2b450"/></radialGradient></defs><path fill="url(#a)" d="M50 2l8 10 12-6 3 13 13-2-3 13 12 5-8 10 8 10-12 5 3 13-13-2-3 13-12-6-8 10-8-10-12 6-3-13-13 2 3-13-12-5 8-10-8-10 12-5-3-13 13 2 3-13 12 6z"/><circle cx="50" cy="52" r="27" fill="url(#b)"/><circle cx="31" cy="30" r="7" fill="#f2b450"/><circle cx="69" cy="30" r="7" fill="#f2b450"/><ellipse cx="40" cy="48" rx="4" ry="5" fill="#2a1600"/><ellipse cx="60" cy="48" rx="4" ry="5" fill="#2a1600"/><path fill="#4a2600" d="M44 60h12l-6 7z"/><path d="M50 67v5M43 74q7 5 14 0" stroke="#4a2600" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`,
+  g_crown: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff6c2"/><stop offset=".45" stop-color="#ffd700"/><stop offset="1" stop-color="#b8760b"/></linearGradient></defs><path fill="url(#a)" d="M8 78 4 28l24 20 22-36 22 36 24-20-4 50z"/><rect x="8" y="78" width="84" height="12" rx="3" fill="#d4a017"/><circle cx="50" cy="56" r="8" fill="#ff2e63"/><circle cx="26" cy="62" r="6" fill="#00c8ff"/><circle cx="74" cy="62" r="6" fill="#2ee59d"/><circle cx="4" cy="28" r="5" fill="#ffd700"/><circle cx="50" cy="12" r="5" fill="#ffd700"/><circle cx="96" cy="28" r="5" fill="#ffd700"/><path d="M14 72h72" stroke="#fff" stroke-width="2" opacity=".5"/></svg>`,
+  g_rocket: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c9d6ff"/><stop offset=".5" stop-color="#fff"/><stop offset="1" stop-color="#9aa8c8"/></linearGradient><linearGradient id="f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff36b"/><stop offset=".5" stop-color="#ff8a00"/><stop offset="1" stop-color="#ff1e3c" stop-opacity="0"/></linearGradient></defs><path fill="url(#f)" d="M38 78h24l-12 22z"/><path fill="url(#a)" d="M50 2c14 12 20 30 18 54l-4 22H36l-4-22C30 32 36 14 50 2z"/><path fill="#ff2e63" d="M50 2c7 6 11 12 14 20H36c3-8 7-14 14-20zM32 56 16 72l2 10 16-8zM68 56l16 16-2 10-16-8z"/><circle cx="50" cy="40" r="9" fill="#2b7bff" stroke="#fff" stroke-width="3"/><circle cx="47" cy="37" r="3" fill="#bfe3ff"/></svg>`,
+};
+const REACT = { hrt: ["heart", "pink"], fir: ["fire", "fire"], str: ["star", "gold"], blt: ["zap", "cyan"], crn: ["crown", "gold"], tro: ["trophy", "gold"], gg: ["game", "violet"] };
+const ARTURL = {}; for (const k in ART) ARTURL[k] = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(ART[k]);
+const ARTIMG = {}; for (const k in ARTURL) { const im = new Image(); im.src = ARTURL[k]; ARTIMG[k] = im; }
+const artHtml = (k, cls = "art") => ARTURL[k] ? `<img class="${cls}" src="${ARTURL[k]}" alt="">` : "";
+/* colored icon */
+const eic = (n, c = "") => `<svg class="ei ${c ? "ei-" + c : ""}"><use href="#i-${n}"/></svg>`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const store = {
   get(k, d) { try { const v = localStorage.getItem("wahj." + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
@@ -32,8 +52,8 @@ const T = {
     tag: "بثّ ألعابك مباشرة — بتأخير أقل من ثانية", login: "تسجيل الدخول", register: "حساب جديد", handle: "اسم المستخدم",
     name: "الاسم الظاهر", password: "كلمة المرور", go: "متابعة", guest: "تصفّح كزائر", liveNow: "مباشر الآن", following: "متابَعون",
     all: "الكل", action: "أكشن", sports: "رياضة", br: "باتل رويال", racing: "سباقات", strategy: "استراتيجية", retro: "ريترو", chill: "دردشة",
-    noLive: "لا يوجد بث مباشر حالياً", beFirst: "كن أول من يبث الآن ✨", viewers: "مشاهد", goLive: "ابدأ البث", title: "عنوان البث",
-    titlePh: "مثال: تحدي الفوز بدون خسارة 🔥", game: "اللعبة", gamePh: "اسم اللعبة", cat: "التصنيف", quality: "الجودة", fps: "الإطارات",
+    noLive: "لا يوجد بث مباشر حالياً", beFirst: "كن أول من يبث الآن", viewers: "مشاهد", goLive: "ابدأ البث", title: "عنوان البث",
+    titlePh: "مثال: تحدي الفوز بدون خسارة", game: "اللعبة", gamePh: "اسم اللعبة", cat: "التصنيف", quality: "الجودة", fps: "الإطارات",
     mic: "الميكروفون", micD: "صوتك يُدمج مع صوت اللعبة", privacy: "درع الخصوصية", dnd: "عدم الإزعاج التلقائي",
     dndD: "يُخفي الإشعارات والاتصالات طوال البث ثم يرجع كما كان", callG: "حماية الاتصالات", callGD: "تُحجب الصورة فوراً عند أي اتصال",
     bannerG: "إخفاء الإشعارات الذكي", bannerGD: "يكشف شريط الإشعارات أعلى الشاشة ويغطّيه", appOnly: "بث اللعبة فقط",
@@ -48,43 +68,44 @@ const T = {
     later: "لاحقاً", invite: "دعوة للبث", kick: "إزالة", pin: "تثبيت", unpin: "إلغاء التثبيت", share: "مشاركة",
     copied: "تم نسخ الرابط", end: "إنهاء البث", endQ: "إنهاء البث المباشر؟", yes: "نعم", no: "لا", liveFor: "مدة البث",
     peak: "الذروة", hypeLvl: "مستوى الحماس", overlay: "الشات فوق اللعبة", camBubble: "كاميرا الوجه", preview: "معاينة",
-    chatTitle: "الدردشة", noChat: "الدردشة هادئة… قل مرحباً 👋", starting: "جارٍ التجهيز…", tapStart: "اضغط «بدء البث» في نافذة النظام",
+    chatTitle: "الدردشة", noChat: "الدردشة هادئة… قل مرحباً", starting: "جارٍ التجهيز…", tapStart: "اضغط «بدء البث» في نافذة النظام",
     reopen: "فتح نافذة البث", onAir: "على الهواء", stopped: "توقف البث", shieldOn: "درع الخصوصية يعمل", shieldOff: "الدرع غير مفعّل",
     shieldPaused: "الصورة محجوبة الآن للخصوصية", privTitle: "لحظة خصوصية", privSub: "سيعود البث خلال ثوانٍ",
     offline: "البث غير متاح الآن", endedT: "انتهى البث", back: "رجوع", tapSound: "اضغط لتشغيل الصوت", follow: "متابعة",
     unfollow: "متابَع", followers: "متابِع", past: "بثوث سابقة", edit: "تعديل الملف", save: "حفظ", bio: "نبذة", color: "لون الحساب",
     settings: "الإعدادات", language: "اللغة", logout: "تسجيل الخروج", focusGuide: "دليل إخفاء الإشعارات في آيفون",
     focusSteps: "١. افتح تطبيق «الاختصارات» ← «الأتمتة» ← «أتمتة جديدة»<br>٢. اختر «تطبيق» ← وهج ← «عند الفتح»<br>٣. اختر «تشغيل فوري»<br>٤. أضف إجراء «تعيين التركيز» ← «عدم الإزعاج» ← تشغيل<br><br>الآن كل مرة تفتح وهج يتفعّل عدم الإزعاج تلقائياً ✓",
-    openShortcuts: "فتح الاختصارات", errs: { bad_handle: "اسم المستخدم: ٣–٢٠ حرفاً إنجليزياً أو أرقام", weak_password: "كلمة المرور ٦ أحرف على الأقل", taken: "الاسم محجوز", bad_login: "بيانات الدخول غير صحيحة", rate: "محاولات كثيرة، انتظر قليلاً", net: "تعذّر الاتصال", auth: "سجّل الدخول أولاً", not_invited: "لم تتم دعوتك", login: "سجّل الدخول للمشاركة", slow: "انتظر لحظة", guests_full: "اكتمل عدد الضيوف (٣)", bad_email: "البريد الإلكتروني غير صحيح", email_taken: "هذا البريد مسجّل مسبقاً", bad_code: "الرمز غير صحيح أو منتهي", mail_off: "إرسال البريد غير مفعّل في السيرفر بعد", bad_link: "الرابط غير صحيح", no_points: "نقاطك غير كافية ⭐", need_text: "اكتب رسالتك أولاً", too_many: "الحد ١٢ مكافأة", no_coins: "رصيدك غير كافٍ 🪙", vip_only: "خاص بمشتركي VIP 👑", owned: "تملكه مسبقاً", self: "لا يمكنك إهداء نفسك", pay_off: "الدفع غير مفعّل بعد", pay_fail: "تعذّر إنشاء الدفع", forbidden: "غير مسموح", not_found: "غير موجود", bad_old: "كلمة المرور الحالية غير صحيحة", bad_image: "الصورة غير مدعومة", fx_off: "البثّاث أوقف المؤثرات", ch_off: "البثّاث أوقف التحديات", co_off: "البثّاث لا يقبل طلبات البث المشترك", bad_ytkey: "مفتاح يوتيوب غير صحيح" },
-    sentFx: "أرسل", hypeTrain: "قطار الحماس 🚀", latency: "تأخير", guestsN: "ضيوف", layoutSplit: "شاشة مقسومة", layoutFocus: "تركيز",
+    openShortcuts: "فتح الاختصارات", errs: { bad_handle: "اسم المستخدم: ٣–٢٠ حرفاً إنجليزياً أو أرقام", weak_password: "كلمة المرور ٦ أحرف على الأقل", taken: "الاسم محجوز", bad_login: "بيانات الدخول غير صحيحة", rate: "محاولات كثيرة، انتظر قليلاً", net: "تعذّر الاتصال", auth: "سجّل الدخول أولاً", not_invited: "لم تتم دعوتك", login: "سجّل الدخول للمشاركة", slow: "انتظر لحظة", guests_full: "اكتمل عدد الضيوف (٣)", bad_email: "البريد الإلكتروني غير صحيح", email_taken: "هذا البريد مسجّل مسبقاً", bad_code: "الرمز غير صحيح أو منتهي", mail_off: "إرسال البريد غير مفعّل في السيرفر بعد", bad_link: "الرابط غير صحيح", no_points: "نقاطك غير كافية", need_text: "اكتب رسالتك أولاً", too_many: "الحد ١٢ مكافأة", no_coins: "رصيدك غير كافٍ", vip_only: "خاص بمشتركي VIP", owned: "تملكه مسبقاً", self: "لا يمكنك إهداء نفسك", pay_off: "الدفع غير مفعّل بعد", pay_fail: "تعذّر إنشاء الدفع", forbidden: "غير مسموح", not_found: "غير موجود", bad_old: "كلمة المرور الحالية غير صحيحة", bad_image: "الصورة غير مدعومة", fx_off: "البثّاث أوقف المؤثرات", ch_off: "البثّاث أوقف التحديات", co_off: "البثّاث لا يقبل طلبات البث المشترك", bad_ytkey: "مفتاح يوتيوب غير صحيح" },
+    sentFx: "أرسل", hypeTrain: "قطار الحماس", latency: "تأخير", guestsN: "ضيوف", layoutSplit: "شاشة مقسومة", layoutFocus: "تركيز",
+    declined: "تم الرفض", errorT: "خطأ",
     modT: "الإشراف", mods: "المشرفون", vipsR: "المميزون (ترقية)", sanctions: "العقوبات الحالية", roleMod: "مشرف", roleVip: "مميز", roleOwner: "صاحب القناة",
-    mTimeout: "تايم أوت (منع الكتابة)", mKick: "طرد 10 دقائق", mBan: "حظر نهائي", mUnban: "رفع كل العقوبات", mUntimeout: "إلغاء التايم أوت", mPromote: "ترقية ⭐ مميز", mDemote: "إزالة الترقية",
+    mTimeout: "تايم أوت (منع الكتابة)", mKick: "طرد 10 دقائق", mBan: "حظر نهائي", mUnban: "رفع كل العقوبات", mUntimeout: "إلغاء التايم أوت", mPromote: "ترقية مميز", mDemote: "إزالة الترقية",
     mAddMod: "تعيين مشرف", mRemoveMod: "إزالة الإشراف", mDel: "حذف الرسالة", mClear: "مسح الشات بالكامل", mProfile: "الملف الشخصي", mAddByHandle: "أضف مشرفاً باسم المستخدم", mAdd: "إضافة",
     mins: "د", hrs: "س", modDone: "تم ✓", owner_only: "هذا لصاحب القناة فقط", already: "مُرقّى مسبقاً", bad_action: "إجراء غير صحيح",
     ml_timeout: "{n} أخذ تايم أوت {m} بواسطة {b}", ml_untimeout: "{b} ألغى التايم أوت عن {n}", ml_kick: "{n} طُرد من البث بواسطة {b}", ml_ban: "{n} حُظر من القناة بواسطة {b}", ml_unban: "{b} رفع العقوبات عن {n}",
-    ml_promote: "⭐ {n} صار مميزاً بواسطة {b}", ml_demote: "{b} أزال ترقية {n}", ml_addmod: "🛡️ {n} صار مشرفاً", ml_removemod: "{b} أزال إشراف {n}",
-    youMod: "صرت مشرفاً في هذه القناة 🛡️", youVip: "تمت ترقيتك ⭐ مميز", youRoleOff: "تمت إزالة رتبتك", timedOutT: "لا يمكنك الكتابة — تايم أوت حتى {t}", kickedT: "تم طردك من هذا البث", bannedT: "أنت محظور من هذه القناة", chatCleared: "تم مسح الشات", noneYet: "لا يوجد",
+    ml_promote: "{n} صار مميزاً بواسطة {b}", ml_demote: "{b} أزال ترقية {n}", ml_addmod: "{n} صار مشرفاً", ml_removemod: "{b} أزال إشراف {n}",
+    youMod: "صرت مشرفاً في هذه القناة", youVip: "تمت ترقيتك مميز", youRoleOff: "تمت إزالة رتبتك", timedOutT: "لا يمكنك الكتابة — تايم أوت حتى {t}", kickedT: "تم طردك من هذا البث", bannedT: "أنت محظور من هذه القناة", chatCleared: "تم مسح الشات", noneYet: "لا يوجد",
     fxs: "المؤثرات", fxLocked: "هذا المؤثر يُشترى من المتجر", preview: "معاينة", owned2: "تملكه",
     ranks: "ترتيب الستريمرز", rankMonth: "هذا الشهر", rankAll: "كل الوقت", rankYou: "مركزك", rankNone: "لم تدخل الترتيب بعد — ابدأ البث!", rankEnds: "ينتهي الموسم بعد {n}", days: "يوم",
-    sLevel: "مستوى الستريمر", sRankM: "مركزه هذا الشهر", sRankA: "مركزه العام", sNext: "{n} XP للمستوى التالي", sLevelUp: "{n} وصل مستوى ستريمر {l} 🎉", sLevelUpMe: "مستواك كستريمر صار {l}!",
-    topPerks: "مزايا الثلاثة الأوائل", topYou: "أنت #{n} هذا الشهر 🏆", sharePct: "أرباحك من الهدايا والاشتراكات: {n}%",
-    perk1: "👑 تاج ذهبي متحرّك بجانب اسمه في كل مكان + إطار ذهبي", perk2: "📌 بثّه يظهر أولاً في الصفحة الرئيسية ببطاقة مميزة", perk3: "💰 أرباح أعلى: الأول 85% • الثاني 80% • الثالث 75% (الباقون 70%)", perk4: "✨ دخول بثّه يظهر بشارة المركز في الشات والبروفايل",
-    xpHow: "كيف يرتفع مستوى الستريمر؟", xpHow1: "+2 XP لكل دقيقة بث", xpHow2: "+1 XP لكل مشاهد مسجّل عن كل دقيقة", xpHow3: "+25 XP لكل متابع جديد", xpHow4: "+250 XP لكل اشتراك ⭐ • +1 XP لكل 2 كوينز هدايا",
+    sLevel: "مستوى الستريمر", sRankM: "مركزه هذا الشهر", sRankA: "مركزه العام", sNext: "{n} XP للمستوى التالي", sLevelUp: "{n} وصل مستوى ستريمر {l}", sLevelUpMe: "مستواك كستريمر صار {l}!",
+    topPerks: "مزايا الثلاثة الأوائل", topYou: "أنت #{n} هذا الشهر", sharePct: "أرباحك من الهدايا والاشتراكات: {n}%",
+    perk1: "تاج ذهبي متحرّك بجانب اسمه في كل مكان + إطار ذهبي", perk2: "بثّه يظهر أولاً في الصفحة الرئيسية ببطاقة مميزة", perk3: "أرباح أعلى: الأول 85% • الثاني 80% • الثالث 75% (الباقون 70%)", perk4: "دخول بثّه يظهر بشارة المركز في الشات والبروفايل",
+    xpHow: "كيف يرتفع مستوى الستريمر؟", xpHow1: "+2 XP لكل دقيقة بث", xpHow2: "+1 XP لكل مشاهد مسجّل عن كل دقيقة", xpHow3: "+25 XP لكل متابع جديد", xpHow4: "+250 XP لكل اشتراك • +1 XP لكل 2 كوينز هدايا",
     tier1: "مبتدئ", tier2: "صاعد", tier3: "محترف", tier4: "نجم", tier5: "أسطورة", tier6: "أيقونة",
     yt: "يوتيوب", ytAlso: "بث على يوتيوب أيضاً", ytAlsoD: "نفس البث يظهر لمتابعيك على قناتك في يوتيوب", ytAdd: "اربط قناة يوتيوب", ytKey: "مفتاح البث (Stream key)", ytKeyPh: "xxxx-xxxx-xxxx-xxxx-xxxx",
     ytHelp: "افتح YouTube Studio ← إنشاء ← بث مباشر ← البث (Stream) وانسخ «مفتاح البث» والصقه هنا. المفتاح يبقى سرّياً على السيرفر ولا يراه أحد.", ytSave: "حفظ", ytRemove: "إزالة الربط", ytSaved: "تم ربط يوتيوب ✓", ytRemoved: "تمت إزالة الربط",
     ytLinked: "مربوط {k}", ytNot: "غير مربوط", ytOn: "يوتيوب: يبث ✓", ytWait: "يوتيوب: يتم الإرسال… (يظهر بعد ~20 ثانية)", ytErr: "يوتيوب: فشل ({c}) — تأكد من المفتاح وأن البث مفعّل في YouTube Studio", bad_ytkey: "مفتاح يوتيوب غير صحيح",
-    subscribe: "اشترك ⭐", subscribed: "مشترك ⭐{n}", subTitle: "اشترك في قناة {n}", subD: "دخول مميز بأنيميشن يراه الجميع • شارة المشترك في الشات • نقاط ×1.5 • +300 نقطة فوراً", subBuy: "اشترك 30 يوم", subOk: "أنت الآن مشترك في {n} ⭐",
+    subscribe: "اشترك", subscribed: "مشترك {n}", subTitle: "اشترك في قناة {n}", subD: "دخول مميز بأنيميشن يراه الجميع • شارة المشترك في الشات • نقاط ×1.5 • +300 نقطة فوراً", subBuy: "اشترك 30 يوم", subOk: "أنت الآن مشترك في {n}",
     subMonths: "مشترك منذ {n} شهر", enteredGrand: "دخل البث", subsN: "مشترك",
-    points: "نقاط القناة", level: "المستوى", xpTo: "{n} XP للمستوى التالي", streakT: "سلسلة {n} يوم 🔥", watchT: "{n} دقيقة مشاهدة", rewards: "المكافآت", topFans: "أبرز المتابعين",
-    dailyT: "🔥 زيارة يومية · سلسلة {s} · +{p} نقطة +{x} XP", chestT: "اضغط لاستلام +50 نقطة", claimedT: "+{n} نقطة ⭐", levelUpT: "وصل للمستوى {n}", youLevel: "🎉 مستواك الآن {n}",
+    points: "نقاط القناة", level: "المستوى", xpTo: "{n} XP للمستوى التالي", streakT: "سلسلة {n} يوم", watchT: "{n} دقيقة مشاهدة", rewards: "المكافآت", topFans: "أبرز المتابعين",
+    dailyT: "زيارة يومية · سلسلة {s} · +{p} نقطة +{x} XP", chestT: "اضغط لاستلام +50 نقطة", claimedT: "+{n} نقطة", levelUpT: "وصل للمستوى {n}", youLevel: "مستواك الآن {n}",
     redeemedT: "استبدل", msgPh: "رسالتك…", noPoints: "نقاطك غير كافية", howEarn: "كيف أجمع؟", howEarnD: "مشاهدة ٥ دقائق: +10 نقاط +10 XP • صندوق كل ١٥ دقيقة: +50 • زيارة يومية: +50 (تزيد مع السلسلة) • رسالة: +2 XP • هدية: XP بنصف قيمتها",
     myRewards: "مكافآت قناتي", addReward: "إضافة مكافأة", rewardTitle: "اسم المكافأة (مثال: غيّر السلاح)", cost: "السعر بالنقاط", redeemQ: "طلبات المكافآت", done2: "تم", refund: "استرجاع", noRedeems: "لا توجد طلبات",
     wallet: "المحفظة", coins: "كوينز", buyCoins: "شراء كوينز", shop: "المتجر", vip: "اشتراك VIP", vipD: "اسم متحرك بكل الألوان • شارة VIP • مؤثرات حصرية • إعلان دخولك للبث", vipBuy: "اشترك 30 يوم", vipUntil: "VIP حتى {d}",
     names: "ألوان الاسم", badges: "الشارات", frames: "إطارات الصورة", buy: "شراء", equip: "استخدام", equipped: "مستخدم ✓", unequip: "إزالة", noCoins: "رصيدك غير كافٍ", gifts: "هدايا", sendGift: "إرسال",
-    giftSent: "أرسل", payOpen: "أكمل الدفع في PayPal ثم ارجع إلى وهج", paid: "تمت إضافة {n} كوينز 🎉", payOff: "الدفع غير مفعّل بعد في السيرفر", history: "السجل", earned: "أرباح الهدايا",
-    entered: "دخل البث ✨", vipOnly: "خاص بمشتركي VIP 👑", admin: "لوحة المالك", grant: "منح", handleQ: "اسم المستخدم", vipDays: "أيام VIP", sandbox: "وضع التجربة (Sandbox)",
-    soonT: "سيبدأ البث خلال لحظات 🎮", soonS: "البثّاث يفتح اللعبة الآن", openGameNow: "افتح {g} الآن — يبدأ البث للمشاهدين عند دخولك اللعبة", soonShield: "المشاهدون يرون «سيبدأ البث» حتى تدخل اللعبة",
+    giftSent: "أرسل", payOpen: "أكمل الدفع في PayPal ثم ارجع إلى وهج", paid: "تمت إضافة {n} كوينز", payOff: "الدفع غير مفعّل بعد في السيرفر", history: "السجل", earned: "أرباح الهدايا",
+    entered: "دخل البث", vipOnly: "خاص بمشتركي VIP", admin: "لوحة المالك", grant: "منح", handleQ: "اسم المستخدم", vipDays: "أيام VIP", sandbox: "وضع التجربة (Sandbox)",
+    soonT: "سيبدأ البث خلال لحظات", soonS: "البثّاث يفتح اللعبة الآن", openGameNow: "افتح {g} الآن — يبدأ البث للمشاهدين عند دخولك اللعبة", soonShield: "المشاهدون يرون «سيبدأ البث» حتى تدخل اللعبة",
     autoLaunch: "افتح اللعبة تلقائياً", autoLaunchD: "بعد بدء البث ينتقل وهج إلى اللعبة مباشرة", openingGame: "جارٍ فتح اللعبة…",
     recSave: "حفظ البث على السيرفر", recSaveD: "يُسجَّل بثك ويمكن إعادة مشاهدته من ملفك", recordings: "التسجيلات", noRecs: "لا توجد تسجيلات", replay: "إعادة مشاهدة", delRec: "حذف التسجيل", delRecQ: "حذف هذا التسجيل نهائياً؟",
     delAllRecs: "حذف كل التسجيلات", delAllQ: "حذف كل تسجيلاتك نهائياً؟", storage: "المساحة المستخدمة", recOff: "حفظ البثوث غير مفعّل في السيرفر", recording: "يتم التسجيل", recFull: "مساحة التسجيلات ممتلئة",
@@ -101,15 +122,15 @@ const T = {
     nowPlaying: "ألعاب يُبث عليها الآن", speedTest: "اختبار سرعة السيرفر", sStart: "ابدأ الاختبار", sAgain: "أعد الاختبار", ping: "الاستجابة", jitter: "التذبذب", down: "التنزيل", up: "الرفع", server: "السيرفر",
     sPing: "قياس الاستجابة…", sDown: "قياس التنزيل…", sUp: "قياس الرفع…", ms: "مللي ثانية", mbps: "ميغابت/ث",
     vGreat: "ممتاز ✓ يمكنك البث بجودة {q}", vOk: "جيد — يُنصح بالبث بجودة {q}", vBad: "الرفع ضعيف — البث قد يتقطع. جرّب شبكة أخرى أو جودة 540p",
-    sound: "الصوت", voiceLink: "صوت الضيوف", you: "أنت", hostTag: "البثّاث", guestTag: "ضيف", chAccepted: "قَبِل التحدي!", chDone: "نجح في التحدي! 🎉",
-    chFailed: "فشل التحدي 😅", secs: "ث", profile: "حسابي", noPast: "لا توجد بثوث سابقة", pendingLive: "البث لم يبدأ بعد…", camNA: "الكاميرا أثناء اللعب غير مدعومة في آيفون",
+    sound: "الصوت", voiceLink: "صوت الضيوف", you: "أنت", hostTag: "البثّاث", guestTag: "ضيف", chAccepted: "قَبِل التحدي!", chDone: "نجح في التحدي!",
+    chFailed: "فشل التحدي", secs: "ث", profile: "حسابي", noPast: "لا توجد بثوث سابقة", pendingLive: "البث لم يبدأ بعد…", camNA: "الكاميرا أثناء اللعب غير مدعومة في آيفون",
   },
   en: {
     tag: "Stream your games live — under a second of delay", login: "Sign in", register: "Create account", handle: "Username",
     name: "Display name", password: "Password", go: "Continue", guest: "Browse as guest", liveNow: "Live now", following: "Following",
     all: "All", action: "Action", sports: "Sports", br: "Battle Royale", racing: "Racing", strategy: "Strategy", retro: "Retro", chill: "Just chatting",
-    noLive: "Nobody is live right now", beFirst: "Be the first to go live ✨", viewers: "viewers", goLive: "Go live", title: "Stream title",
-    titlePh: "e.g. No-loss challenge 🔥", game: "Game", gamePh: "Game name", cat: "Category", quality: "Quality", fps: "Frame rate",
+    noLive: "Nobody is live right now", beFirst: "Be the first to go live", viewers: "viewers", goLive: "Go live", title: "Stream title",
+    titlePh: "e.g. No-loss challenge", game: "Game", gamePh: "Game name", cat: "Category", quality: "Quality", fps: "Frame rate",
     mic: "Microphone", micD: "Your voice is mixed with game audio", privacy: "Privacy shield", dnd: "Auto Do Not Disturb",
     dndD: "Hides notifications and calls during the stream, then restores", callG: "Call guard", callGD: "Video is blocked instantly on any call",
     bannerG: "Smart notification hiding", bannerGD: "Detects the top notification banner and covers it", appOnly: "Stream the game only",
@@ -124,43 +145,44 @@ const T = {
     later: "Later", invite: "Invite to stream", kick: "Remove", pin: "Pin", unpin: "Unpin", share: "Share",
     copied: "Link copied", end: "End stream", endQ: "End the live stream?", yes: "Yes", no: "No", liveFor: "Live for",
     peak: "Peak", hypeLvl: "Hype level", overlay: "Chat over game", camBubble: "Face cam", preview: "Preview",
-    chatTitle: "Chat", noChat: "Chat is quiet… say hi 👋", starting: "Getting ready…", tapStart: "Tap “Start Broadcast” in the system sheet",
+    chatTitle: "Chat", noChat: "Chat is quiet… say hi", starting: "Getting ready…", tapStart: "Tap “Start Broadcast” in the system sheet",
     reopen: "Open broadcast sheet", onAir: "On air", stopped: "Broadcast stopped", shieldOn: "Privacy shield active", shieldOff: "Shield is off",
     shieldPaused: "Video is hidden for privacy right now", privTitle: "Privacy moment", privSub: "The stream is back in a few seconds",
     offline: "This stream is not available", endedT: "Stream ended", back: "Back", tapSound: "Tap for sound", follow: "Follow",
     unfollow: "Following", followers: "followers", past: "Past streams", edit: "Edit profile", save: "Save", bio: "Bio", color: "Accent color",
     settings: "Settings", language: "Language", logout: "Sign out", focusGuide: "Hide notifications on iPhone",
     focusSteps: "1. Open Shortcuts → Automation → New Automation<br>2. Choose App → Wahj → Is Opened<br>3. Choose Run Immediately<br>4. Add action Set Focus → Do Not Disturb → On<br><br>Now Do Not Disturb turns on automatically every time you open Wahj ✓",
-    openShortcuts: "Open Shortcuts", errs: { bad_handle: "Username: 3–20 latin letters/digits", weak_password: "Password needs 6+ characters", taken: "Username taken", bad_login: "Wrong username or password", rate: "Too many attempts, wait a bit", net: "Connection failed", auth: "Sign in first", not_invited: "You were not invited", login: "Sign in to take part", slow: "Slow down a moment", guests_full: "Guest slots are full (3)", bad_email: "Invalid email address", email_taken: "Email already registered", bad_code: "Wrong or expired code", mail_off: "Email sending isn't enabled on the server yet", bad_link: "Invalid link", no_points: "Not enough points ⭐", need_text: "Write your message first", too_many: "Max 12 rewards", no_coins: "Not enough coins 🪙", vip_only: "VIP only 👑", owned: "Already owned", self: "You can't gift yourself", pay_off: "Payments aren't enabled yet", pay_fail: "Couldn't start the payment", forbidden: "Not allowed", not_found: "Not found", bad_old: "Current password is wrong", bad_image: "Unsupported image", fx_off: "The streamer turned effects off", ch_off: "The streamer turned challenges off", co_off: "The streamer isn't accepting co-stream requests", bad_ytkey: "Invalid YouTube stream key" },
-    sentFx: "sent", hypeTrain: "HYPE TRAIN 🚀", latency: "Delay", guestsN: "guests", layoutSplit: "Split screen", layoutFocus: "Focus",
+    openShortcuts: "Open Shortcuts", errs: { bad_handle: "Username: 3–20 latin letters/digits", weak_password: "Password needs 6+ characters", taken: "Username taken", bad_login: "Wrong username or password", rate: "Too many attempts, wait a bit", net: "Connection failed", auth: "Sign in first", not_invited: "You were not invited", login: "Sign in to take part", slow: "Slow down a moment", guests_full: "Guest slots are full (3)", bad_email: "Invalid email address", email_taken: "Email already registered", bad_code: "Wrong or expired code", mail_off: "Email sending isn't enabled on the server yet", bad_link: "Invalid link", no_points: "Not enough points", need_text: "Write your message first", too_many: "Max 12 rewards", no_coins: "Not enough coins", vip_only: "VIP only", owned: "Already owned", self: "You can't gift yourself", pay_off: "Payments aren't enabled yet", pay_fail: "Couldn't start the payment", forbidden: "Not allowed", not_found: "Not found", bad_old: "Current password is wrong", bad_image: "Unsupported image", fx_off: "The streamer turned effects off", ch_off: "The streamer turned challenges off", co_off: "The streamer isn't accepting co-stream requests", bad_ytkey: "Invalid YouTube stream key" },
+    sentFx: "sent", hypeTrain: "HYPE TRAIN", latency: "Delay", guestsN: "guests", layoutSplit: "Split screen", layoutFocus: "Focus",
+    declined: "Declined", errorT: "Error",
     modT: "Moderation", mods: "Moderators", vipsR: "Promoted (VIP)", sanctions: "Active sanctions", roleMod: "Mod", roleVip: "VIP", roleOwner: "Owner",
-    mTimeout: "Timeout (mute)", mKick: "Kick 10 minutes", mBan: "Ban permanently", mUnban: "Lift all sanctions", mUntimeout: "Remove timeout", mPromote: "Promote ⭐ VIP", mDemote: "Remove promotion",
+    mTimeout: "Timeout (mute)", mKick: "Kick 10 minutes", mBan: "Ban permanently", mUnban: "Lift all sanctions", mUntimeout: "Remove timeout", mPromote: "Promote VIP", mDemote: "Remove promotion",
     mAddMod: "Make moderator", mRemoveMod: "Remove moderator", mDel: "Delete message", mClear: "Clear the whole chat", mProfile: "Profile", mAddByHandle: "Add a moderator by username", mAdd: "Add",
     mins: "m", hrs: "h", modDone: "Done ✓", owner_only: "Channel owner only", already: "Already promoted", bad_action: "Invalid action",
     ml_timeout: "{n} was timed out {m} by {b}", ml_untimeout: "{b} removed {n}'s timeout", ml_kick: "{n} was kicked by {b}", ml_ban: "{n} was banned by {b}", ml_unban: "{b} lifted {n}'s sanctions",
-    ml_promote: "⭐ {n} was promoted by {b}", ml_demote: "{b} removed {n}'s promotion", ml_addmod: "🛡️ {n} is now a moderator", ml_removemod: "{b} removed {n} as moderator",
-    youMod: "You're now a moderator here 🛡️", youVip: "You've been promoted ⭐ VIP", youRoleOff: "Your role was removed", timedOutT: "You can't chat — timed out until {t}", kickedT: "You were kicked from this stream", bannedT: "You're banned from this channel", chatCleared: "Chat was cleared", noneYet: "None",
+    ml_promote: "{n} was promoted by {b}", ml_demote: "{b} removed {n}'s promotion", ml_addmod: "{n} is now a moderator", ml_removemod: "{b} removed {n} as moderator",
+    youMod: "You're now a moderator here", youVip: "You've been promoted VIP", youRoleOff: "Your role was removed", timedOutT: "You can't chat — timed out until {t}", kickedT: "You were kicked from this stream", bannedT: "You're banned from this channel", chatCleared: "Chat was cleared", noneYet: "None",
     fxs: "Effects", fxLocked: "Get this effect in the shop", preview: "Preview", owned2: "Owned",
     ranks: "Streamer ranking", rankMonth: "This month", rankAll: "All time", rankYou: "Your rank", rankNone: "Not ranked yet — go live!", rankEnds: "Season ends in {n}", days: "days",
-    sLevel: "Streamer level", sRankM: "Rank this month", sRankA: "Overall rank", sNext: "{n} XP to next level", sLevelUp: "{n} reached streamer level {l} 🎉", sLevelUpMe: "Your streamer level is now {l}!",
-    topPerks: "Top 3 perks", topYou: "You're #{n} this month 🏆", sharePct: "Your share of gifts & subs: {n}%",
-    perk1: "👑 Animated medal next to their name everywhere + a matching frame", perk2: "📌 Their stream is pinned first on the home page with a featured card", perk3: "💰 Higher earnings: #1 85% • #2 80% • #3 75% (others 70%)", perk4: "✨ Rank badge shown in chat and on the profile",
-    xpHow: "How streamer XP works", xpHow1: "+2 XP per minute live", xpHow2: "+1 XP per signed-in viewer per minute", xpHow3: "+25 XP per new follower", xpHow4: "+250 XP per subscription ⭐ • +1 XP per 2 gift coins",
+    sLevel: "Streamer level", sRankM: "Rank this month", sRankA: "Overall rank", sNext: "{n} XP to next level", sLevelUp: "{n} reached streamer level {l}", sLevelUpMe: "Your streamer level is now {l}!",
+    topPerks: "Top 3 perks", topYou: "You're #{n} this month", sharePct: "Your share of gifts & subs: {n}%",
+    perk1: "Animated medal next to their name everywhere + a matching frame", perk2: "Their stream is pinned first on the home page with a featured card", perk3: "Higher earnings: #1 85% • #2 80% • #3 75% (others 70%)", perk4: "Rank badge shown in chat and on the profile",
+    xpHow: "How streamer XP works", xpHow1: "+2 XP per minute live", xpHow2: "+1 XP per signed-in viewer per minute", xpHow3: "+25 XP per new follower", xpHow4: "+250 XP per subscription • +1 XP per 2 gift coins",
     tier1: "Rookie", tier2: "Rising", tier3: "Pro", tier4: "Star", tier5: "Legend", tier6: "Icon",
     yt: "YouTube", ytAlso: "Also stream to YouTube", ytAlsoD: "The same stream goes live on your YouTube channel", ytAdd: "Link YouTube channel", ytKey: "Stream key", ytKeyPh: "xxxx-xxxx-xxxx-xxxx-xxxx",
     ytHelp: "Open YouTube Studio → Create → Go live → Stream, copy the “Stream key” and paste it here. It stays secret on the server.", ytSave: "Save", ytRemove: "Unlink", ytSaved: "YouTube linked ✓", ytRemoved: "YouTube unlinked",
     ytLinked: "Linked {k}", ytNot: "Not linked", ytOn: "YouTube: live ✓", ytWait: "YouTube: sending… (shows up in ~20s)", ytErr: "YouTube: failed ({c}) — check the key and that streaming is enabled in YouTube Studio", bad_ytkey: "Invalid YouTube key",
-    subscribe: "Subscribe ⭐", subscribed: "Subscribed ⭐{n}", subTitle: "Subscribe to {n}", subD: "Grand entrance everyone sees • subscriber badge in chat • ×1.5 points • +300 points now", subBuy: "Subscribe 30 days", subOk: "You're subscribed to {n} ⭐",
+    subscribe: "Subscribe", subscribed: "Subscribed {n}", subTitle: "Subscribe to {n}", subD: "Grand entrance everyone sees • subscriber badge in chat • ×1.5 points • +300 points now", subBuy: "Subscribe 30 days", subOk: "You're subscribed to {n}",
     subMonths: "Subscribed {n} month(s)", enteredGrand: "joined the stream", subsN: "subscribers",
-    points: "Channel points", level: "Level", xpTo: "{n} XP to next level", streakT: "{n}-day streak 🔥", watchT: "{n} min watched", rewards: "Rewards", topFans: "Top fans",
-    dailyT: "🔥 Daily visit · streak {s} · +{p} points +{x} XP", chestT: "Tap to claim +50 points", claimedT: "+{n} points ⭐", levelUpT: "reached level {n}", youLevel: "🎉 You're now level {n}",
+    points: "Channel points", level: "Level", xpTo: "{n} XP to next level", streakT: "{n}-day streak", watchT: "{n} min watched", rewards: "Rewards", topFans: "Top fans",
+    dailyT: "Daily visit · streak {s} · +{p} points +{x} XP", chestT: "Tap to claim +50 points", claimedT: "+{n} points", levelUpT: "reached level {n}", youLevel: "You're now level {n}",
     redeemedT: "redeemed", msgPh: "Your message…", noPoints: "Not enough points", howEarn: "How to earn?", howEarnD: "Watch 5 min: +10 points +10 XP • Chest every 15 min: +50 • Daily visit: +50 (grows with streak) • Message: +2 XP • Gift: XP worth half its value",
     myRewards: "My channel rewards", addReward: "Add reward", rewardTitle: "Reward name (e.g. switch weapons)", cost: "Cost in points", redeemQ: "Reward requests", done2: "Done", refund: "Refund", noRedeems: "No requests",
     wallet: "Wallet", coins: "coins", buyCoins: "Buy coins", shop: "Shop", vip: "VIP membership", vipD: "Animated name in every style • VIP badge • exclusive effects • entrance announcement", vipBuy: "Subscribe 30 days", vipUntil: "VIP until {d}",
     names: "Name styles", badges: "Badges", frames: "Avatar frames", buy: "Buy", equip: "Use", equipped: "In use ✓", unequip: "Remove", noCoins: "Not enough coins", gifts: "Gifts", sendGift: "Send",
-    giftSent: "sent", payOpen: "Finish paying in PayPal, then come back to Wahj", paid: "{n} coins added 🎉", payOff: "Payments aren't enabled on the server yet", history: "History", earned: "Gift earnings",
-    entered: "joined the stream ✨", vipOnly: "VIP only 👑", admin: "Owner panel", grant: "Grant", handleQ: "Username", vipDays: "VIP days", sandbox: "Test mode (Sandbox)",
-    soonT: "Starting in a moment 🎮", soonS: "The streamer is opening the game", openGameNow: "Open {g} now — viewers see the stream once you're in the game", soonShield: "Viewers see “starting soon” until you're in the game",
+    giftSent: "sent", payOpen: "Finish paying in PayPal, then come back to Wahj", paid: "{n} coins added", payOff: "Payments aren't enabled on the server yet", history: "History", earned: "Gift earnings",
+    entered: "joined the stream", vipOnly: "VIP only", admin: "Owner panel", grant: "Grant", handleQ: "Username", vipDays: "VIP days", sandbox: "Test mode (Sandbox)",
+    soonT: "Starting in a moment", soonS: "The streamer is opening the game", openGameNow: "Open {g} now — viewers see the stream once you're in the game", soonShield: "Viewers see “starting soon” until you're in the game",
     autoLaunch: "Open the game automatically", autoLaunchD: "When the stream starts, Wahj switches straight to the game", openingGame: "Opening the game…",
     recSave: "Save streams on the server", recSaveD: "Your stream is recorded and can be replayed from your profile", recordings: "Recordings", noRecs: "No recordings", replay: "Replay", delRec: "Delete recording", delRecQ: "Delete this recording permanently?",
     delAllRecs: "Delete all recordings", delAllQ: "Delete all your recordings permanently?", storage: "Storage used", recOff: "Stream saving isn't enabled on the server", recording: "Recording", recFull: "Recording storage is full",
@@ -177,8 +199,8 @@ const T = {
     nowPlaying: "Games live now", speedTest: "Server speed test", sStart: "Start test", sAgain: "Test again", ping: "Ping", jitter: "Jitter", down: "Download", up: "Upload", server: "Server",
     sPing: "Measuring ping…", sDown: "Measuring download…", sUp: "Measuring upload…", ms: "ms", mbps: "Mbps",
     vGreat: "Excellent ✓ you can stream at {q}", vOk: "Good — streaming at {q} is recommended", vBad: "Upload is weak — the stream may stutter. Try another network or 540p",
-    sound: "Sound", voiceLink: "Guest voice", you: "You", hostTag: "HOST", guestTag: "GUEST", chAccepted: "accepted the challenge!", chDone: "completed the challenge! 🎉",
-    chFailed: "failed the challenge 😅", secs: "s", profile: "Profile", noPast: "No past streams", pendingLive: "Stream hasn't started yet…", camNA: "Face cam while gaming isn't supported on iPhone",
+    sound: "Sound", voiceLink: "Guest voice", you: "You", hostTag: "HOST", guestTag: "GUEST", chAccepted: "accepted the challenge!", chDone: "completed the challenge!",
+    chFailed: "failed the challenge", secs: "s", profile: "Profile", noPast: "No past streams", pendingLive: "Stream hasn't started yet…", camNA: "Face cam while gaming isn't supported on iPhone",
   },
 };
 const t = (k, v) => { let s = (T[S.lang] && T[S.lang][k]) ?? T.en[k] ?? k; if (v) for (const x in v) s = s.replace("{" + x + "}", v[x]); return s; };
@@ -297,7 +319,7 @@ const BADGES = {
 };
 const RARITY = { c: ["عادي", "Common"], r: ["نادر", "Rare"], e: ["ملحمي", "Epic"], l: ["أسطوري", "Legendary"] };
 const badgeSvg = (id) => { const b = BADGES[id]; if (!b) return ""; return `<span class="bx r-${b[3]}" style="--a:${b[1]};--b:${b[2]}"><svg viewBox="0 0 24 24"><path fill-rule="evenodd" d="${b[0]}"/></svg></span>`; };
-const MEDAL = { 1: "🥇", 2: "🥈", 3: "🥉" };
+const MEDAL = { 1: eic("medal", "gold"), 2: eic("medal", "silver"), 3: eic("medal", "bronze") };
 const topHtml = (n) => (n >= 1 && n <= 3 ? `<span class="bdg top${n}">${MEDAL[n]} TOP ${n}</span>` : "");
 function badgeHtml(L) {
   if (!L) return "";
@@ -312,7 +334,7 @@ function badgeHtml0(L) {
 const uname = (u, tag = "b") => { const L = (u && u.look) || {}; return `${badgeHtml(L)}<${tag} class="un ${L.name ? "un-" + esc(L.name) : ""}" style="color:${esc((u && u.color) || "#fff")}" data-t="${esc((u && u.name) || "")}">${esc((u && u.name) || "")}</${tag}>`; };
 const lvlHtml = (l) => { l = l | 0; if (!l) return ""; const tier = l >= 30 ? 5 : l >= 20 ? 4 : l >= 10 ? 3 : l >= 5 ? 2 : 1; return `<span class="lvl t${tier}">${l}</span>`; };
 const sTier = (l) => (l >= 50 ? 6 : l >= 35 ? 5 : l >= 20 ? 4 : l >= 10 ? 3 : l >= 5 ? 2 : 1);
-const sLvlHtml = (l) => { l = l | 0; if (!l) return ""; const k = sTier(l); return `<span class="slvl st${k}">🎙 ${l} · ${t("tier" + k)}</span>`; };
+const sLvlHtml = (l) => { l = l | 0; if (!l) return ""; const k = sTier(l); return `<span class="slvl st${k}">${eic("mic")} ${l} · ${t("tier" + k)}</span>`; };
 const coinHtml = (n) => `<span class="coin"><i></i>${fmtN(n | 0)}</span>`;
 const avatar = (u, cls = "", style = "") => { const a = avatar0(u, cls, style); const L = (u && u.look) || {}; const f = L.top ? "top" + L.top : L.frame; return f ? `<div class="frm frm-${esc(f)}">${a}</div>` : a; };
 const avatar0 = (u, cls = "", style = "") => (u && u.avatar)
@@ -321,7 +343,7 @@ const avatar0 = (u, cls = "", style = "") => (u && u.avatar)
 const fmtN = (n) => (n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + "K" : String(n | 0));
 const fmtDur = (ms) => { const s = Math.max(0, ms / 1000 | 0); const h = s / 3600 | 0, m = (s % 3600) / 60 | 0, x = s % 60; return (h ? h + ":" : "") + String(m).padStart(h ? 2 : 1, "0") + ":" + String(x).padStart(2, "0"); };
 const CATS = ["all", "action", "sports", "br", "racing", "strategy", "retro", "chill"];
-const CAT_EMO = { action: "⚔️", sports: "⚽", br: "🪂", racing: "🏎️", strategy: "♟️", retro: "👾", chill: "💬", all: "🎮" };
+const CAT_EMO = { action: eic("swords", "fire"), sports: eic("ball", "green"), br: eic("chute", "cyan"), racing: eic("car", "pink"), strategy: eic("rook", "violet"), retro: eic("alien", "green"), chill: eic("chat", "cyan"), all: eic("game", "brand") };
 const GAMES = ["PUBG Mobile", "Free Fire", "eFootball", "EA FC Mobile", "Call of Duty Mobile", "Minecraft", "Roblox", "Clash Royale", "Genshin Impact", "Brawl Stars", "Asphalt Legends", "Emulator"];
 
 /* ---------------- router ---------------- */
@@ -487,31 +509,32 @@ class RoomWS {
   close() { this.closed = true; clearInterval(this.ping); try { this.ws.close(); } catch (e) {} }
 }
 
+
 /* ================= Effects engine ================= */
 const FX = window.FX = {
   list: [
-    { id: "fire", e: "🔥", ar: "نار", en: "Fire" },
-    { id: "hearts", e: "💖", ar: "قلب", en: "Heart" },
-    { id: "wave", e: "🌊", ar: "موجة", en: "Wave" },
-    { id: "confetti", e: "🎉", ar: "احتفال", en: "Confetti" },
-    { id: "lightning", e: "⚡", ar: "صاعقة", en: "Lightning" },
-    { id: "shake", e: "💥", ar: "انفجار", en: "Boom" },
-    { id: "airhorn", e: "📯", ar: "بوق", en: "Airhorn" },
-    { id: "boo", e: "👻", ar: "أشباح", en: "Ghosts" },
-    { id: "fireworks", e: "🎆", ar: "ألعاب نارية", en: "Fireworks", vip: true },
-    { id: "meteor", e: "☄️", ar: "نيازك", en: "Meteors", vip: true },
-    { id: "rain", e: "🌧️", ar: "مطر وموج ماء", en: "Rain & ripples", shop: true },
-    { id: "snow", e: "❄️", ar: "عاصفة ثلج", en: "Blizzard", shop: true },
-    { id: "aurora", e: "🌌", ar: "شفق قطبي", en: "Aurora", shop: true },
-    { id: "warp", e: "🚀", ar: "قفزة فضائية", en: "Hyperspace", shop: true },
-    { id: "matrix", e: "💻", ar: "ماتريكس", en: "Matrix", shop: true },
-    { id: "bubbles", e: "🫧", ar: "فقاعات", en: "Bubbles", shop: true },
-    { id: "petals", e: "🌸", ar: "بتلات ساكورا", en: "Sakura", shop: true },
-    { id: "lasers", e: "🔦", ar: "ليزر حفلة", en: "Laser show", shop: true },
-    { id: "rings", e: "⭕", ar: "حلقات نيون", en: "Neon rings", shop: true },
-    { id: "blackhole", e: "🕳️", ar: "ثقب أسود", en: "Black hole", shop: true },
-    { id: "tornado", e: "🌪️", ar: "إعصار", en: "Tornado", shop: true },
-    { id: "stars", e: "✨", ar: "شهب ونجوم", en: "Starfall", shop: true },
+    { id: "fire", e: "fire", ar: "نار", en: "Fire" },
+    { id: "hearts", e: "heart", ar: "قلب", en: "Heart" },
+    { id: "wave", e: "wave", ar: "موجة", en: "Wave" },
+    { id: "confetti", e: "party", ar: "احتفال", en: "Confetti" },
+    { id: "lightning", e: "zap", ar: "صاعقة", en: "Lightning" },
+    { id: "shake", e: "boom", ar: "انفجار", en: "Boom" },
+    { id: "airhorn", e: "vol", ar: "بوق", en: "Airhorn" },
+    { id: "boo", e: "ghost", ar: "أشباح", en: "Ghosts" },
+    { id: "fireworks", e: "burst", ar: "ألعاب نارية", en: "Fireworks", vip: true },
+    { id: "meteor", e: "comet", ar: "نيازك", en: "Meteors", vip: true },
+    { id: "rain", e: "drop", ar: "مطر وموج ماء", en: "Rain & ripples", shop: true },
+    { id: "snow", e: "snow", ar: "عاصفة ثلج", en: "Blizzard", shop: true },
+    { id: "aurora", e: "aurora", ar: "شفق قطبي", en: "Aurora", shop: true },
+    { id: "warp", e: "rocket", ar: "قفزة فضائية", en: "Hyperspace", shop: true },
+    { id: "matrix", e: "code", ar: "ماتريكس", en: "Matrix", shop: true },
+    { id: "bubbles", e: "bubbles", ar: "فقاعات", en: "Bubbles", shop: true },
+    { id: "petals", e: "flower", ar: "بتلات ساكورا", en: "Sakura", shop: true },
+    { id: "lasers", e: "laser", ar: "ليزر حفلة", en: "Laser show", shop: true },
+    { id: "rings", e: "rings", ar: "حلقات نيون", en: "Neon rings", shop: true },
+    { id: "blackhole", e: "hole", ar: "ثقب أسود", en: "Black hole", shop: true },
+    { id: "tornado", e: "tornado", ar: "إعصار", en: "Tornado", shop: true },
+    { id: "stars", e: "star", ar: "شهب ونجوم", en: "Starfall", shop: true },
   ],
   ac: null,
   audio() { try { this.ac = this.ac || new (window.AudioContext || window.webkitAudioContext)(); if (this.ac.state === "suspended") this.ac.resume(); return this.ac; } catch (e) { return null; } },
@@ -537,7 +560,7 @@ const FX = window.FX = {
   floaty(root, e, n = 1, opts = {}) {
     for (let i = 0; i < n; i++) setTimeout(() => {
       const d = document.createElement("div");
-      d.className = "floaty"; d.textContent = e;
+      d.className = "floaty"; if (REACT[e]) d.innerHTML = eic(REACT[e][0], REACT[e][1]); else d.textContent = e;
       d.style.setProperty("--dx", (Math.random() * 120 - 60) + "px");
       if (opts.spread) { d.style.insetInlineEnd = (Math.random() * 80 + 5) + "%"; d.style.bottom = (Math.random() * 20 + 5) + "%"; }
       if (opts.size) d.style.fontSize = opts.size + "px";
@@ -710,7 +733,7 @@ const FX = window.FX = {
       for (let i = 0; i < 3; i++) { const q = Math.min(1, p * 1.6 - i * 0.15); if (q <= 0) continue; ctx.strokeStyle = `rgba(255,230,180,${(1 - q) * 0.9})`; ctx.lineWidth = 18 * (1 - q); ctx.beginPath(); ctx.arc(cx, cy, q * R * 0.7, 0, 7); ctx.stroke(); }
       if (!s.d) s.d = Array.from({ length: 70 }, () => { const a = Math.random() * 7, v = 6 + Math.random() * 16; return { x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, s: 3 + Math.random() * 7 }; });
       s.d.forEach((q) => { q.vy += 0.35; q.x += q.vx; q.y += q.vy; ctx.fillStyle = `rgba(${200 + Math.random() * 55},${90 + Math.random() * 80},20,${1 - p})`; ctx.fillRect(q.x, q.y, q.s, q.s); });
-      ctx.font = `${Math.min(W, H) * 0.45 * this.ease(Math.min(1, p * 4))}px system-ui`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.globalAlpha = e; ctx.fillText("💥", cx, cy);
+      ctx.globalAlpha = e; this.art(ctx, "boom", cx, cy, Math.min(W, H) * 0.5 * this.ease(Math.min(1, p * 4)));
     });
     this.noise(1.6, 0.5, 300); this.tone([45, 60], 0.9, "square", 0.12);
   },
@@ -723,7 +746,7 @@ const FX = window.FX = {
       const cx = W / 2, cy = H * 0.45;
       for (let i = 0; i < 6; i++) { const q = ((ms / 600) + i / 6) % 1; ctx.strokeStyle = `rgba(255,${180 + i * 10},60,${(1 - q) * 0.7 * e})`; ctx.lineWidth = 10 * (1 - q); ctx.beginPath(); ctx.arc(cx, cy, 60 + q * Math.max(W, H) * 0.7, -0.9, 0.9); ctx.stroke(); ctx.beginPath(); ctx.arc(cx, cy, 60 + q * Math.max(W, H) * 0.7, Math.PI - 0.9, Math.PI + 0.9); ctx.stroke(); }
       ctx.font = `${Math.min(W, H) * 0.5 * pulse * this.ease(Math.min(1, p * 5))}px system-ui`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.globalAlpha = e;
-      ctx.save(); ctx.translate(cx, cy); ctx.rotate(Math.sin(ms * 0.03) * 0.12); ctx.fillText("📯", 0, 0); ctx.restore();
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(Math.sin(ms * 0.03) * 0.12); this.art(ctx, "horn", 0, 0, Math.min(W, H) * 0.5 * pulse * this.ease(Math.min(1, p * 5))); ctx.restore();
     });
     [0, 0.3, 0.6, 1.2].forEach((d) => this.tone([466, 470, 932], 0.26, "sawtooth", 0.1, d));
   },
@@ -740,7 +763,7 @@ const FX = window.FX = {
         const q = (p - g.d) / (1 - g.d); if (q < 0) return;
         const x = g.dir > 0 ? -100 + q * (W + 200) : W + 100 - q * (W + 200);
         ctx.globalAlpha = Math.min(1, q * 4) * e * 0.9; ctx.font = `${g.sz}px system-ui`;
-        ctx.save(); ctx.translate(x, g.y + Math.sin(ms * 0.004 + g.ph) * 30); ctx.scale(g.dir, 1); ctx.fillText("👻", 0, 0); ctx.restore();
+        ctx.save(); ctx.translate(x, g.y + Math.sin(ms * 0.004 + g.ph) * 30); ctx.scale(g.dir, 1); this.art(ctx, "ghost", 0, 0, g.sz); ctx.restore();
       });
     });
     this.tone([220, 165], 1.6, "triangle", 0.1); this.tone([330, 247], 1.4, "sine", 0.06, 0.3);
@@ -780,7 +803,7 @@ const FX = window.FX = {
   },
   /* gifts: a big animated scene per gift */
   gift(canvas, stage, id, n = 1) {
-    const E = { rose: "🌹", heart: "💖", controller: "🎮", car: "🏎️", lion: "🦁", crown: "👑", rocket: "🚀" }[id] || "🎁";
+    const E = "g_" + (ART["g_" + id] ? id : "heart");
     const big = { rose: 0.35, heart: 0.4, controller: 0.45, car: 0.4, lion: 0.6, crown: 0.55, rocket: 0.5 }[id] || 0.4;
     const dur = { rose: 2600, heart: 2800, controller: 2800, car: 3000, lion: 3600, crown: 3800, rocket: 4200 }[id] || 3000;
     if (id === "heart") this.hearts(canvas);
@@ -788,7 +811,7 @@ const FX = window.FX = {
     if (id === "rocket") setTimeout(() => this.fireworks(canvas), 1800);
     if (id === "lion" && !P.reduceFx && stage) setTimeout(() => { stage.classList.remove("shake"); void stage.offsetWidth; stage.classList.add("shake"); }, 700);
     this.start(canvas, dur, (ctx, p, W, H, s, ms) => {
-      const e = this.env(p, 0.08, 0.8), sz = Math.min(W, H) * big;
+      const e = this.env(p, 0.08, 0.8), sz = Math.min(W, H) * big; const art = (x, y) => this.art(ctx, E, x, y, sz);
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
       // golden rays behind premium gifts
       if (["lion", "crown", "rocket", "car"].includes(id)) {
@@ -800,19 +823,19 @@ const FX = window.FX = {
       if (id === "car") {
         const x = W + sz - p * (W + sz * 2) * 1.05;
         for (let i = 0; i < 12; i++) { ctx.fillStyle = `rgba(255,255,255,${0.25 * e})`; ctx.fillRect(x + sz * 0.4 + Math.random() * 120, H * 0.45 - sz * 0.3 + Math.random() * sz * 0.6, 40 + Math.random() * 80, 3); }
-        ctx.save(); ctx.translate(x, H * 0.45 + Math.sin(ms * 0.05) * 3); ctx.fillText(E, 0, 0); ctx.restore();
+        ctx.save(); ctx.translate(x, H * 0.45 + Math.sin(ms * 0.05) * 3); ctx.scale(-1, 1); art(0, 0); ctx.restore();
       } else if (id === "rocket") {
         const y = H + sz - this.ease(Math.min(1, p * 1.3)) * (H + sz * 2);
         for (let i = 0; i < 20; i++) { const r = 8 + Math.random() * 26; const gy = y + sz * 0.45 + Math.random() * 120; const g = ctx.createRadialGradient(W / 2, gy, 0, W / 2, gy, r); g.addColorStop(0, "rgba(255,230,120,.9)"); g.addColorStop(1, "rgba(255,80,0,0)"); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(W / 2 + (Math.random() - 0.5) * 30, gy, r, 0, 7); ctx.fill(); }
-        ctx.save(); ctx.translate(W / 2, y); ctx.rotate(-Math.PI / 4); ctx.fillText(E, 0, 0); ctx.restore();
+        ctx.save(); ctx.translate(W / 2, y); art(0, 0); ctx.restore();
       } else if (id === "crown") {
         const y = p < 0.3 ? -sz + this.ease(p / 0.3) * (H * 0.42 + sz) : H * 0.42 + Math.sin(ms * 0.006) * 6;
-        ctx.save(); ctx.shadowColor = "rgba(255,215,0,.9)"; ctx.shadowBlur = 40; ctx.fillText(E, W / 2, y); ctx.restore();
+        ctx.save(); ctx.shadowColor = "rgba(255,215,0,.9)"; ctx.shadowBlur = 40; art(W / 2, y); ctx.restore();
       } else {
         const k = this.ease(Math.min(1, p * 4)), pulse = 1 + 0.08 * Math.sin(ms * 0.012);
         ctx.save(); ctx.translate(W / 2, H * 0.45); ctx.scale(k * pulse, k * pulse); if (id === "controller") ctx.rotate(Math.sin(ms * 0.01) * 0.25);
-        ctx.shadowColor = "rgba(255,255,255,.6)"; ctx.shadowBlur = 30; ctx.fillText(E, 0, 0); ctx.restore();
-        if (id === "rose") { if (!s.pt) s.pt = Array.from({ length: 40 }, () => ({ x: Math.random() * W, y: -Math.random() * H, v: 1.5 + Math.random() * 3, r: Math.random() * 6 })); ctx.font = "22px system-ui"; s.pt.forEach((q) => { q.y += q.v; q.r += 0.05; ctx.save(); ctx.translate(q.x + Math.sin(q.y * 0.02) * 20, q.y); ctx.rotate(q.r); ctx.fillText("🌸", 0, 0); ctx.restore(); }); }
+        ctx.shadowColor = "rgba(255,255,255,.6)"; ctx.shadowBlur = 30; art(0, 0); ctx.restore();
+        if (id === "rose") { if (!s.pt) s.pt = Array.from({ length: 40 }, () => ({ x: Math.random() * W, y: -Math.random() * H, v: 1.5 + Math.random() * 3, r: Math.random() * 6 })); s.pt.forEach((q) => { q.y += q.v; q.r += 0.05; ctx.save(); ctx.translate(q.x + Math.sin(q.y * 0.02) * 20, q.y); ctx.rotate(q.r); this.art(ctx, "petal", 0, 0, 20); ctx.restore(); }); }
       }
       if (n > 1) { ctx.globalAlpha = e; ctx.font = `900 ${Math.min(W, H) * 0.14}px system-ui`; ctx.fillStyle = "#fff"; ctx.strokeStyle = "rgba(0,0,0,.5)"; ctx.lineWidth = 6; ctx.strokeText("×" + n, W / 2, H * 0.45 + sz * 0.7); ctx.fillText("×" + n, W / 2, H * 0.45 + sz * 0.7); }
     });
@@ -1030,6 +1053,7 @@ const FX = window.FX = {
     [0, 0.4, 0.8, 1.2, 1.6].forEach((d, i) => this.tone([1046 + i * 120], 0.25, "triangle", 0.04, d));
   },
 
+  art(ctx, k, x, y, sz) { const im = ARTIMG[k]; if (im && im.complete && im.naturalWidth) ctx.drawImage(im, x - sz / 2, y - sz / 2, sz, sz); },
   play(id, root, stage, canvas) {
     if (!canvas || !this[id] || typeof this[id] !== "function") return;
     this[id](canvas, stage);
@@ -1291,13 +1315,13 @@ function userSheet(m, ctx) {
   sheet(`<div style="text-align:center">${avatar(m, "lg", "margin:0 auto")}<div style="font-size:20px;font-weight:800;margin-top:10px">${uname(m, "span")}</div>
       <div style="margin-top:6px">${m.uid === ctx.hostId ? `<span class="rtag rowner">${t("roleOwner")}</span>` : roleTag(m.role)}</div></div>
     ${m.handle ? `<button class="btn g" id="usp" style="margin-top:14px">${ic("user")} ${t("mProfile")}</button>` : ""}
-    ${canAct ? `<div class="h2" style="margin-top:14px">🛡️ ${t("modT")}</div>
+    ${canAct ? `<div class="h2" style="margin-top:14px">${eic("shield", "green")} ${t("modT")}</div>
       ${m.id ? b("del", ic("x") + " " + t("mDel")) : ""}
       <label class="small mut" style="display:block;margin:12px 4px 6px">${t("mTimeout")}</label>
       <div class="seg" id="mto">${[1, 5, 10, 60, 1440].map((n) => `<button data-mins="${n}">${fmtMins(n)}</button>`).join("")}</div>
       ${b("untimeout", t("mUntimeout"))}${b("kick", t("mKick"), "g", 'style="color:#ffb86b"')}
       ${m.role === "vip" ? (isOwner ? b("demote", t("mDemote")) : "") : m.role !== "mod" ? b("promote", t("mPromote"), "p") : ""}
-      ${isOwner ? (m.role === "mod" ? b("removemod", t("mRemoveMod")) : b("addmod", "🛡️ " + t("mAddMod"), "p")) + b("ban", t("mBan"), "g", 'style="color:#ff7b88"') + b("unban", t("mUnban")) : ""}` : ""}`,
+      ${isOwner ? (m.role === "mod" ? b("removemod", t("mRemoveMod")) : b("addmod", eic("shield") + " " + t("mAddMod"), "p")) + b("ban", t("mBan"), "g", 'style="color:#ff7b88"') + b("unban", t("mUnban")) : ""}` : ""}`,
     (sh, close) => {
       const p = $("#usp", sh); if (p) p.onclick = () => { close(); go("user", m.handle); };
       $$("#mto [data-mins]", sh).forEach((x) => (x.onclick = async () => { if (await modAct(ctx.hostId, "timeout", { target: m.uid, mins: +x.dataset.mins })) close(); }));
@@ -1315,7 +1339,7 @@ function modsManager(hostId) {
     const own = r.myRole === "owner";
     const row = (u, btns) => `<div class="sm" style="align-items:center">${avatar(u, "md")}<div class="tx"><b>${uname(u, "span")}</b><br><span class="small mut" dir="ltr">@${esc(u.handle)}</span>${u.kind ? `<br><span class="small" style="color:#ff9b9b">${u.kind === "ban" ? t("mBan") : u.kind === "kick" ? t("mKick") : t("mTimeout")} · ${u.kind === "ban" ? "∞" : new Date(u.until).toLocaleString(S.lang)}</span>` : ""}</div>${btns}</div>`;
     const x = (act, uid) => `<button class="mini" data-ma="${act}" data-u="${uid}" style="color:#ff7b88">${ic("x")}</button>`;
-    sheet(`<h3>🛡️ ${t("modT")}</h3>
+    sheet(`<h3>${eic("shield", "green")} ${t("modT")}</h3>
       ${own ? `<div class="row" style="margin:6px 0 4px"><input class="inp" id="mah" placeholder="${t("mAddByHandle")}" dir="ltr" autocapitalize="none"><button class="btn p" id="maa" style="width:auto;padding:14px 16px">${t("mAdd")}</button></div>` : ""}
       <div class="h2">${t("mods")} · ${r.mods.length}</div><div class="sl">${r.mods.map((u) => row(u, own ? x("removemod", u.id) : "")).join("") || `<p class="mut small">${t("noneYet")}</p>`}</div>
       <div class="h2">${t("vipsR")} · ${r.vips.length}</div><div class="sl">${r.vips.map((u) => row(u, own ? x("demote", u.id) : "")).join("") || `<p class="mut small">${t("noneYet")}</p>`}</div>
@@ -1349,9 +1373,9 @@ function ytSheet(done) {
 /* ---------- grand entrance (VIP / channel subscribers) ---------- */
 function grandEntrance(m, canvas) {
   const d = document.createElement("div"); d.className = "grand";
-  const tags = [m.look && m.look.vip ? `<span class="bdg bdg-vip">VIP</span>` : "", m.sub ? `<span class="bdg bdg-sub">⭐${m.sub}</span>` : "", lvlHtml(m.level)].join("");
+  const tags = [m.look && m.look.vip ? `<span class="bdg bdg-vip">VIP</span>` : "", m.sub ? `<span class="bdg bdg-sub">${eic("star")}${m.sub}</span>` : "", lvlHtml(m.level)].join("");
   d.innerHTML = `<div class="gav">${avatar(m, "lg")}</div><div class="gn">${uname(m, "span")}</div>
-    <div class="gs">${tags}${m.sub ? t("subMonths", { n: m.sub }) : ""}</div><div class="gt">👑 ${t("enteredGrand")}</div>`;
+    <div class="gs">${tags}${m.sub ? t("subMonths", { n: m.sub }) : ""}</div><div class="gt">${eic("crown")} ${t("enteredGrand")}</div>`;
   ($("#app") || document.body).appendChild(d); setTimeout(() => d.remove(), 5300);
   if (canvas) FX.play(m.look && m.look.vip ? "goldrain" : "confetti", null, null, canvas);
   FX.tone([784, 988, 1318], 0.5, "triangle", 0.07); FX.tone([1046, 1318, 1568], 0.6, "triangle", 0.05, 0.25);
@@ -1372,18 +1396,18 @@ function subSheet(host, done) {
 }
 
 /* ---------- channel points ---------- */
-const RW_ICON = { highlight: "💬", goldrain: "🪙", pin: "📌" };
+const RW_ICON = { highlight: eic("chat", "cyan"), goldrain: eic("coin", "gold"), pin: eic("pin", "pink") };
 function pointsSheet(loy, host, redeem) {
   loy = loy || { level: 1, xp: 0, points: 0, cur: 0, next: 50, rewards: [] };
   const pct = Math.round(((loy.xp - loy.cur) / Math.max(1, loy.next - loy.cur)) * 100);
   sheet(`<div class="lvring"><div class="lvnum" style="--pct:${pct}%"><span>${loy.level}</span></div>
       <div style="flex:1"><b style="font-size:17px">${t("level")} ${loy.level}</b> <span class="mut small">· ${esc(host ? host.name : "")}</span>
       <div class="bar"><i style="width:${pct}%"></i></div><div class="small mut" style="margin-top:6px">${t("xpTo", { n: Math.max(0, loy.next - loy.xp) })}</div></div></div>
-    <div class="row" style="justify-content:space-between;margin:14px 2px 4px"><span class="pt" style="font-size:22px">⭐ ${fmtN(loy.points)}</span>
+    <div class="row" style="justify-content:space-between;margin:14px 2px 4px"><span class="pt" style="font-size:22px">${eic("star", "gold")} ${fmtN(loy.points)}</span>
       <span class="small mut">${loy.streak ? t("streakT", { n: loy.streak }) + " · " : ""}${t("watchT", { n: loy.watchMin || 0 })}</span></div>
     <div class="h2">${t("rewards")}</div>
-    <div id="rwl">${(loy.rewards || []).map((r) => `<button class="rw" data-r="${esc(r.id)}" data-t="${r.text || r.id === "highlight" || r.id === "pin" ? 1 : ""}"><span class="ic">${RW_ICON[r.id] || "🎯"}</span>
-      <span style="flex:1;font-weight:600">${esc(r.custom ? r.title : S.lang === "ar" ? r.ar : r.en)}</span><span class="pt">⭐ ${fmtN(r.cost)}</span></button>`).join("")}</div>
+    <div id="rwl">${(loy.rewards || []).map((r) => `<button class="rw" data-r="${esc(r.id)}" data-t="${r.text || r.id === "highlight" || r.id === "pin" ? 1 : ""}"><span class="ic">${RW_ICON[r.id] || eic("target", "violet")}</span>
+      <span style="flex:1;font-weight:600">${esc(r.custom ? r.title : S.lang === "ar" ? r.ar : r.en)}</span><span class="pt">${eic("star", "gold")} ${fmtN(r.cost)}</span></button>`).join("")}</div>
     <div class="h2">${t("topFans")}</div><div id="tfl" class="sl"><div style="height:60px;position:relative"><div class="spin"></div></div></div>
     <details style="margin-top:14px"><summary class="mut small">${t("howEarn")}</summary><p class="small mut" style="line-height:1.9;margin-top:8px">${t("howEarnD")}</p></details>`, (sh, close) => {
     $$("[data-r]", sh).forEach((b) => (b.onclick = () => {
@@ -1404,17 +1428,17 @@ function pointsSheet(loy, host, redeem) {
 function rewardsSheet(st, ws) {
   const draw = (sh) => {
     const list = st.redeems || [];
-    $("#rq", sh).innerHTML = list.filter((x) => x.state === "new").length ? list.filter((x) => x.state === "new").map((q) => `<div class="chl"><div class="row">${uname(q, "span")}<span class="sp"></span><span class="pt">⭐ ${q.cost}</span></div>
+    $("#rq", sh).innerHTML = list.filter((x) => x.state === "new").length ? list.filter((x) => x.state === "new").map((q) => `<div class="chl"><div class="row">${uname(q, "span")}<span class="sp"></span><span class="pt">${eic("star", "gold")} ${q.cost}</span></div>
       <div style="margin:6px 0 8px;font-weight:700">${esc(q.title)}</div>${q.text ? `<div class="small mut">${esc(q.text)}</div>` : ""}
       <div class="row" style="margin-top:8px"><button class="mini p" data-ok="${q.id}">${t("done2")}</button><button class="mini" data-rf="${q.id}">${t("refund")}</button></div></div>`).join("") : `<p class="mut small" style="text-align:center;padding:12px">${t("noRedeems")}</p>`;
     $$("[data-ok]", sh).forEach((b) => (b.onclick = () => { ws.send({ t: "redeem-set", id: b.dataset.ok, state: "done" }); const x = list.find((y) => y.id === b.dataset.ok); if (x) x.state = "done"; draw(sh); }));
     $$("[data-rf]", sh).forEach((b) => (b.onclick = () => { ws.send({ t: "redeem-set", id: b.dataset.rf, state: "refund" }); const x = list.find((y) => y.id === b.dataset.rf); if (x) x.state = "refund"; draw(sh); }));
   };
-  sheet(`<h3>⭐ ${t("redeemQ")}</h3><div id="rq"></div><div class="h2">${t("myRewards")}</div><div id="myr"></div>
+  sheet(`<h3>${eic("star", "gold")} ${t("redeemQ")}</h3><div id="rq"></div><div class="h2">${t("myRewards")}</div><div id="myr"></div>
     <div class="row" style="margin-top:8px"><input class="inp" id="nrt" maxlength="50" placeholder="${t("rewardTitle")}"><input class="inp" id="nrc" inputmode="numeric" placeholder="${t("cost")}" style="width:110px"></div>
     <button class="btn p" id="nra" style="margin-top:8px">${t("addReward")}</button>`, (sh) => {
     draw(sh);
-    const mine = (rows) => { $("#myr", sh).innerHTML = rows.map((r) => `<div class="sm" style="align-items:center"><div class="tx"><b>${esc(r.title)}</b></div><span class="pt">⭐ ${r.cost}</span><button class="mini" data-del="${r.id}" style="color:#ff7b88">${ic("x")}</button></div>`).join("") || `<p class="mut small">—</p>`;
+    const mine = (rows) => { $("#myr", sh).innerHTML = rows.map((r) => `<div class="sm" style="align-items:center"><div class="tx"><b>${esc(r.title)}</b></div><span class="pt">${eic("star", "gold")} ${r.cost}</span><button class="mini" data-del="${r.id}" style="color:#ff7b88">${ic("x")}</button></div>`).join("") || `<p class="mut small">—</p>`;
       $$("[data-del]", sh).forEach((b) => (b.onclick = async () => mine((await api("/api/rewards", { del: b.dataset.del })).rewards || []))); };
     api("/api/rewards", {}).then((r) => mine(r.rewards || []));
     $("#nra", sh).onclick = async () => { const title = $("#nrt", sh).value.trim(), cost = +$("#nrc", sh).value || 0; if (!title || cost < 10) return toast(t("cost") + " ≥ 10"); const r = await api("/api/rewards", { title, cost }); if (r.error) return toast(terr(r.error)); $("#nrt", sh).value = ""; $("#nrc", sh).value = ""; mine(r.rewards || []); haptic("success"); };
@@ -1422,7 +1446,7 @@ function rewardsSheet(st, ws) {
 }
 
 /* ---------- economy ---------- */
-const GIFT_E = { rose: "🌹", heart: "💖", controller: "🎮", car: "🏎️", lion: "🦁", crown: "👑", rocket: "🚀" };
+const GIFT_E = new Proxy({}, { get: (o, k) => artHtml("g_" + String(k), "art gi2") || eic("gift", "pink") });
 const GIFT_N = { rose: ["وردة", "Rose"], heart: ["قلب", "Heart"], controller: ["يد تحكم", "Controller"], car: ["سيارة", "Supercar"], lion: ["أسد", "Lion"], crown: ["تاج", "Crown"], rocket: ["صاروخ", "Rocket"] };
 let SHOPDATA = null;
 async function shopData() { if (!SHOPDATA) SHOPDATA = await api("/api/shop"); return SHOPDATA; }
@@ -1431,8 +1455,8 @@ function giftSheet(send) {
   shopData().then((d) => {
     const gifts = Object.entries(d.gifts || {});
     let n = 1;
-    sheet(`<div class="row"><h3 style="margin:0">🎁 ${t("gifts")}</h3><span class="sp"></span><button class="chip" id="gw">${coinHtml(S.user && S.user.coins)} +</button></div>
-      <div class="giftg" style="margin-top:12px">${gifts.map(([id, g]) => `<button class="gift" data-g="${id}"><span class="e">${g.e}</span><small>${GIFT_N[id] ? GIFT_N[id][S.lang === "ar" ? 0 : 1] : id}</small>${coinHtml(g.price)}</button>`).join("")}</div>
+    sheet(`<div class="row"><h3 style="margin:0">${eic("gift", "pink")} ${t("gifts")}</h3><span class="sp"></span><button class="chip" id="gw">${coinHtml(S.user && S.user.coins)} +</button></div>
+      <div class="giftg" style="margin-top:12px">${gifts.map(([id, g]) => `<button class="gift" data-g="${id}"><span class="e">${artHtml("g_" + id, "art")}</span><small>${GIFT_N[id] ? GIFT_N[id][S.lang === "ar" ? 0 : 1] : id}</small>${coinHtml(g.price)}</button>`).join("")}</div>
       <div class="seg" id="gn" style="margin-top:12px">${[1, 5, 10, 99].map((k) => `<button class="${k === 1 ? "on" : ""}" data-n="${k}">×${k}</button>`).join("")}</div>`, (sh, close) => {
       $("#gw", sh).onclick = () => { close(); go("wallet"); };
       $$("#gn button", sh).forEach((b) => (b.onclick = () => { n = +b.dataset.n; $$("#gn button", sh).forEach((x) => x.classList.toggle("on", x === b)); }));
@@ -1472,7 +1496,7 @@ VIEWS.wallet = (root, arg = {}) => {
         <div class="small" style="opacity:.8;position:relative;z-index:1">${t("earned")}: ${coinHtml(u.earned)}${vip ? ` · <b style="color:#ffd700">${t("vipUntil", { d: new Date(u.vipUntil).toLocaleDateString(S.lang) })}</b>` : ""}</div></div>
       <div class="h2">${t("buyCoins")} ${d.mode !== "live" && d.pay ? `<span class="small mut">· ${t("sandbox")}</span>` : ""}</div>
       <div class="packs">${Object.entries(d.packs).map(([id, p], i) => `<button class="pack ${i === 2 ? "best" : ""}" data-pack="${id}">${coinHtml(p.coins)}<span class="pr">$${p.usd}</span></button>`).join("")}</div>
-      <div class="vipcard"><h3>👑 ${t("vip")}</h3><p style="margin:8px 0 12px;line-height:1.7;color:#ffe9a8;font-size:14px">${t("vipD")}</p>
+      <div class="vipcard"><h3>${eic("crown", "gold")} ${t("vip")}</h3><p style="margin:8px 0 12px;line-height:1.7;color:#ffe9a8;font-size:14px">${t("vipD")}</p>
         <button class="btn" id="vbuy" style="background:linear-gradient(120deg,#ffd700,#ff9a3d);color:#2b1600">${t("vipBuy")} · ${coinHtml(d.vip)}</button></div>
       <div class="seg" id="wt" style="margin-top:18px">${["names", "badges", "frames", "fxs"].map((k) => `<button class="${k === tab ? "on" : ""}" data-t="${k}">${t(k)}</button>`).join("")}</div>
       <div class="shopg" style="margin-top:12px">${items.map(([id, it]) => {
@@ -1484,7 +1508,7 @@ VIEWS.wallet = (root, arg = {}) => {
           ${own ? `<button class="mini ${on ? "" : "p"}" data-eq="${id}" data-k="${it.kind}">${on ? t("unequip") : t("equip")}</button>`
                 : it.vip ? `<span class="small" style="color:#ffd700">${t("vipOnly")}</span>` : `<button class="mini p" data-buy="${id}">${t("buy")} ${coinHtml(it.price)}</button>`}</div>`;
       }).join("")}</div>
-      ${u.admin ? `<div class="h2">🛠️ ${t("admin")}</div><div class="tile"><div class="field"><input class="inp" id="ah2" placeholder="${t("handleQ")}" dir="ltr" autocapitalize="none"></div>
+      ${u.admin ? `<div class="h2">${eic("wrench", "cyan")} ${t("admin")}</div><div class="tile"><div class="field"><input class="inp" id="ah2" placeholder="${t("handleQ")}" dir="ltr" autocapitalize="none"></div>
         <div class="row"><input class="inp" id="ac2" inputmode="numeric" placeholder="${t("coins")}"><input class="inp" id="av2" inputmode="numeric" placeholder="${t("vipDays")}"></div>
         <button class="btn p" id="ag2" style="margin-top:10px">${t("grant")}</button></div>` : ""}
       <div class="h2">${t("history")}</div><div class="sl">${(r.tx || []).map((x) => `<div class="sm"><div class="tx">${esc(x.kind)} <span class="mut small">${esc(x.ref)}</span><br><span class="mut small">${new Date(x.t).toLocaleString(S.lang)}</span></div><b style="color:${x.delta > 0 ? "var(--ok)" : "#ff7b88"}">${x.delta > 0 ? "+" : ""}${x.delta}</b></div>`).join("")}</div>`;
@@ -1492,7 +1516,7 @@ VIEWS.wallet = (root, arg = {}) => {
     $$("[data-pv]").forEach((b) => (b.onclick = () => { FX.audio(); FX.play(b.dataset.pv, null, $("#wsc"), $("#fx")); haptic("medium"); }));
     $$("[data-buy]").forEach((b) => (b.onclick = async () => { const x = await api("/api/buy", { item: b.dataset.buy }); if (x.error) return toast(terr(x.error)); S.user = { ...S.user, ...x.user }; store.set("user", S.user); haptic("success"); toast(t("saved")); render(); }));
     $$("[data-eq]").forEach((b) => (b.onclick = async () => { const on = (S.user.equip || {})[b.dataset.k] === b.dataset.eq; const x = await api("/api/equip", { kind: b.dataset.k, item: on ? "" : b.dataset.eq }); if (x.error) return toast(terr(x.error)); S.user = { ...S.user, ...x.user }; store.set("user", S.user); haptic(); render(); }));
-    $("#vbuy").onclick = () => confirmBox(`${t("vipBuy")} — ${d.vip} ${t("coins")}?`, async () => { const x = await api("/api/vip", {}); if (x.error) return toast(terr(x.error)); S.user = { ...S.user, ...x.user }; store.set("user", S.user); haptic("success"); FX.play("fireworks", null, null, null); toast("👑 VIP"); render(); });
+    $("#vbuy").onclick = () => confirmBox(`${t("vipBuy")} — ${d.vip} ${t("coins")}?`, async () => { const x = await api("/api/vip", {}); if (x.error) return toast(terr(x.error)); S.user = { ...S.user, ...x.user }; store.set("user", S.user); haptic("success"); FX.play("fireworks", null, null, null); toast("VIP"); render(); });
     $$("[data-pack]").forEach((b) => (b.onclick = async () => {
       if (!d.pay) return toast(t("payOff"));
       b.disabled = true; const x = await api("/api/pay/create", { pack: b.dataset.pack }); b.disabled = false;
@@ -1502,7 +1526,7 @@ VIEWS.wallet = (root, arg = {}) => {
       clearInterval(polling); let k = 0;
       polling = setInterval(async () => { if (++k > 200 || current !== "wallet") return clearInterval(polling); const st = await api("/api/pay/status?id=" + x.id); if (st.status === "paid") { clearInterval(polling); haptic("success"); toast(t("paid", { n: st.coins })); FX.play("confetti", null, null, null); render(); } }, 3000);
     }));
-    if ($("#ag2")) $("#ag2").onclick = async () => { const x = await api("/api/admin/grant", { handle: $("#ah2").value.trim(), coins: +$("#ac2").value || 0, vipDays: +$("#av2").value || 0 }); if (x.error) return toast(terr(x.error)); toast("✓ @" + x.user.handle + " · " + x.user.coins + " 🪙"); if (x.user.id === S.user.id) render(); };
+    if ($("#ag2")) $("#ag2").onclick = async () => { const x = await api("/api/admin/grant", { handle: $("#ah2").value.trim(), coins: +$("#ac2").value || 0, vipDays: +$("#av2").value || 0 }); if (x.error) return toast(terr(x.error)); toast("✓ @" + x.user.handle + " · " + x.user.coins + " coins"); if (x.user.id === S.user.id) render(); };
   };
   render();
   return () => clearInterval(polling);
@@ -1616,7 +1640,7 @@ VIEWS.home = (root) => {
   let cat = "all", tab = "live", data = [], gameF = "";
   root.innerHTML = `<div class="view">
     <div class="top"><div class="brand"><div class="logo">${ic("live")}</div><b>${S.lang === "ar" ? "وهج" : "Wahj"}</b></div><div class="sp"></div>
-      <button class="ibtn" id="hrk" title="${t("ranks")}">🏆</button><button class="ibtn" id="hr">${ic("refresh")}</button></div>
+      <button class="ibtn" id="hrk" title="${t("ranks")}">${eic("trophy", "gold")}</button><button class="ibtn" id="hr">${ic("refresh")}</button></div>
     <div class="scroll" id="hs">
       <div class="seg" style="margin-top:4px" id="ht"><button class="on" data-t="live">${t("liveNow")}</button><button data-t="fol">${t("following")}</button></div>
       <div id="hg"></div>
@@ -1626,7 +1650,7 @@ VIEWS.home = (root) => {
   const card = (s, big) => {
     const thumb = `/api/thumb/${s.id}?b=${Math.floor(Date.now() / 20000)}`;
     const badges = `<div class="live"><span class="badge red">LIVE</span><span class="badge">${ic("eye")} ${fmtN(s.viewers)}</span>${s.guests ? `<span class="badge co">${ic("users")} ${s.guests + 1}</span>` : ""}</div>`;
-    const ph = s.gameIcon ? `<div class="thbg" style="background-image:url('${esc(s.gameIcon)}')"></div>${gIcon(s.gameIcon, "gi thic")}` : `<div class="ph">${CAT_EMO[s.cat] || "🎮"}</div>`;
+    const ph = s.gameIcon ? `<div class="thbg" style="background-image:url('${esc(s.gameIcon)}')"></div>${gIcon(s.gameIcon, "gi thic")}` : `<div class="ph">${CAT_EMO[s.cat] || CAT_EMO.all}</div>`;
     const gb = s.game ? `<div class="gbadge">${gIcon(s.gameIcon)}<span>${esc(s.game)}</span></div>` : "";
     if (big) return `<div class="feat ${s.top ? "ftop ftop" + s.top : ""}" data-id="${s.id}">${s.top ? `<div class="fmedal">${MEDAL[s.top]} TOP ${s.top}</div>` : ""}${ph}<img src="${thumb}" onerror="this.remove()" alt="" style="position:absolute;inset:0">${badges}<div class="ov"><div class="t">${esc(s.title)}</div>
       <div class="who">${avatar(s.host)}<span style="font-weight:600">${uname(s.host, "span")}</span></div>${s.game ? `<div class="row" style="gap:8px;margin-top:8px">${gIcon(s.gameIcon, "gi", 22)}<span class="small" style="color:#e6e1ff;font-weight:600">${esc(s.game)}</span></div>` : ""}</div></div>`;
@@ -1638,13 +1662,13 @@ VIEWS.home = (root) => {
     const gm = new Map();
     data.forEach((s) => { if (!s.game) return; const k = s.game.toLowerCase(); const g = gm.get(k) || { name: s.game, icon: s.gameIcon, n: 0 }; g.n++; if (!g.icon) g.icon = s.gameIcon; gm.set(k, g); });
     const games = [...gm.values()].sort((a, b) => b.n - a.n);
-    $("#hg").innerHTML = games.length ? `<div class="h2" style="margin-top:14px">${ic("game")} ${t("nowPlaying")}</div><div class="chips">${games.map((g) => `<button class="chip gchip ${gameF === g.name.toLowerCase() ? "on" : ""}" data-g="${esc(g.name.toLowerCase())}">${g.icon ? gIcon(g.icon) : "🎮"}<span>${esc(g.name)}</span><b>${g.n}</b></button>`).join("")}</div>` : "";
+    $("#hg").innerHTML = games.length ? `<div class="h2" style="margin-top:14px">${ic("game")} ${t("nowPlaying")}</div><div class="chips">${games.map((g) => `<button class="chip gchip ${gameF === g.name.toLowerCase() ? "on" : ""}" data-g="${esc(g.name.toLowerCase())}">${g.icon ? gIcon(g.icon) : eic("game", "brand")}<span>${esc(g.name)}</span><b>${g.n}</b></button>`).join("")}</div>` : "";
     $$("#hg [data-g]").forEach((b) => (b.onclick = () => { gameF = gameF === b.dataset.g ? "" : b.dataset.g; haptic(); render(); }));
     let list = data.filter((s) => (cat === "all" || s.cat === cat) && (!gameF || (s.game || "").toLowerCase() === gameF));
     if (tab === "fol") list = list.filter((s) => s.followed);
     const el = $("#hl");
     if (!list.length) {
-      el.innerHTML = `<div class="empty"><div class="big">📡</div><div style="font-weight:700;font-size:17px;color:var(--txt)">${t("noLive")}</div><div style="margin-top:6px">${t("beFirst")}</div>
+      el.innerHTML = `<div class="empty"><div class="radar"><i></i><i></i><i></i>${eic("live", "brand")}</div><div style="font-weight:700;font-size:17px;color:var(--txt)">${t("noLive")}</div><div style="margin-top:6px">${t("beFirst")}</div>
         <button class="btn p" style="margin-top:20px;width:auto;padding:14px 26px;display:inline-flex" id="hgo">${ic("live")} ${t("goLive")}</button></div>`;
       $("#hgo").onclick = () => go("golive");
       return;
@@ -1666,13 +1690,13 @@ VIEWS.home = (root) => {
 /* ---------- streamer ranking ---------- */
 VIEWS.ranks = (root) => {
   let mode = "month";
-  root.innerHTML = `<div class="view"><div class="top"><button class="ibtn" id="rb">${ic("back")}</button><div class="h1">🏆 ${t("ranks")}</div></div>
+  root.innerHTML = `<div class="view"><div class="top"><button class="ibtn" id="rb">${ic("back")}</button><div class="h1">${eic("trophy", "gold")} ${t("ranks")}</div></div>
     <div class="scroll" style="padding-bottom:calc(40px + var(--sb))">
       <div class="seg" id="rm"><button class="on" data-m="month">${t("rankMonth")}</button><button data-m="all">${t("rankAll")}</button></div>
       <div id="rl"><div style="height:200px;position:relative"><div class="spin"></div></div></div>
-      <div class="h2">👑 ${t("topPerks")}</div>
+      <div class="h2">${eic("crown", "gold")} ${t("topPerks")}</div>
       <div class="tile perks">${[1, 2, 3, 4].map((i) => `<div>${t("perk" + i)}</div>`).join("")}</div>
-      <div class="h2">📈 ${t("xpHow")}</div>
+      <div class="h2">${eic("chart", "green")} ${t("xpHow")}</div>
       <div class="tile perks">${[1, 2, 3, 4].map((i) => `<div>${t("xpHow" + i)}</div>`).join("")}
         <div class="mut small">${[[1, 1], [5, 2], [10, 3], [20, 4], [35, 5], [50, 6]].map(([l, k]) => `<span class="slvl st${k}" style="margin:3px">${l}+ ${t("tier" + k)}</span>`).join("")}</div></div>
     </div></div>`;
@@ -1683,7 +1707,7 @@ VIEWS.ranks = (root) => {
     const L = r.list, pod = [L[1], L[0], L[2]];
     const days = Math.max(0, Math.ceil((r.ends - Date.now()) / 86400000));
     const me = r.me;
-    el.innerHTML = `${mode === "month" ? `<p class="small mut" style="text-align:center;margin:10px 0 0">⏳ ${t("rankEnds", { n: days + " " + t("days") })}</p>` : ""}
+    el.innerHTML = `${mode === "month" ? `<p class="small mut" style="text-align:center;margin:10px 0 0">${eic("hourglass", "violet")} ${t("rankEnds", { n: days + " " + t("days") })}</p>` : ""}
       <div class="podium">${pod.map((u) => u ? `<div class="pd p${u.rank}" data-h="${esc(u.handle)}"><div class="pm">${MEDAL[u.rank]}</div>${avatar(u, "lg")}${u.live ? '<span class="badge red pl">LIVE</span>' : ""}
         <div class="pn">${uname({ ...u, look: { ...u.look, top: 0 } }, "span")}</div><div class="small">${sLvlHtml(u.level)}</div><div class="px">${fmtN(u.xp)} XP</div><div class="pbase">${u.rank}</div></div>` : `<div class="pd empty"></div>`).join("")}</div>
       ${me ? `<div class="sm" style="margin-top:12px;align-items:center;border-color:rgba(124,92,255,.5)"><b style="width:44px;text-align:center">${(mode === "month" ? me.mrank : me.rank) ? "#" + (mode === "month" ? me.mrank : me.rank) : "–"}</b><div class="tx"><b>${t("rankYou")}</b><br><span class="small mut">${(mode === "month" ? me.mrank : me.rank) ? fmtN(mode === "month" ? me.mxp : me.xp) + " XP" : t("rankNone")}</span></div>${sLvlHtml(me.level)}</div>` : ""}
@@ -1714,7 +1738,7 @@ VIEWS.watch = (root, id) => {
     <div id="wpoll"></div>
     <div class="wbar">
       <div class="cin"><input id="wi" placeholder="${S.token ? t("chatPh") : t("loginToChat")}" maxlength="200" enterkeyhint="send"><button class="rbtn" id="wsend" style="width:36px;height:36px;background:none">${ic("send")}</button></div>
-      <button class="rbtn ptsbtn" id="wpts">⭐</button><button class="rbtn" id="wr">❤️</button><button class="rbtn" id="wgf">🎁</button><button class="rbtn hot" id="we">${ic("spark")}</button><button class="rbtn" id="wm">${ic("layers")}</button>
+      <button class="rbtn ptsbtn" id="wpts">${eic("star", "gold")}</button><button class="rbtn" id="wr">${eic("heart", "pink")}</button><button class="rbtn" id="wgf">${eic("gift", "pink")}</button><button class="rbtn hot" id="we">${ic("spark")}</button><button class="rbtn" id="wm">${ic("layers")}</button>
     </div>
     <div class="stat lat hide" id="wlat" style="position:absolute;z-index:6;top:calc(var(--st) + 64px);inset-inline-start:14px">${ic("zap")}<span></span></div>
   </div>`;
@@ -1742,12 +1766,12 @@ VIEWS.watch = (root, id) => {
     const m = chatMsgs.get(c.dataset.id); if (!m || !m.uid) return;
     userSheet(m, { myRole, hostId: meta && meta.host });
   });
-  const chatHtml = (m) => `${roleTag(m.role)}${lvlHtml(m.lvl)}${m.sub ? `<span class="bdg bdg-sub">⭐${m.sub}</span>` : ""}${m.host ? `<span class="tag">${t("hostTag")}</span>` : m.guest ? `<span class="tag" style="background:var(--grad2)">${t("guestTag")}</span>` : ""}${uname(m)} ${esc(m.text)}`;
+  const chatHtml = (m) => `${roleTag(m.role)}${lvlHtml(m.lvl)}${m.sub ? `<span class="bdg bdg-sub">${eic("star")}${m.sub}</span>` : ""}${m.host ? `<span class="tag">${t("hostTag")}</span>` : m.guest ? `<span class="tag" style="background:var(--grad2)">${t("guestTag")}</span>` : ""}${uname(m)} ${m.giftId ? GIFT_E[m.giftId] + " " : ""}${esc(m.text)}`;
   const offline = (txt) => {
     $$(".wtop .badge.red").forEach((b) => (b.parentElement.style.display = "none"));
     if ($(".offline", stageEl)) return;
     const o = document.createElement("div"); o.className = "offline";
-    o.innerHTML = `<div style="font-size:56px">📴</div><b style="color:#fff;font-size:18px">${txt}</b><button class="btn g" style="width:auto;padding:12px 24px;margin-top:10px">${t("back")}</button>`;
+    o.innerHTML = `<div class="offic">${eic("sigoff", "violet")}</div><b style="color:#fff;font-size:18px">${txt}</b><button class="btn g" style="width:auto;padding:12px 24px;margin-top:10px">${t("back")}</button>`;
     $("button", o).onclick = () => go("home");
     stageEl.appendChild(o);
   };
@@ -1787,46 +1811,46 @@ VIEWS.watch = (root, id) => {
       case "privacy": stage.setPrivacy(m.uid, m.on, m.reason); break;
       case "viewers": $("#wv").innerHTML = ic("eye") + " " + fmtN(m.n); break;
       case "chat": addChat(chatHtml(m), m.hl ? "hl" : "", true, m); break;
-      case "modlog": addChat(`🛡️ ${modLine(m)}`, "sys"); break;
+      case "modlog": addChat(`${eic("shield", "green")} ${modLine(m)}`, "sys"); break;
       case "delmsg": { const c = $(`.cm[data-id="${m.id}"]`, chatEl); if (c) c.remove(); break; }
       case "purge": $$(`.cm[data-uid="${m.uid}"]`, chatEl).forEach((c) => c.remove()); break;
-      case "clearchat": chatEl.innerHTML = ""; addChat(`🧹 ${t("chatCleared")}`, "sys"); break;
+      case "clearchat": chatEl.innerHTML = ""; addChat(`${eic("broom", "cyan")} ${t("chatCleared")}`, "sys"); break;
       case "myrole": myRole = m.role; if (m.role === "mod") toast(t("youMod")); else if (m.role === "vip") toast(t("youVip")); else if (!S.user || meta.host !== S.user.id) toast(t("youRoleOff")); haptic("success"); break;
       case "timedout": timedUntil = m.until || 0; if (timedUntil > Date.now()) toast(t("timedOutT", { t: new Date(timedUntil).toLocaleTimeString(S.lang, { hour: "2-digit", minute: "2-digit" }) })); break;
       case "kicked": ws.close && ws.close(); stage.setPubs([]); offline(m.ban ? t("bannedT") : t("kickedT")); toast(m.ban ? t("bannedT") : t("kickedT")); haptic("error"); break;
       case "loy": {
-        root._loy = m; const pb = $("#wpts"); if (pb) pb.innerHTML = `⭐ ${fmtN(m.points)}`;
+        root._loy = m; const pb = $("#wpts"); if (pb) pb.innerHTML = `${eic("star", "gold")} ${fmtN(m.points)}`;
         if (m.daily && m.gotPts) toast(t("dailyT", { s: m.streak, p: m.gotPts, x: m.gotXp }), 4500);
         break;
       }
       case "chest": {
         if ($(".chest", root)) break;
-        const c = document.createElement("button"); c.className = "chest"; c.textContent = "🎁"; c.title = t("chestT");
+        const c = document.createElement("button"); c.className = "chest"; c.innerHTML = eic("gift", "gold"); c.title = t("chestT");
         c.onclick = () => { ws.send({ t: "claim" }); c.remove(); haptic("success"); };
         $("#watch").appendChild(c); break;
       }
-      case "claimed": toast(t("claimedT", { n: m.pts })); FX.floaty($("#wfx"), "⭐", 10, { spread: true }); break;
-      case "slevelup": sLevelUpFx(m, $("#fx")); addChat(`🎙 ${esc(t("sLevelUp", { n: m.name || "", l: m.level }))}`, "sys"); break;
+      case "claimed": toast(t("claimedT", { n: m.pts })); FX.floaty($("#wfx"), "str", 10, { spread: true }); break;
+      case "slevelup": sLevelUpFx(m, $("#fx")); addChat(`${eic("mic", "brand")} ${esc(t("sLevelUp", { n: m.name || "", l: m.level }))}`, "sys"); break;
       case "levelup": {
         const mine = S.user && m.uid === S.user.id;
         if (mine) { const d = document.createElement("div"); d.className = "lvup"; d.innerHTML = `<b>LV ${m.level}</b>${t("youLevel", { n: m.level })}`; $("#watch").appendChild(d); setTimeout(() => d.remove(), 3100); FX.play("confetti", null, null, $("#fx")); }
-        addChat(`🎉 ${uname(m)} ${t("levelUpT", { n: m.level })} ${lvlHtml(m.level)}`, "sys");
+        addChat(`${eic("party", "gold")} ${uname(m)} ${t("levelUpT", { n: m.level })} ${lvlHtml(m.level)}`, "sys");
         break;
       }
-      case "redeemed": banner(`⭐ ${uname(m, "span")} ${t("redeemedT")}: ${esc(m.title)}${m.text ? `<br><span style="font-weight:500">${esc(m.text)}</span>` : ""}`); break;
+      case "redeemed": banner(`${eic("star", "gold")} ${uname(m, "span")} ${t("redeemedT")}: ${esc(m.title)}${m.text ? `<br><span style="font-weight:500">${esc(m.text)}</span>` : ""}`); break;
       case "react": if (m.uid !== me.uid) FX.floaty($("#wfx"), m.e); break;
       case "effect":
         FX.play(m.id, $("#wfx"), stageEl, $("#fx"));
-        addChat(`<b style="color:${esc(m.color)}">${esc(m.name)}</b>${t("sentFx")} ${m.id === "goldrain" ? "🪙" : (FX.list.find((x) => x.id === m.id) || {}).e || "✨"}`, "fx");
+        addChat(`<b style="color:${esc(m.color)}">${esc(m.name)}</b>${t("sentFx")} ${m.id === "goldrain" ? eic("coin", "gold") : eic((FX.list.find((x) => x.id === m.id) || {}).e || "spark", "brand")}`, "fx");
         break;
       case "hype": setHype(m.v, m.lvl); if (m.train) { const d = document.createElement("div"); d.className = "train"; d.textContent = t("hypeTrain") + " x" + m.lvl; $("#watch").appendChild(d); setTimeout(() => d.remove(), 2700); FX.play("confetti", null, null, $("#fx")); } break;
       case "poll": if (!poll || poll.id !== m.poll.id) myVote = null; poll = m.poll; renderPoll(); break;
       case "challenges":
         if (m.changed && hostInfo) {
           const c = m.changed, hn = esc(hostInfo.name);
-          if (c.state === "accepted") banner(`🏆 ${hn} ${t("chAccepted")}<br><span style="font-weight:500">${esc(c.text)}</span>`);
-          if (c.state === "done") { banner(`🎉 ${hn} ${t("chDone")}`); FX.play("confetti", null, null, $("#fx")); }
-          if (c.state === "failed") banner(`😅 ${hn} ${t("chFailed")}`);
+          if (c.state === "accepted") banner(`${eic("trophy", "gold")} ${hn} ${t("chAccepted")}<br><span style="font-weight:500">${esc(c.text)}</span>`);
+          if (c.state === "done") { banner(`${eic("party", "gold")} ${hn} ${t("chDone")}`); FX.play("confetti", null, null, $("#fx")); }
+          if (c.state === "failed") banner(`${eic("x", "pink")} ${hn} ${t("chFailed")}`);
         }
         root._ch = m.list;
         break;
@@ -1834,9 +1858,9 @@ VIEWS.watch = (root, id) => {
       case "gift": {
         FX.gift($("#fx"), stageEl, m.gift, m.n);
         const gb = document.createElement("div"); gb.className = "gbanner";
-        gb.innerHTML = `<span class="ge">${(GIFT_E[m.gift] || "🎁")}</span><span>${uname(m, "span")} ${t("giftSent")} ×${m.n}</span>`;
+        gb.innerHTML = `<span class="ge">${GIFT_E[m.gift]}</span><span>${uname(m, "span")} ${t("giftSent")} ×${m.n}</span>`;
         $("#watch").appendChild(gb); setTimeout(() => gb.remove(), 3500);
-        addChat(`${uname(m)} ${t("giftSent")} ${(GIFT_E[m.gift] || "🎁")} ×${m.n}`, "fx");
+        addChat(`${uname(m)} ${t("giftSent")} ${GIFT_E[m.gift]} ×${m.n}`, "fx");
         break;
       }
       case "coins": if (S.user) { S.user.coins = m.coins; store.set("user", S.user); } break;
@@ -1845,11 +1869,11 @@ VIEWS.watch = (root, id) => {
       case "guest-pending": toast(t("reqSent")); break;
       case "guest-ok":
         haptic("success");
-        sheet(`<div style="text-align:center"><div style="font-size:52px">🎮</div><h3 style="margin-top:6px">${esc(t("invited", { n: m.host }))}</h3><p class="mut" style="margin-bottom:16px">${esc(m.title)}</p></div>
+        sheet(`<div style="text-align:center"><div class="bigic">${eic("game", "brand")}</div><h3 style="margin-top:6px">${esc(t("invited", { n: m.host }))}</h3><p class="mut" style="margin-bottom:16px">${esc(m.title)}</p></div>
           <button class="btn p" id="gj">${ic("live")} ${t("joinNow")}</button><button class="btn g" style="margin-top:8px" id="gl">${t("later")}</button>`,
           (sh, close) => { $("#gj", sh).onclick = () => { close(); go("golive", { joinRoom: id, hostName: m.host }); }; $("#gl", sh).onclick = close; });
         break;
-      case "guest-no": toast("🙏"); break;
+      case "guest-no": toast(t("declined")); break;
       case "ended": offline(t("endedT")); stage.setPubs([]); break;
       case "err": toast(terr(m.e)); break;
     }
@@ -1897,13 +1921,13 @@ VIEWS.watch = (root, id) => {
   $("#wi").onkeydown = (e) => { if (e.key === "Enter") send(); };
   $("#wx").onclick = () => go("home");
   let lastR = 0;
-  $("#wr").onclick = () => { const e = ["❤️", "🔥", "😂", "👏", "😮", "💯"][Math.random() * 6 | 0]; FX.floaty($("#wfx"), e); if (Date.now() - lastR > 250) { ws.send({ t: "react", e }); lastR = Date.now(); } haptic(); FX.audio(); };
+  $("#wr").onclick = () => { const e = ["hrt", "fir", "str", "blt", "crn", "gg"][Math.random() * 6 | 0]; FX.floaty($("#wfx"), e); if (Date.now() - lastR > 250) { ws.send({ t: "react", e }); lastR = Date.now(); } haptic(); FX.audio(); };
   $("#wpts").onclick = () => { if (!S.token) return toast(terr("login")); pointsSheet(root._loy, hostInfo, (id, text) => ws.send({ t: "redeem", id, text })); };
   $("#wgf").onclick = () => { FX.audio(); if (!S.token) return toast(terr("login")); giftSheet((g, n) => ws.send({ t: "gift", gift: g, n })); };
   $("#we").onclick = () => {
     FX.audio();
-    sheet(`<h3>${t("react")}</h3><div class="emoji">${["❤️", "🔥", "😂", "👏", "😮", "💯", "🏆"].map((e) => `<button data-e="${e}">${e}</button>`).join("")}</div>
-      <h3>${t("effects")}</h3><div class="fxgrid">${FX.list.map((f) => { const lock = f.shop && !((S.user && S.user.look && S.user.look.fx) || []).includes(f.id); return `<button class="fxb ${f.shop ? "fxs" : ""} ${lock ? "lock" : ""}" data-fx="${f.id}" ${f.vip ? 'style="border-color:rgba(255,215,0,.5)"' : ""}>${f.e}<small>${f.vip ? "👑 " : ""}${S.lang === "ar" ? f.ar : f.en}</small>${lock ? `<i class="lk">${ic("lock")}</i>` : ""}</button>`; }).join("")}</div>
+    sheet(`<h3>${t("react")}</h3><div class="emoji">${Object.keys(REACT).map((e) => `<button data-e="${e}">${eic(REACT[e][0], REACT[e][1])}</button>`).join("")}</div>
+      <h3>${t("effects")}</h3><div class="fxgrid">${FX.list.map((f) => { const lock = f.shop && !((S.user && S.user.look && S.user.look.fx) || []).includes(f.id); return `<button class="fxb ${f.shop ? "fxs" : ""} ${lock ? "lock" : ""}" data-fx="${f.id}" ${f.vip ? 'style="border-color:rgba(255,215,0,.5)"' : ""}>${eic(f.e, f.vip ? "gold" : f.shop ? "violet" : "brand")}<small>${f.vip ? "VIP · " : ""}${S.lang === "ar" ? f.ar : f.en}</small>${lock ? `<i class="lk">${ic("lock")}</i>` : ""}</button>`; }).join("")}</div>
       <button class="btn g" style="margin-top:16px" id="sch">${ic("trophy")} ${t("challenge")}</button>`,
       (sh, close) => {
         $$("[data-e]", sh).forEach((b) => (b.onclick = () => { FX.floaty($("#wfx"), b.dataset.e, 3); ws.send({ t: "react", e: b.dataset.e }); haptic(); }));
@@ -1921,8 +1945,8 @@ VIEWS.watch = (root, id) => {
     const list = root._ch || [];
     sheet(`<h3>${ic("trophy")} ${t("challenges")}</h3>
       <div class="row"><input class="inp" id="chi" placeholder="${t("challengePh")}" maxlength="90"><button class="btn p" style="width:auto;padding:15px 18px" id="chs">${ic("send")}</button></div>
-      <div id="chl">${list.length ? list.map((c) => `<div class="chl"><div class="row"><b style="color:${esc(c.color)};font-size:13px">${esc(c.name)}</b><span class="sp"></span><span class="st ${c.state}">${c.state === "new" ? "🔥 " + c.up : t(c.state === "accepted" ? "accept" : c.state)}</span></div>
-        <div style="margin-top:6px;font-size:15px">${esc(c.text)}</div>${c.state === "new" ? `<button class="mini" style="margin-top:8px" data-up="${c.id}">+1 🔥</button>` : ""}</div>`).join("") : `<p class="mut" style="padding:20px;text-align:center">${t("noCh")}</p>`}</div>`,
+      <div id="chl">${list.length ? list.map((c) => `<div class="chl"><div class="row"><b style="color:${esc(c.color)};font-size:13px">${esc(c.name)}</b><span class="sp"></span><span class="st ${c.state}">${c.state === "new" ? eic("fire", "fire") + " " + c.up : t(c.state === "accepted" ? "accept" : c.state)}</span></div>
+        <div style="margin-top:6px;font-size:15px">${esc(c.text)}</div>${c.state === "new" ? `<button class="mini" style="margin-top:8px" data-up="${c.id}">+1 ${eic("fire", "fire")}</button>` : ""}</div>`).join("") : `<p class="mut" style="padding:20px;text-align:center">${t("noCh")}</p>`}</div>`,
       (sh, close) => {
         $("#chs", sh).onclick = () => { const v = $("#chi", sh).value.trim(); if (!v) return; if (!S.token) return toast(terr("login")); ws.send({ t: "challenge", text: v }); haptic("success"); close(); };
         $$("[data-up]", sh).forEach((b) => (b.onclick = () => { ws.send({ t: "ch-up", id: b.dataset.up }); b.remove(); }));
@@ -1962,7 +1986,7 @@ VIEWS.golive = (root, arg = {}) => {
   const sw = (k, on) => `<div class="sw ${on ? "on" : ""}" data-sw="${k}"></div>`;
   root.innerHTML = `<div class="view"><div class="top"><button class="ibtn" id="gb">${ic("back")}</button><div class="h1">${joining ? t("costream") : t("goLive")}</div></div>
   <div class="scroll" style="padding-bottom:calc(30px + var(--sb))">
-    ${joining ? `<div class="tile" style="text-align:center"><div style="font-size:40px">🤝</div><b>${esc(t("invited", { n: arg.hostName || "" }))}</b></div>` : `
+    ${joining ? `<div class="tile" style="text-align:center"><div class="bigic">${eic("users", "brand")}</div><b>${esc(t("invited", { n: arg.hostName || "" }))}</b></div>` : `
     <div class="field"><label>${t("title")}</label><input class="inp" id="gt" maxlength="80" placeholder="${t("titlePh")}" value="${esc(cfg.title)}"></div>
     <div class="field"><label>${t("game")}</label><button class="gpick" id="gg"></button></div>
     <div class="field"><label>${t("cat")}</label><div class="chips" id="gc">${CATS.slice(1).map((c) => `<button class="chip ${cfg.cat === c ? "on" : ""}" data-c="${c}">${CAT_EMO[c]} ${t(c)}</button>`).join("")}</div></div>`}
@@ -1992,7 +2016,7 @@ VIEWS.golive = (root, arg = {}) => {
   $("#gspd").onclick = () => go("speed");
   if (!joining) {
     const showGame = () => {
-      $("#gg").innerHTML = (cfg.gameIcon || cfg.gameIconData ? gIcon(cfg.gameIcon || cfg.gameIconData) : `<div class="ph2">🎮</div>`) +
+      $("#gg").innerHTML = (cfg.gameIcon || cfg.gameIconData ? gIcon(cfg.gameIcon || cfg.gameIconData) : `<div class="ph2">${eic("game", "brand")}</div>`) +
         `<div style="flex:1;min-width:0"><b style="display:block;font-size:16px">${esc(cfg.game || t("pickGame"))}</b><span class="mut small">${cfg.game ? t("change") : t("searchGames")}</span></div><span class="mut">›</span>`;
     };
     showGame();
@@ -2080,7 +2104,7 @@ VIEWS.studio = (root) => {
       <button class="act" id="ach">${ic("trophy")}<span>${t("challenges")}</span></button>
       <button class="act" id="areq">${ic("users")}<span>${t("costream")}</span></button>
       <button class="act" id="apv">${ic("eye")}<span>${t("preview")}</span></button>
-      <button class="act" id="arw">⭐<span>${t("rewards")}</span></button>
+      <button class="act" id="arw">${eic("star", "gold")}<span>${t("rewards")}</span></button>
       ${job.role === "host" ? `<button class="act" id="amod">${MOD_SVG.replace("<svg", '<svg width="22" height="22" fill="currentColor"')}<span>${t("modT")}</span></button>` : ""}
       <button class="act" id="aend" style="color:#ff7b88">${ic("stop")}<span>${t("end")}</span></button>
     </div>
@@ -2097,7 +2121,7 @@ VIEWS.studio = (root) => {
   const renderChat = () => {
     const el = $("#sl");
     if (!st.chat.length) return;
-    el.innerHTML = st.chat.slice(-60).reverse().map((m) => m.sys ? `<div class="sm small mut" style="justify-content:center">${m.sys}</div>` : `<div class="sm">${avatar(m)}<div class="tx">${roleTag(m.role)}${uname(m)}<br>${esc(m.text)}</div>
+    el.innerHTML = st.chat.slice(-60).reverse().map((m) => m.sys ? `<div class="sm small mut" style="justify-content:center">${m.sys}</div>` : `<div class="sm">${avatar(m)}<div class="tx">${roleTag(m.role)}${uname(m)}<br>${m.giftId ? GIFT_E[m.giftId] + " " : ""}${esc(m.text)}</div>
       ${job.role === "host" && m.uid !== S.user.id ? `<button class="mini" data-mod="${m.id}">${MOD_SVG.replace("<svg", '<svg width="16" height="16" fill="currentColor"')}</button><button class="mini" data-pin="${m.id}">${ic("pin")}</button><button class="mini" data-inv="${m.uid}" data-n="${esc(m.name)}">${ic("users")}</button>` : ""}</div>`).join("");
     $$("[data-pin]", el).forEach((b) => (b.onclick = () => { ws.send({ t: "pin", id: b.dataset.pin }); toast(t("pin") + " ✓"); }));
     $$("[data-mod]", el).forEach((b) => (b.onclick = () => { const m = st.chat.find((x) => x.id === b.dataset.mod); if (m) userSheet(m, { myRole: "owner", hostId: S.user.id }); }));
@@ -2128,7 +2152,7 @@ VIEWS.studio = (root) => {
         if (m.meta && m.meta.ended) { toast(t("endedT")); endLive(); }
         break;
       case "chat": st.chat.push(m); renderChat(); break;
-      case "modlog": st.chat.push({ sys: "🛡️ " + modLine(m), id: "s" + m.at }); renderChat(); break;
+      case "modlog": st.chat.push({ sys: eic("shield", "green") + " " + modLine(m), id: "s" + m.at }); renderChat(); break;
       case "delmsg": st.chat = st.chat.filter((x) => x.id !== m.id); renderChat(); break;
       case "purge": st.chat = st.chat.filter((x) => x.uid !== m.uid); renderChat(); break;
       case "clearchat": st.chat = []; $("#sl").innerHTML = ""; break;
@@ -2145,7 +2169,7 @@ VIEWS.studio = (root) => {
       case "effect": haptic("medium"); break;
       case "enter": grandEntrance(m, null); haptic("success"); break;
       case "redeems": st.redeems = m.list; dot($("#arw"), m.list.filter((x) => x.state === "new").length); if (m.list.some((x) => x.state === "new")) haptic(); break;
-      case "gift": haptic("success"); toast(`${GIFT_E[m.gift] || "🎁"} ${uname(m, "span")} ${t("giftSent")} ×${m.n} · +${Math.floor(m.value * 0.7)} 🪙`, 4000); st.chat.push({ uid: m.uid, name: m.name, color: m.color, look: m.look, text: `🎁 ${GIFT_E[m.gift] || ""} ×${m.n}` }); renderChat(); break;
+      case "gift": haptic("success"); toast(`${GIFT_E[m.gift]} ${uname(m, "span")} ${t("giftSent")} ×${m.n} · +${Math.floor(m.value * 0.7)} ${eic("coin", "gold")}`, 4000); st.chat.push({ uid: m.uid, name: m.name, color: m.color, look: m.look, text: `×${m.n}`, giftId: m.gift }); renderChat(); break;
       case "bstatus": if (m.uid === S.user.id && m.msg) { toast(esc(m.msg), 6000); if (m.state === "error") setState("error"); } break;
       case "kicked": case "ended": endLive(); break;
       case "err": toast(terr(m.e)); break;
@@ -2154,7 +2178,7 @@ VIEWS.studio = (root) => {
   const upd = () => { $("#kv").textContent = fmtN(st.viewers); st.peak = Math.max(st.peak, st.viewers); $("#kp").textContent = fmtN(st.peak); $("#kh").textContent = "x" + st.lvl; };
   const setState = (s) => {
     S.bstate = s;
-    $("#sst").textContent = s === "live" ? "● " + t("onAir") : s === "stopped" ? t("stopped") : s === "error" ? "⚠️" : t("starting");
+    $("#sst").textContent = s === "live" ? "● " + t("onAir") : s === "stopped" ? t("stopped") : s === "error" ? t("errorT") : t("starting");
     $("#sst").style.color = s === "live" ? "var(--ok)" : "";
     const hint = $("#shint");
     if (s === "starting" && isIOS()) {
@@ -2212,7 +2236,7 @@ VIEWS.studio = (root) => {
   };
   $("#ach").onclick = () => {
     const render = (sh, close) => {
-      $("#chlist", sh).innerHTML = st.ch.length ? st.ch.map((c) => `<div class="chl"><div class="row"><b style="color:${esc(c.color)};font-size:13px">${esc(c.name)}</b><span class="sp"></span><span class="st ${c.state}">${c.state === "new" ? "🔥 " + c.up : t(c.state === "accepted" ? "accept" : c.state)}</span></div>
+      $("#chlist", sh).innerHTML = st.ch.length ? st.ch.map((c) => `<div class="chl"><div class="row"><b style="color:${esc(c.color)};font-size:13px">${esc(c.name)}</b><span class="sp"></span><span class="st ${c.state}">${c.state === "new" ? eic("fire", "fire") + " " + c.up : t(c.state === "accepted" ? "accept" : c.state)}</span></div>
         <div style="margin:6px 0 8px;font-size:15px">${esc(c.text)}</div><div class="row">${c.state === "new" ? `<button class="mini p" data-s="accepted" data-id="${c.id}">${t("accept")}</button><button class="mini" data-s="rejected" data-id="${c.id}">${t("reject")}</button>` : c.state === "accepted" ? `<button class="mini p" data-s="done" data-id="${c.id}">${t("done")}</button><button class="mini" data-s="failed" data-id="${c.id}">${t("failed")}</button>` : ""}</div></div>`).join("") : `<p class="mut" style="padding:20px;text-align:center">${t("noCh")}</p>`;
       $$("[data-s]", sh).forEach((b) => (b.onclick = () => { ws.send({ t: "ch-set", id: b.dataset.id, state: b.dataset.s }); const c = st.ch.find((x) => x.id === b.dataset.id); if (c) c.state = b.dataset.s; haptic("success"); render(sh, close); }));
     };
@@ -2242,11 +2266,11 @@ function streamerCard(st, self) {
       <div class="srk"><b>${st.mrank ? "#" + st.mrank : "–"}</b><span>${t("sRankM")}</span></div><div class="srk"><b>${st.rank ? "#" + st.rank : "–"}</b><span>${t("sRankA")}</span></div></div>
     <div class="bar" style="margin-top:12px"><i style="width:${pct}%"></i></div>
     <div class="row small mut" style="margin-top:6px"><span>${fmtN(st.xp)} XP</span><div class="sp"></div><span>${t("sNext", { n: fmtN(Math.max(0, st.next - st.xp)) })}</span></div>
-    ${self ? `<div class="small" style="margin-top:8px;color:#ffd36b">💰 ${t("sharePct", { n: st.share })}</div>` : ""}
+    ${self ? `<div class="small" style="margin-top:8px;color:#ffd36b">${eic("coin", "gold")} ${t("sharePct", { n: st.share })}</div>` : ""}
   </div>`;
 }
 function sLevelUpFx(m, canvas) {
-  const d = document.createElement("div"); d.className = "lvup slv"; d.innerHTML = `<b>🎙 LV ${m.level}</b>${S.user && m.uid === S.user.id ? t("sLevelUpMe", { l: m.level }) : esc(t("sLevelUp", { n: m.name || "", l: m.level }))}`;
+  const d = document.createElement("div"); d.className = "lvup slv"; d.innerHTML = `<b>${eic("mic")} LV ${m.level}</b>${S.user && m.uid === S.user.id ? t("sLevelUpMe", { l: m.level }) : esc(t("sLevelUp", { n: m.name || "", l: m.level }))}`;
   ($("#app") || document.body).appendChild(d); setTimeout(() => d.remove(), 3600);
   FX.play("fireworks", null, null, canvas || $("#fx")); haptic("success");
 }
@@ -2269,15 +2293,15 @@ function profileHtml(r, self) {
     ${kp(r.hours, t("hoursN"))}${kp(fmtN(r.bestPeak), t("bestPeak"))}${kp(fmtN(r.subsCount || 0), t("subsN"))}
   </div>
   <div id="pact"></div>
-  ${r.games.length ? `<div class="h2">${ic("game")} ${t("gamesPlayed")}</div><div class="chips">${r.games.map((g) => `<span class="chip gchip">${g.icon ? gIcon(g.icon) : "🎮"}<span>${esc(g.name)}</span><b>${g.n}</b></span>`).join("")}</div>` : ""}
+  ${r.games.length ? `<div class="h2">${ic("game")} ${t("gamesPlayed")}</div><div class="chips">${r.games.map((g) => `<span class="chip gchip">${g.icon ? gIcon(g.icon) : eic("game", "brand")}<span>${esc(g.name)}</span><b>${g.n}</b></span>`).join("")}</div>` : ""}
   ${(() => { const recs = r.streams.filter((s) => s.rec && !s.live); return recs.length ? `<div class="h2">${ic("live")} ${t("recordings")}</div><div class="grid">${recs.map((s) => `<div class="card" data-id="${s.id}" data-rec="1">
-      <div class="th land">${s.gameIcon ? `<div class="thbg" style="background-image:url('${esc(s.gameIcon)}')"></div>` : `<div class="ph">🎮</div>`}<img src="/api/thumb/${s.id}" onerror="this.remove()" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+      <div class="th land">${s.gameIcon ? `<div class="thbg" style="background-image:url('${esc(s.gameIcon)}')"></div>` : `<div class="ph">${eic("game", "brand")}</div>`}<img src="/api/thumb/${s.id}" onerror="this.remove()" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
         <div style="position:absolute;inset:0;display:grid;place-items:center"><div style="width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.55);display:grid;place-items:center;font-size:18px;backdrop-filter:blur(8px)">▶</div></div>
         <span class="badge" style="position:absolute;bottom:8px;inset-inline-end:8px">${fmtDur(s.rec.dur * 1000)}</span>
         ${self ? `<button class="mini" data-del="${s.id}" style="position:absolute;top:8px;inset-inline-end:8px;background:rgba(0,0,0,.55);color:#ff7b88">${ic("x")}</button>` : ""}</div>
       <div class="meta"><div class="tt">${esc(s.title)}</div><div class="small mut" style="margin-top:4px">${s.game ? esc(s.game) + " · " : ""}${new Date(s.started).toLocaleDateString(S.lang)}</div></div></div>`).join("")}</div>` : ""; })()}
   <div class="h2">${t("past")}</div>
-  <div class="sl">${r.streams.length ? r.streams.map((s) => `<div class="sm" data-id="${s.id}" data-rec="${s.rec && !s.live ? 1 : ""}" style="align-items:center">${s.gameIcon ? gIcon(s.gameIcon, "gi", 40) : `<div class="ph2" style="width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--card2)">🎮</div>`}
+  <div class="sl">${r.streams.length ? r.streams.map((s) => `<div class="sm" data-id="${s.id}" data-rec="${s.rec && !s.live ? 1 : ""}" style="align-items:center">${s.gameIcon ? gIcon(s.gameIcon, "gi", 40) : `<div class="ph2" style="width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--card2)">${eic("game", "brand")}</div>`}
     <div class="tx"><b>${esc(s.title)}</b><br><span class="mut small">${esc(s.game || "")} · ${new Date(s.started).toLocaleDateString(S.lang)} · ${t("peak")} ${s.peak}</span></div>${s.live ? '<span class="badge red">LIVE</span>' : s.rec ? `<span class="badge" style="background:var(--grad)">▶ ${fmtDur(s.rec.dur * 1000)}</span>${self ? `<button class="mini" data-del="${s.id}" style="color:#ff7b88">${ic("x")}</button>` : ""}` : ""}</div>`).join("") : `<p class="mut small" style="text-align:center;padding:16px">${t("noPast")}</p>`}</div>`;
 }
 function pickPhoto(cb) {
