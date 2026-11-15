@@ -107,6 +107,52 @@ final class Publisher: NSObject, RTCPeerConnectionDelegate {
             ],
         ], headers: ["x-pub": job.pub])
         onState?("live")
+        startStats()
+    }
+
+    // MARK: quality telemetry (every 15 s → server diag)
+    private var statsTimer: DispatchSourceTimer?
+    private var lastV: (Double, Double) = (0, 0)   // bytes, timestamp(us)
+    private var lastA: (Double, Double) = (0, 0)
+    private func startStats() {
+        guard statsTimer == nil else { return }
+        let t = DispatchSource.makeTimerSource(queue: .global(qos: .utility))
+        t.schedule(deadline: .now() + 10, repeating: 15)
+        t.setEventHandler { [weak self] in self?.collectStats() }
+        t.resume(); statsTimer = t
+    }
+    private func collectStats() {
+        guard let pc = pc, !stopped else { return }
+        pc.statistics { [weak self] rep in
+            guard let self = self else { return }
+            var v = "", a = "", rtt = "", lost = ""
+            func num(_ o: NSObject?) -> Double { (o as? NSNumber)?.doubleValue ?? 0 }
+            for (_, st) in rep.statistics {
+                let x = st.values
+                switch st.type {
+                case "outbound-rtp":
+                    let kind = (x["kind"] as? String) ?? (x["mediaType"] as? String) ?? ""
+                    let bytes = num(x["bytesSent"]), ts = st.timestamp_us
+                    if kind == "video" {
+                        let kbps = self.lastV.1 > 0 ? (bytes - self.lastV.0) * 8 / ((ts - self.lastV.1) / 1000) : 0
+                        self.lastV = (bytes, ts)
+                        v = String(format: "v %.0ffps %@x%@ %.0fkbps limit=%@ dropped=%.0f", num(x["framesPerSecond"]),
+                                   "\(Int(num(x["frameWidth"])))", "\(Int(num(x["frameHeight"])))", kbps, (x["qualityLimitationReason"] as? String) ?? "-", num(x["framesDropped"]))
+                    } else if kind == "audio" {
+                        let kbps = self.lastA.1 > 0 ? (bytes - self.lastA.0) * 8 / ((ts - self.lastA.1) / 1000) : 0
+                        self.lastA = (bytes, ts)
+                        a = String(format: "a %.0fkbps", kbps)
+                    }
+                case "remote-inbound-rtp":
+                    if ((x["kind"] as? String) ?? "") == "video" {
+                        rtt = String(format: "rtt=%.0fms", num(x["roundTripTime"]) * 1000)
+                        lost = String(format: "lost=%.1f%%", num(x["fractionLost"]) * 100)
+                    }
+                default: break
+                }
+            }
+            Diag.log("stats pub \(v) | \(a) \(rtt) \(lost)")
+        }
     }
 
     // Stereo-ish quality music for game audio.
@@ -129,6 +175,7 @@ final class Publisher: NSObject, RTCPeerConnectionDelegate {
 
     func stop() {
         stopped = true
+        statsTimer?.cancel(); statsTimer = nil
         _ = audio.stopRecording()
         pc?.close()
         pc = nil

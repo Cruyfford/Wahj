@@ -430,7 +430,10 @@ class Sub {
     try {
       const st = await this.pc.getStats();
       let rtt = 0, jb = 0, jbn = 0, fps = 0, kbps = 0;
+      const q = { vFreeze: 0, vFreezeS: 0, vLost: 0, vRecv: 0, vDrop: 0, aConceal: 0, aTotal: 0, aLost: 0, aRecv: 0, aJit: 0, w: 0, h: 0 };
       st.forEach((r) => {
+        if (r.type === "inbound-rtp" && r.kind === "video") { q.vFreeze += r.freezeCount || 0; q.vFreezeS += r.totalFreezesDuration || 0; q.vLost += r.packetsLost || 0; q.vRecv += r.packetsReceived || 0; q.vDrop += r.framesDropped || 0; q.w = r.frameWidth || q.w; q.h = r.frameHeight || q.h; }
+        if (r.type === "inbound-rtp" && r.kind === "audio") { q.aConceal += r.concealedSamples || 0; q.aTotal += r.totalSamplesReceived || 0; q.aLost += r.packetsLost || 0; q.aRecv += r.packetsReceived || 0; q.aJit = Math.max(q.aJit, r.jitter || 0); }
         if (r.type === "candidate-pair" && r.state === "succeeded" && r.currentRoundTripTime) rtt = r.currentRoundTripTime;
         if (r.type === "inbound-rtp" && r.kind === "video") {
           jb += r.jitterBufferDelay || 0; jbn += r.jitterBufferEmittedCount || 0; fps = Math.max(fps, r.framesPerSecond || 0);
@@ -439,7 +442,7 @@ class Sub {
         }
       });
       const buf = jbn ? jb / jbn : 0;
-      return { delay: rtt / 2 + buf + 0.05, fps, kbps };
+      return { delay: rtt / 2 + buf + 0.05, fps, kbps, rtt, q };
     } catch (e) { return null; }
   }
   close() { try { this.pc.close(); } catch (e) {} if (this.sid) api(`/api/sfu/${this.sid}/close`, { tracks: [], force: true }, "PUT"); }
@@ -1906,8 +1909,21 @@ VIEWS.watch = (root, id) => {
 
   // stats
   const latEl = $("#wlat");
+  let qPrev = null, qT = 0, fpsSum = 0, fpsN = 0, fpsMin = 99;
   const statT = setInterval(async () => {
     const s = await stage.sub.stats();
+    // quality telemetry every ~15 s (deltas) → server, so stutter/audio issues show up in the logs
+    if (s && s.q && s.fps) {
+      fpsSum += s.fps; fpsN++; fpsMin = Math.min(fpsMin, s.fps);
+      if (Date.now() - qT > 15000) {
+        const q = s.q, p = qPrev || { vFreeze: 0, vFreezeS: 0, vLost: 0, vRecv: 0, vDrop: 0, aConceal: 0, aTotal: 0, aLost: 0, aRecv: 0 };
+        const d = (k) => q[k] - (p[k] || 0);
+        const vl = d("vRecv") + d("vLost") > 0 ? (100 * d("vLost")) / (d("vRecv") + d("vLost")) : 0;
+        const ac = d("aTotal") > 0 ? (100 * d("aConceal")) / d("aTotal") : 0;
+        if (qPrev) diag(`stats view v ${(fpsSum / fpsN).toFixed(0)}fps(min ${fpsMin.toFixed(0)}) ${q.w}x${q.h} ${Math.round(s.kbps)}kbps freezes=${d("vFreeze")} (${d("vFreezeS").toFixed(1)}s) lost=${vl.toFixed(1)}% dropped=${d("vDrop")} | a concealed=${ac.toFixed(1)}% lost=${d("aLost")} jitter=${Math.round(q.aJit * 1000)}ms | delay=${s.delay.toFixed(2)}s rtt=${Math.round(s.rtt * 1000)}ms`, id);
+        qPrev = q; qT = Date.now(); fpsSum = 0; fpsN = 0; fpsMin = 99;
+      }
+    }
     if (s && s.fps && P.showLat) { latEl.classList.remove("hide"); $("span", latEl).textContent = `${s.delay.toFixed(1)}s · ${Math.round(s.fps)}fps`; }
   }, 2000);
 

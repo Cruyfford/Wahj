@@ -8,7 +8,8 @@ import UniformTypeIdentifiers
 /// Video is letterboxed into a fixed 720p canvas so rotation mid-stream never breaks the file.
 final class SegmentRecorder: NSObject, AVAssetWriterDelegate {
     private let job: WahjJob
-    private let q = DispatchQueue(label: "wahj.rec", qos: .utility)
+    private let q = DispatchQueue(label: "wahj.rec", qos: .userInitiated)
+    private var audioQueued = 0   // bounded: never let audio pile up behind slow video renders
     private let up = DispatchQueue(label: "wahj.rec.upload", qos: .utility)
     private var writer: AVAssetWriter?
     private var vIn: AVAssetWriterInput?
@@ -88,7 +89,7 @@ final class SegmentRecorder: NSObject, AVAssetWriterDelegate {
             AVVideoCodecKey: AVVideoCodecType.h264,
             AVVideoWidthKey: Int(canvas.width), AVVideoHeightKey: Int(canvas.height),
             AVVideoCompressionPropertiesKey: [
-                AVVideoAverageBitRateKey: 2_000_000,
+                AVVideoAverageBitRateKey: 1_500_000,   // leaves upstream bandwidth for the live stream
                 AVVideoMaxKeyFrameIntervalDurationKey: 2,
                 AVVideoExpectedSourceFrameRateKey: 30,
                 AVVideoAllowFrameReorderingKey: false,
@@ -119,8 +120,11 @@ final class SegmentRecorder: NSObject, AVAssetWriterDelegate {
     func pushAudio(_ samples: [Int16]) {
         guard !disabled, !finishing, let fmt = audioFmt, !samples.isEmpty else { return }
         let now = CMClockGetTime(CMClockGetHostTimeClock())
+        lock.lock(); if audioQueued > 40 { lock.unlock(); return }; audioQueued += 1; lock.unlock()
         q.async { [weak self] in
-            guard let self = self, let w = self.writer, w.status == .writing, let ai = self.aIn else { return }
+            guard let self = self else { return }
+            defer { self.lock.lock(); self.audioQueued -= 1; self.lock.unlock() }
+            guard let w = self.writer, w.status == .writing, let ai = self.aIn else { return }
             // continuous timeline anchored on the host clock; re-anchor if we drift
             let frames = Int64(samples.count)
             let start = CMTimeSubtract(now, CMTime(value: frames, timescale: 48000))
@@ -157,7 +161,7 @@ final class SegmentRecorder: NSObject, AVAssetWriterDelegate {
 
     private func upload(path: String, data: Data) {
         lock.lock()
-        if pendingUploads >= 8 { lock.unlock(); NSLog("rec: upload backlog, dropping segment"); return }
+        if pendingUploads >= 4 { lock.unlock(); NSLog("rec: upload backlog, dropping segment"); return }
         pendingUploads += 1
         lock.unlock()
         let url = job.serverURL + "/api/rec/\(job.room)/" + path
