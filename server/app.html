@@ -675,6 +675,12 @@ svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-l
 .radar .ei{width:46px;height:46px;stroke-width:2.2;position:relative;z-index:1;padding:14px;box-sizing:content-box;border-radius:50%;background:radial-gradient(circle,rgba(124,92,255,.35),rgba(255,77,141,.12) 70%,transparent);animation:radarb 2.4s ease-in-out infinite}
 @keyframes radar{0%{transform:scale(.35);opacity:1}100%{transform:scale(1.15);opacity:0}}
 @keyframes radarb{50%{transform:scale(1.08)}}
+/* frames: keep their layers self-contained so nothing covers buttons on top */
+.frm{isolation:isolate}
+#pcam{z-index:10}
+.frm:has(> .av.lg)::before{inset:-6px}
+.frm:has(> .av.lg)::after{inset:-7px}
+.frm:has(> .av.lg)>.av{box-shadow:0 0 0 4px var(--bg)}
 </style></head><body>
 <svg width="0" height="0" style="position:absolute">
   <defs>
