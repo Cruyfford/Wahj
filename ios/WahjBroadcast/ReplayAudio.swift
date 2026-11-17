@@ -232,7 +232,7 @@ final class ReplayAudio: NSObject, RTCAudioDevice {
         guard !mono.isEmpty else { return nil }
         if nb > 1 { let k = 1 / Float(nb); for i in 0..<mono.count { mono[i] *= k } }
         return (mono, asbd.mSampleRate > 0 ? asbd.mSampleRate : 44100)
-
+    }
 }
 
 /// Continuous linear resampler to 48 kHz.

@@ -176,7 +176,7 @@ jobs:
           xcodebuild -project WahjLive.xcodeproj -scheme WahjLive -configuration Release \
             -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build 2>&1 | tee build.log | grep -E "error:|warning: unre|BUILD" || true
-          test -d build/Build/Products/Release-iphoneos/WahjLive.app || { grep -E "error:" build.log | head -60; exit 1; }
+          if grep -q "BUILD FAILED" build.log || [ ! -f build/Build/Products/Release-iphoneos/WahjLive.app/WahjLive ]; then grep -E "error:" build.log | head -60; exit 1; fi
 
       - name: Package IPA
         run: |
@@ -184,8 +184,10 @@ jobs:
           rm -rf Payload && mkdir Payload
           cp -R build/Build/Products/Release-iphoneos/WahjLive.app Payload/
           ls Payload/WahjLive.app/PlugIns Payload/WahjLive.app/Frameworks
+          test -d Payload/WahjLive.app/PlugIns/WahjBroadcast.appex || { echo "broadcast extension missing"; exit 1; }
           zip -qry WahjLive.ipa Payload
           ls -la WahjLive.ipa
+          [ $(stat -f%z WahjLive.ipa) -gt 1000000 ] || { echo "IPA too small"; exit 1; }
 
       - uses: actions/upload-artifact@v4
         with:
