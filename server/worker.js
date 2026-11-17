@@ -46,10 +46,15 @@ function bearer(req) {
 // ---------- email (Resend API, optional) ----------
 // ---- i18n ----
 let _i18nV = "";
-function I18N_V() { if (!_i18nV) { let h = 5381; for (let i = 0; i < EN_TXT.length; i++) h = ((h << 5) + h + EN_TXT.charCodeAt(i)) | 0; _i18nV = (h >>> 0).toString(36); } return _i18nV; }
+function I18N_V() { if (!_i18nV) { let h = 5381; const src = "v2|" + EN_TXT; for (let i = 0; i < src.length; i++) h = ((h << 5) + h + src.charCodeAt(i)) | 0; _i18nV = (h >>> 0).toString(36); } return _i18nV; }
 const I18N_LANGS = new Set("af am az be bg bn bs ca ceb cs cy da de el es et fa fi fr ga gl gu ha he hi hr ht hu hy id ig is it ja jv ka kk km kn ko lb lo lt lv mg mk ml mn mr ms my ne nl no pa pl ps pt ro ru sd si sk sl so sq sr su sv sw ta th tl tr uk ur uz vi xh yo zh zu".split(" "));
 const _i18nMem = {};
 const LANG_EN = { af: "Afrikaans", am: "Amharic", az: "Azerbaijani", be: "Belarusian", bg: "Bulgarian", bn: "Bengali", bs: "Bosnian", ca: "Catalan", ceb: "Cebuano", cs: "Czech", cy: "Welsh", da: "Danish", de: "German", el: "Greek", es: "Spanish", et: "Estonian", fa: "Persian (Farsi)", fi: "Finnish", fr: "French", ga: "Irish", gl: "Galician", gu: "Gujarati", ha: "Hausa", he: "Hebrew", hi: "Hindi", hr: "Croatian", ht: "Haitian Creole", hu: "Hungarian", hy: "Armenian", id: "Indonesian", ig: "Igbo", is: "Icelandic", it: "Italian", ja: "Japanese", jv: "Javanese", ka: "Georgian", kk: "Kazakh", km: "Khmer", kn: "Kannada", ko: "Korean", lb: "Luxembourgish", lo: "Lao", lt: "Lithuanian", lv: "Latvian", mg: "Malagasy", mk: "Macedonian", ml: "Malayalam", mn: "Mongolian", mr: "Marathi", ms: "Malay", my: "Burmese", ne: "Nepali", nl: "Dutch", no: "Norwegian (Bokmål)", pa: "Punjabi", pl: "Polish", ps: "Pashto", pt: "Portuguese", ro: "Romanian", ru: "Russian", sd: "Sindhi", si: "Sinhala", sk: "Slovak", sl: "Slovenian", so: "Somali", sq: "Albanian", sr: "Serbian (Cyrillic)", su: "Sundanese", sv: "Swedish", sw: "Swahili", ta: "Tamil", te: "Telugu", th: "Thai", tl: "Filipino (Tagalog)", tr: "Turkish", uk: "Ukrainian", ur: "Urdu", uz: "Uzbek (Latin)", vi: "Vietnamese", xh: "Xhosa", yo: "Yoruba", zh: "Simplified Chinese", zu: "Zulu" };
+// reject outputs that leak letters from an unrelated script (e.g. Hangul inside Urdu)
+const SCRIPTS = [[/[\uAC00-\uD7AF\u1100-\u11FF]/, ["ko"]], [/[\u3040-\u30FF]/, ["ja"]], [/[\u4E00-\u9FFF]/, ["zh", "ja"]], [/[\u0600-\u06FF]/, ["fa", "ur", "ps", "sd"]],
+  [/[\u0400-\u04FF]/, ["ru", "uk", "bg", "sr", "mk", "be", "kk", "mn"]], [/[\u0590-\u05FF]/, ["he"]], [/[\u0900-\u097F]/, ["hi", "mr", "ne"]], [/[\u0E00-\u0E7F]/, ["th"]]];
+const NON_LATIN = new Set("am be bg bn el fa gu he hi hy ja ka kk km kn ko lo mk ml mn mr my ne pa ps ru sd si sr ta te th uk ur zh".split(" "));
+const scriptOk = (lang, v) => SCRIPTS.every(([re, ok]) => ok.includes(lang) || !re.test(v));
 const I18N_MODELS = ["@cf/meta/llama-3.3-70b-instruct-fp8-fast", "@cf/google/gemma-3-12b-it"];
 async function i18nBatch(env, lang, part) {
   const sys = `You are a professional app localizer. Translate the JSON values of a mobile GAME LIVE-STREAMING app (like Twitch/Kick) from English into ${LANG_EN[lang]}.
@@ -66,7 +71,9 @@ Return ONLY a JSON object with exactly the same keys.`;
       for (const k in part) {
         const v = typeof o[k] === "string" ? o[k].trim() : "";
         const ph = part[k].match(/\{\w+\}/g) || [];
-        if (v && ph.every((p) => v.includes(p))) out[k] = v;
+        // in non-Latin languages an untranslated English sentence is a miss (brand words alone are fine)
+        const untranslated = NON_LATIN.has(lang) && v === part[k] && /[a-z]{3,}/i.test(part[k].replace(/Wahj|Live|VIP|LIVE|XP|PayPal|YouTube|Wi-?Fi|\{\w+\}/g, ""));
+        if (v && ph.every((p) => v.includes(p)) && scriptOk(lang, v) && !untranslated) out[k] = v;
       }
       if (Object.keys(out).length >= Object.keys(part).length * 0.7) return out;
     } catch (e) {}
@@ -83,6 +90,9 @@ async function i18n(env, lang) {
   for (let i = 0; i < keys.length; i += 40) { const p = {}; keys.slice(i, i + 40).forEach((k) => (p[k] = en[k])); parts.push(p); }
   const res = await Promise.all(parts.map((p) => i18nBatch(env, lang, p)));
   const out = Object.assign({}, ...res);
+  // second pass for anything missing or rejected
+  const miss = keys.filter((k) => !out[k]);
+  for (let i = 0; i < miss.length; i += 30) { const p = {}; miss.slice(i, i + 30).forEach((k) => (p[k] = en[k])); Object.assign(out, await i18nBatch(env, lang, p)); }
   if (!Object.keys(out).length) return { error: "ai_fail" };
   const partial = Object.keys(out).length < keys.length * 0.97;
   if (!partial) { _i18nMem[key] = out; if (env.REC) await env.REC.put(key, JSON.stringify(out), { httpMetadata: { contentType: "application/json" } }); }
