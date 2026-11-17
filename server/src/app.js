@@ -2151,8 +2151,8 @@ VIEWS.watch = (root, id) => {
     if (!s) return offline(t("offline"));
     hostInfo = s.host;
     $("#wav").outerHTML = avatar(s.host, "md");
-    $("#wn").innerHTML = uname(s.host, "span");
-    $("#wg").innerHTML = (s.game ? gIcon(s.gameIcon) + esc(s.game) + " · " : "") + esc(s.title);
+    $("#wn").innerHTML = uname({ ...s.host, look: { ...((s.host && s.host.look) || {}), badge: "", top: 0 } }, "span");
+    $("#wg").innerHTML = badgeHtml((s.host && s.host.look) || {}) + (s.game ? gIcon(s.gameIcon) + esc(s.game) + " · " : "") + esc(s.title);
     if (S.user && S.user.id !== s.uid) {
       isFollowing = S.following.has(s.uid);
       const fb = $("#wf"); fb.classList.remove("hide");
