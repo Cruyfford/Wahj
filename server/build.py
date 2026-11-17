@@ -16,3 +16,14 @@ html = f'''<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8">
 <script>{js}</script></body></html>'''
 (d/'app.html').write_text(html)
 print('app.html', len(html))
+
+# English UI strings → lib/en.txt (source for automatic translation into other languages)
+import subprocess, json
+js_src = (d/'src/app.js').read_text()
+a = js_src.index('const T = {'); e = js_src.index('\nconst t = (k, v)')
+code = 'const T=' + js_src[a+10:e].rstrip().rstrip(';') + ';const o={};for(const[k,v]of Object.entries(T.en)){if(k==="errs")for(const[x,y]of Object.entries(v))o["errs."+x]=y;else if(typeof v==="string")o[k]=v;}process.stdout.write(JSON.stringify(o));'
+try:
+    out = subprocess.run(['node', '-e', code], capture_output=True, text=True, check=True).stdout
+    json.loads(out); (d/'lib/en.txt').write_text(out); print('lib/en.txt', len(out))
+except Exception as ex:
+    print('en.txt skipped:', ex)

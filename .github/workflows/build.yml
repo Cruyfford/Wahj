@@ -131,6 +131,14 @@ jobs:
         run: pip install playwright==1.48.0 && python -m playwright install --with-deps chromium
       - name: Run
         run: python tests/e2e.py "${{ needs.server.outputs.url }}"
+      - name: Translate top languages (prewarm cache)
+        continue-on-error: true
+        run: |
+          U="${{ needs.server.outputs.url }}"
+          for l in fr es de tr fa ur hi id ru zh pt ja; do
+            ( r=$(curl -s --max-time 170 "$U/api/i18n/$l"); echo "$l: $(echo "$r" | python3 -c 'import sys,json; d=json.load(sys.stdin); x=d.get("d") or {}; print(len(x), "strings", "partial" if d.get("partial") else "", d.get("error",""), "|", x.get("goLive",""), "|", x.get("follow",""))' 2>&1)" ) &
+          done
+          wait
       - uses: actions/upload-artifact@v4
         if: always()
         with:

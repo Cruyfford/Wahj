@@ -697,3 +697,11 @@ svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-l
 .donalert .dan{font-weight:900;font-size:16px}
 .donalert .daa{font-size:13px;color:#ffe9b0}.donalert .daa b{color:#ffd700;font-size:16px}
 .donalert .dam{margin-top:10px;padding:10px 12px;border-radius:14px;background:rgba(0,0,0,.3);font-size:14.5px;line-height:1.6;font-weight:600}
+/* language picker */
+.langl{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;max-height:52vh;overflow:auto;padding:2px}
+.langl button{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:12px 12px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid var(--line);color:#fff;text-align:start}
+.langl button b{font-size:14px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.langl button span{font-size:10px;color:var(--mut);font-weight:800}
+.langl button.on{background:var(--grad);border-color:transparent}.langl button.on span{color:#fff}
+.langl button.ld{opacity:.55;animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.3}}

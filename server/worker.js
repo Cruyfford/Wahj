@@ -3,6 +3,7 @@
 import APP_HTML from "./app.html";
 import GAMES from "./games.json";
 import HLS_JS from "./lib/hls.txt";
+import EN_TXT from "./lib/en.txt";
 
 const SFU = "https://rtc.live.cloudflare.com/v1";
 const VERSION = "1.0.0";
@@ -43,6 +44,40 @@ function bearer(req) {
 }
 
 // ---------- email (Resend API, optional) ----------
+// ---- i18n ----
+let _i18nV = "";
+function I18N_V() { if (!_i18nV) { let h = 5381; for (let i = 0; i < EN_TXT.length; i++) h = ((h << 5) + h + EN_TXT.charCodeAt(i)) | 0; _i18nV = (h >>> 0).toString(36); } return _i18nV; }
+const I18N_LANGS = new Set("af am az be bg bn bs ca ceb cs cy da de el es et fa fi fr ga gl gu ha he hi hr ht hu hy id ig is it ja jv ka kk km kn ko lb lo lt lv mg mk ml mn mr ms my ne nl no pa pl ps pt ro ru sd si sk sl so sq sr su sv sw ta th tl tr uk ur uz vi xh yo zh zu".split(" "));
+const _i18nMem = {};
+async function i18n(env, lang) {
+  if (!I18N_LANGS.has(lang)) return { error: "lang" };
+  const v = I18N_V(), key = `i18n/${lang}-${v}.json`;
+  if (_i18nMem[key]) return { v, lang, d: _i18nMem[key] };
+  if (env.REC) { const o = await env.REC.get(key); if (o) { const d = await o.json(); _i18nMem[key] = d; return { v, lang, d }; } }
+  if (!env.AI) return { error: "ai_off" };
+  const en = JSON.parse(EN_TXT), keys = Object.keys(en), out = {};
+  let i = 0, fails = 0;
+  const one = async (k) => {
+    const src = en[k];
+    // protect {placeholders} as numbered tokens the model leaves alone
+    const ph = [...new Set(src.match(/\{\w+\}/g) || [])];
+    let text = src; ph.forEach((p, j) => (text = text.split(p).join(`{${j}}`)));
+    try {
+      const r = await env.AI.run("@cf/meta/m2m100-1.2b", { text, source_lang: "en", target_lang: lang });
+      let tr = String((r && r.translated_text) || "").trim();
+      if (!tr || ph.some((p, j) => !tr.includes(`{${j}}`))) { fails++; return; }
+      ph.forEach((p, j) => (tr = tr.split(`{${j}}`).join(p)));
+      out[k] = tr;
+    } catch (e) { fails++; }
+  };
+  const worker = async () => { while (i < keys.length) { const k = keys[i++]; await one(k); } };
+  await Promise.all(Array.from({ length: 24 }, worker));
+  if (!Object.keys(out).length) return { error: "ai_fail" };
+  // only cache a good result; partial ones are returned but retried next time
+  if (Object.keys(out).length > keys.length * 0.8) { _i18nMem[key] = out; if (env.REC) await env.REC.put(key, JSON.stringify(out), { httpMetadata: { contentType: "application/json" } }); }
+  return { v, lang, d: out, partial: fails > 0 };
+}
+
 // ---- YouTube simulcast over HLS ingest (same fMP4 segments the phone already uploads) ----
 async function ytForward(env, room, n, buf, yt) {
   const base = "https://a.upload.youtube.com/http_upload_hls?cid=" + encodeURIComponent(yt.key) + "&copy=0&file=";
@@ -139,9 +174,11 @@ export default {
     try {
       // ---- config ----
       if (p === "/api/config") {
-        return J({ v: VERSION, rev: env.NATIVE_REV || "", ice: await iceServers(env), sfu: !!env.SFU_APP_ID, mail: !!env.RESEND_API_KEY, rec: !!env.REC });
+        return J({ v: VERSION, i18n: I18N_V(), ai: !!env.AI, rev: env.NATIVE_REV || "", ice: await iceServers(env), sfu: !!env.SFU_APP_ID, mail: !!env.RESEND_API_KEY, rec: !!env.REC });
       }
       if (p === "/api/ice") return J({ iceServers: await iceServers(env) });
+      // ---- automatic UI translation (Workers AI m2m100), cached in R2 per language + string-set version ----
+      { const im = p.match(/^\/api\/i18n\/([a-z]{2,3})$/); if (im) return J(await i18n(env, im[1])); }
 
       // ---- diagnostics ----
       if (p === "/api/diag" && req.method === "POST") {
