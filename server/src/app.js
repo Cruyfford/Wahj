@@ -31,7 +31,7 @@ const store = {
 };
 
 /* ---------------- app settings (this device) ---------------- */
-const P = Object.assign({ clipBuf: true, haptics: true, fxSound: true, reduceFx: false, showLat: true, chatOnStream: true, autoSound: true }, store.get("prefs", {}));
+const P = Object.assign({ showYt: true, clipBuf: true, haptics: true, fxSound: true, reduceFx: false, showLat: true, chatOnStream: true, autoSound: true }, store.get("prefs", {}));
 const setP = (k, v) => { P[k] = v; store.set("prefs", P); };
 
 /* ---------------- state ---------------- */
@@ -73,12 +73,14 @@ const T = {
     shieldPaused: "الصورة محجوبة الآن للخصوصية", privTitle: "لحظة خصوصية", privSub: "سيعود البث خلال ثوانٍ",
     offline: "البث غير متاح الآن", endedT: "انتهى البث", back: "رجوع", tapSound: "اضغط لتشغيل الصوت", follow: "متابعة",
     unfollow: "متابَع", followers: "متابِع", past: "بثوث سابقة", edit: "تعديل الملف", save: "حفظ", bio: "نبذة", color: "لون الحساب",
-    settings: "الإعدادات", language: "اللغة", clip: "كليب", clips: "الكليبات", topClips: "أفضل الكليبات هذا الأسبوع", clipMaking: "جارٍ حفظ الكليب…", clipTitle: "عنوان الكليب", clipPublish: "نشر الكليب", clipUploading: "جارٍ الرفع… {n}%",
+    settings: "الإعدادات", language: "اللغة", ytChan: "رابط قناتك على يوتيوب", ytChanPh: "youtube.com/@اسم_قناتك", ytChanD: "لعرض تعليقات يوتيوب في شات وهج أثناء البث", ytChat: "تعليقات يوتيوب في الشات", ytChatD: "تظهر تعليقات بثك على يوتيوب في شات وهج وفوق اللعبة",
+    ytChatOff: "إخفاء تعليقات يوتيوب", showYt: "إظهار تعليقات يوتيوب في الشات", ytApiMissing: "قراءة تعليقات يوتيوب تحتاج إضافة مفتاح YouTube API في إعدادات السيرفر", ytChatOnT: "تعليقات يوتيوب ظاهرة", ytChatOffT: "تعليقات يوتيوب مخفية",
+    clip: "كليب", clips: "الكليبات", topClips: "أفضل الكليبات هذا الأسبوع", clipMaking: "جارٍ حفظ الكليب…", clipTitle: "عنوان الكليب", clipPublish: "نشر الكليب", clipUploading: "جارٍ الرفع… {n}%",
     clipDone: "تم نشر الكليب!", clipShare: "مشاركة", clipCopy: "نسخ الرابط", clipCopied: "تم نسخ الرابط", clipWait: "انتظر قليلاً — الكليب يحتاج بضع ثوانٍ من البث", clipUnsup: "جهازك لا يدعم صنع الكليبات",
     clipMade: "صنع كليب", views: "مشاهدة", clipBy: "بواسطة", clipDel: "حذف الكليب", clipBuf: "تجهيز الكليبات أثناء المشاهدة", clipBufD: "يحفظ آخر 30 ثانية حتى تصنع كليب بضغطة (يستهلك بطارية أكثر قليلاً)", noClips: "لا توجد كليبات بعد",
     search: "ابحث…", langLoading: "جارٍ تجهيز اللغة… (أول مرة فقط)", langFail: "تعذّر تحميل اللغة الآن، حاول لاحقاً", langAuto: "العربية والإنجليزية مترجمة يدوياً، وباقي اللغات مترجمة تلقائياً.", logout: "تسجيل الخروج", focusGuide: "دليل إخفاء الإشعارات في آيفون",
     focusSteps: "١. افتح تطبيق «الاختصارات» ← «الأتمتة» ← «أتمتة جديدة»<br>٢. اختر «تطبيق» ← وهج ← «عند الفتح»<br>٣. اختر «تشغيل فوري»<br>٤. أضف إجراء «تعيين التركيز» ← «عدم الإزعاج» ← تشغيل<br><br>الآن كل مرة تفتح وهج يتفعّل عدم الإزعاج تلقائياً ✓",
-    openShortcuts: "فتح الاختصارات", errs: { bad_handle: "اسم المستخدم: ٣–٢٠ حرفاً إنجليزياً أو أرقام", weak_password: "كلمة المرور ٦ أحرف على الأقل", taken: "الاسم محجوز", bad_login: "بيانات الدخول غير صحيحة", rate: "محاولات كثيرة، انتظر قليلاً", net: "تعذّر الاتصال", auth: "سجّل الدخول أولاً", not_invited: "لم تتم دعوتك", login: "سجّل الدخول للمشاركة", slow: "انتظر لحظة", guests_full: "اكتمل عدد الضيوف (٣)", bad_email: "البريد الإلكتروني غير صحيح", email_taken: "هذا البريد مسجّل مسبقاً", bad_code: "الرمز غير صحيح أو منتهي", mail_off: "إرسال البريد غير مفعّل في السيرفر بعد", bad_link: "الرابط غير صحيح", no_points: "نقاطك غير كافية", need_text: "اكتب رسالتك أولاً", too_many: "الحد ١٢ مكافأة", no_coins: "رصيدك غير كافٍ", vip_only: "خاص بمشتركي VIP", owned: "تملكه مسبقاً", self: "لا يمكنك إهداء نفسك", pay_off: "الدفع غير مفعّل بعد", pay_fail: "تعذّر إنشاء الدفع", forbidden: "غير مسموح", not_found: "غير موجود", bad_old: "كلمة المرور الحالية غير صحيحة", bad_image: "الصورة غير مدعومة", fx_off: "البثّاث أوقف المؤثرات", ch_off: "البثّاث أوقف التحديات", co_off: "البثّاث لا يقبل طلبات البث المشترك", bad_ytkey: "مفتاح يوتيوب غير صحيح" },
+    openShortcuts: "فتح الاختصارات", errs: { bad_handle: "اسم المستخدم: ٣–٢٠ حرفاً إنجليزياً أو أرقام", weak_password: "كلمة المرور ٦ أحرف على الأقل", taken: "الاسم محجوز", bad_login: "بيانات الدخول غير صحيحة", rate: "محاولات كثيرة، انتظر قليلاً", net: "تعذّر الاتصال", auth: "سجّل الدخول أولاً", not_invited: "لم تتم دعوتك", login: "سجّل الدخول للمشاركة", slow: "انتظر لحظة", guests_full: "اكتمل عدد الضيوف (٣)", bad_email: "البريد الإلكتروني غير صحيح", email_taken: "هذا البريد مسجّل مسبقاً", bad_code: "الرمز غير صحيح أو منتهي", mail_off: "إرسال البريد غير مفعّل في السيرفر بعد", bad_link: "الرابط غير صحيح", no_points: "نقاطك غير كافية", need_text: "اكتب رسالتك أولاً", too_many: "الحد ١٢ مكافأة", no_coins: "رصيدك غير كافٍ", vip_only: "خاص بمشتركي VIP", owned: "تملكه مسبقاً", self: "لا يمكنك إهداء نفسك", pay_off: "الدفع غير مفعّل بعد", pay_fail: "تعذّر إنشاء الدفع", forbidden: "غير مسموح", not_found: "غير موجود", bad_old: "كلمة المرور الحالية غير صحيحة", bad_image: "الصورة غير مدعومة", fx_off: "البثّاث أوقف المؤثرات", ch_off: "البثّاث أوقف التحديات", co_off: "البثّاث لا يقبل طلبات البث المشترك", bad_ytkey: "مفتاح يوتيوب غير صحيح", bad_ytchan: "لم أجد هذه القناة — الصق رابط قناتك" },
     sentFx: "أرسل", hypeTrain: "قطار الحماس", latency: "تأخير", guestsN: "ضيوف", layoutSplit: "شاشة مقسومة", layoutFocus: "تركيز",
     declined: "تم الرفض", errorT: "خطأ",
     support: "ادعم", supportT: "ادعم {n}", donCoins: "كوينز", donPaypal: "PayPal", donMsg: "رسالة تظهر على شاشة البث (اختياري)", donSend: "أرسل الدعم", donCustom: "مبلغ آخر",
@@ -159,12 +161,14 @@ const T = {
     shieldPaused: "Video is hidden for privacy right now", privTitle: "Privacy moment", privSub: "The stream is back in a few seconds",
     offline: "This stream is not available", endedT: "Stream ended", back: "Back", tapSound: "Tap for sound", follow: "Follow",
     unfollow: "Following", followers: "followers", past: "Past streams", edit: "Edit profile", save: "Save", bio: "Bio", color: "Accent color",
-    settings: "Settings", language: "Language", clip: "Clip", clips: "Clips", topClips: "Top clips this week", clipMaking: "Saving clip…", clipTitle: "Clip title", clipPublish: "Publish clip", clipUploading: "Uploading… {n}%",
+    settings: "Settings", language: "Language", ytChan: "Your YouTube channel link", ytChanPh: "youtube.com/@yourchannel", ytChanD: "Shows YouTube comments in Wahj chat while you stream", ytChat: "YouTube comments in chat", ytChatD: "Comments from your YouTube live show up in Wahj chat and over the game",
+    ytChatOff: "Hide YouTube comments", showYt: "Show YouTube comments in chat", ytApiMissing: "Reading YouTube comments needs a YouTube API key in the server settings", ytChatOnT: "YouTube comments shown", ytChatOffT: "YouTube comments hidden",
+    clip: "Clip", clips: "Clips", topClips: "Top clips this week", clipMaking: "Saving clip…", clipTitle: "Clip title", clipPublish: "Publish clip", clipUploading: "Uploading… {n}%",
     clipDone: "Clip published!", clipShare: "Share", clipCopy: "Copy link", clipCopied: "Link copied", clipWait: "Hold on — a clip needs a few seconds of stream first", clipUnsup: "This device can't make clips",
     clipMade: "made a clip", views: "views", clipBy: "by", clipDel: "Delete clip", clipBuf: "Prepare clips while watching", clipBufD: "Keeps the last 30 seconds so you can clip in one tap (uses slightly more battery)", noClips: "No clips yet",
     search: "Search…", langLoading: "Preparing language… (first time only)", langFail: "Couldn't load that language right now, try later", langAuto: "Arabic and English are hand-translated; other languages are translated automatically.", logout: "Sign out", focusGuide: "Hide notifications on iPhone",
     focusSteps: "1. Open Shortcuts → Automation → New Automation<br>2. Choose App → Wahj → Is Opened<br>3. Choose Run Immediately<br>4. Add action Set Focus → Do Not Disturb → On<br><br>Now Do Not Disturb turns on automatically every time you open Wahj ✓",
-    openShortcuts: "Open Shortcuts", errs: { bad_handle: "Username: 3–20 latin letters/digits", weak_password: "Password needs 6+ characters", taken: "Username taken", bad_login: "Wrong username or password", rate: "Too many attempts, wait a bit", net: "Connection failed", auth: "Sign in first", not_invited: "You were not invited", login: "Sign in to take part", slow: "Slow down a moment", guests_full: "Guest slots are full (3)", bad_email: "Invalid email address", email_taken: "Email already registered", bad_code: "Wrong or expired code", mail_off: "Email sending isn't enabled on the server yet", bad_link: "Invalid link", no_points: "Not enough points", need_text: "Write your message first", too_many: "Max 12 rewards", no_coins: "Not enough coins", vip_only: "VIP only", owned: "Already owned", self: "You can't gift yourself", pay_off: "Payments aren't enabled yet", pay_fail: "Couldn't start the payment", forbidden: "Not allowed", not_found: "Not found", bad_old: "Current password is wrong", bad_image: "Unsupported image", fx_off: "The streamer turned effects off", ch_off: "The streamer turned challenges off", co_off: "The streamer isn't accepting co-stream requests", bad_ytkey: "Invalid YouTube stream key" },
+    openShortcuts: "Open Shortcuts", errs: { bad_handle: "Username: 3–20 latin letters/digits", weak_password: "Password needs 6+ characters", taken: "Username taken", bad_login: "Wrong username or password", rate: "Too many attempts, wait a bit", net: "Connection failed", auth: "Sign in first", not_invited: "You were not invited", login: "Sign in to take part", slow: "Slow down a moment", guests_full: "Guest slots are full (3)", bad_email: "Invalid email address", email_taken: "Email already registered", bad_code: "Wrong or expired code", mail_off: "Email sending isn't enabled on the server yet", bad_link: "Invalid link", no_points: "Not enough points", need_text: "Write your message first", too_many: "Max 12 rewards", no_coins: "Not enough coins", vip_only: "VIP only", owned: "Already owned", self: "You can't gift yourself", pay_off: "Payments aren't enabled yet", pay_fail: "Couldn't start the payment", forbidden: "Not allowed", not_found: "Not found", bad_old: "Current password is wrong", bad_image: "Unsupported image", fx_off: "The streamer turned effects off", ch_off: "The streamer turned challenges off", co_off: "The streamer isn't accepting co-stream requests", bad_ytkey: "Invalid YouTube stream key", bad_ytchan: "Channel not found — paste your channel link" },
     sentFx: "sent", hypeTrain: "HYPE TRAIN", latency: "Delay", guestsN: "guests", layoutSplit: "Split screen", layoutFocus: "Focus",
     declined: "Declined", errorT: "Error",
     support: "Support", supportT: "Support {n}", donCoins: "Coins", donPaypal: "PayPal", donMsg: "Message shown on stream (optional)", donSend: "Send support", donCustom: "Other amount",
@@ -1586,11 +1590,14 @@ function modsManager(hostId) {
 }
 
 /* ---------- YouTube link ---------- */
+const YTB = `<span class="ytb"><svg viewBox="0 0 24 24"><path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .5-4.8 31 31 0 0 0-.5-4.8zM9.8 15.1V8.9l5.8 3.1z"/></svg></span>`;
 function ytSheet(done) {
   const u = S.user || {};
   sheet(`<div style="text-align:center"><div class="ytlogo">▶</div><h3 style="margin-top:10px">${t("ytAdd")}</h3></div>
     <p class="mut small" style="line-height:1.8;margin:10px 0 14px">${t("ytHelp")}</p>
     <div class="field"><label>${t("ytKey")}${u.yt ? ` · <span dir="ltr">${esc(u.yt)}</span>` : ""}</label>${pwField("ytk", t("ytKeyPh"), "off")}</div>
+    <div class="field"><label>${t("ytChan")}</label><input class="inp" id="ytc" dir="ltr" autocapitalize="none" placeholder="${t("ytChanPh")}" value="${esc(u.ytchan ? "youtube.com/channel/" + u.ytchan : "")}"><div class="small mut" style="margin-top:6px">${t("ytChanD")}${u.ytChatOk === false ? `<br><span style="color:#ffb86b">${t("ytApiMissing")}</span>` : ""}</div></div>
+    <div class="tg" style="margin-bottom:12px"><div class="tx"><b>${t("ytChat")}</b><span>${t("ytChatD")}</span></div>${`<div class="sw ${(u.prefs || {}).ytChat !== false ? "on" : ""}" id="ytcs"><i></i></div>`}</div>
     <button class="btn p" id="yts">${t("ytSave")}</button>${u.yt ? `<button class="btn g" id="ytr" style="margin-top:10px;color:#ff7b88">${t("ytRemove")}</button>` : ""}`, (sh, close) => {
     bindEyes(sh);
     const save = async (k) => {
@@ -1598,7 +1605,13 @@ function ytSheet(done) {
       if (r.error) return toast(terr(r.error));
       S.user = r.user; store.set("user", r.user); close(); haptic("success"); toast(k ? t("ytSaved") : t("ytRemoved")); done && done();
     };
-    $("#yts", sh).onclick = () => { const k = $("#ytk", sh).value.trim(); if (!k) return toast(t("ytKey")); save(k); };
+    const cs = $("#ytcs", sh); cs.onclick = () => cs.classList.toggle("on");
+    $("#yts", sh).onclick = async () => {
+      const k = $("#ytk", sh).value.trim(); if (!k && !u.yt) return toast(t("ytKey"));
+      const r = await api("/api/profile", { ...(k ? { ytkey: k } : {}), ytchan: $("#ytc", sh).value.trim(), prefs: { ...(u.prefs || {}), ytChat: cs.classList.contains("on") } });
+      if (r.error) return toast(terr(r.error) === r.error ? t(r.error) : terr(r.error));
+      S.user = r.user; store.set("user", r.user); close(); haptic("success"); toast(t("ytSaved")); done && done();
+    };
     const rm = $("#ytr", sh); if (rm) rm.onclick = () => save("");
   });
 }
@@ -2013,7 +2026,7 @@ VIEWS.watch = (root, id) => {
     const m = chatMsgs.get(c.dataset.id); if (!m || !m.uid) return;
     userSheet(m, { myRole, hostId: meta && meta.host });
   });
-  const chatHtml = (m) => m.don ? `${eic("coin", "gold")} ${uname(m)} ${t("donated")} <b>${typeof m.don === "string" ? m.don : fmtN(m.don) + " " + t("coins")}</b>${m.text ? " — " + esc(m.text) : ""}` : `${roleTag(m.role)}${lvlHtml(m.lvl)}${m.sub ? `<span class="bdg bdg-sub">${eic("star")}${m.sub}</span>` : ""}${m.host ? `<span class="tag">${t("hostTag")}</span>` : m.guest ? `<span class="tag" style="background:var(--grad2)">${t("guestTag")}</span>` : ""}${uname(m)} ${m.giftId ? GIFT_E[m.giftId] + " " : ""}${esc(m.text)}`;
+  const chatHtml = (m) => m.src === "yt" ? `${YTB}${m.ysc ? `<b class="ysc">${esc(m.ysc)}</b> ` : ""}<b style="color:${m.ymod ? "#5ec8ff" : "#ff8a84"}">${esc(m.name)}</b> ${esc(m.text)}` : m.don ? `${eic("coin", "gold")} ${uname(m)} ${t("donated")} <b>${typeof m.don === "string" ? m.don : fmtN(m.don) + " " + t("coins")}</b>${m.text ? " — " + esc(m.text) : ""}` : `${roleTag(m.role)}${lvlHtml(m.lvl)}${m.sub ? `<span class="bdg bdg-sub">${eic("star")}${m.sub}</span>` : ""}${m.host ? `<span class="tag">${t("hostTag")}</span>` : m.guest ? `<span class="tag" style="background:var(--grad2)">${t("guestTag")}</span>` : ""}${uname(m)} ${m.giftId ? GIFT_E[m.giftId] + " " : ""}${esc(m.text)}`;
   const offline = (txt) => {
     $$(".wtop .badge.red").forEach((b) => (b.parentElement.style.display = "none"));
     if ($(".offline", stageEl)) return;
@@ -2046,7 +2059,7 @@ VIEWS.watch = (root, id) => {
         if (!meta) return offline(t("offline"));
         if (meta.ended) return offline(t("endedT"));
         chatEl.innerHTML = "";
-        (m.history || []).slice(-12).forEach((x) => addChat(chatHtml(x), x.hl ? "hl" : "", true, x));
+        (m.history || []).filter((x) => x.src !== "yt" || P.showYt).slice(-12).forEach((x) => addChat(chatHtml(x), x.hl ? "hl" : x.src === "yt" ? "ytm" : "", true, x));
         if (S.user && meta.host === S.user.id) myRole = "owner";
         api("/api/support/" + encodeURIComponent(meta.host)).then((r) => { const g = $("#wgoal"); if (g) g.innerHTML = goalHtml(r.goal); });
         stage.setPubs(m.publishers); sawPubs = sawPubs || m.publishers.length > 0;
@@ -2058,7 +2071,8 @@ VIEWS.watch = (root, id) => {
       case "publishers": stage.setPubs(m.list); sawPubs = true; break;
       case "privacy": stage.setPrivacy(m.uid, m.on, m.reason); break;
       case "viewers": $("#wv").innerHTML = ic("eye") + " " + fmtN(m.n); break;
-      case "chat": addChat(chatHtml(m), m.hl ? "hl" : "", true, m); break;
+      case "chat": if (m.src === "yt" && !P.showYt) break; addChat(chatHtml(m), m.hl ? "hl" : m.src === "yt" ? "ytm" : "", true, m); break;
+      case "ytchat": if (!m.on) $$(".cm.ytm", chatEl).forEach((x) => x.remove()); break;
       case "modlog": addChat(`${eic("shield", "green")} ${modLine(m)}`, "sys"); break;
       case "donation": donationAlert(m, $("#fx")); addChat(`${eic("coin", "gold")} ${uname(m)} ${t("donated")} <b>${donAmt(m)}</b>${m.msg ? " — " + esc(m.msg) : ""}`, "hl"); break;
       case "goal": { const g = $("#wgoal"); if (g) g.innerHTML = goalHtml(m.goal); break; }
@@ -2375,6 +2389,7 @@ VIEWS.studio = (root) => {
     <div class="shield" id="sshield"><div class="ic">${ic("shield")}</div><div style="flex:1"><b id="sshT">${t("shieldOn")}</b><div class="small mut" id="sshD"></div></div></div>
     <div class="acts">
       <button class="act ${st.overlay ? "on" : ""}" id="aov">${ic("chat")}<span>${t("overlay")}</span></button>
+      ${job.role === "host" && job.yt ? `<button class="act hide" id="aytc">${YTB}<span>${t("ytChat")}</span></button>` : ""}
       <button class="act" id="acam">${ic("cam")}<span>${t("camBubble")}</span></button>
       <button class="act" id="apoll">${ic("poll")}<span>${t("poll")}</span></button>
       <button class="act" id="ach">${ic("trophy")}<span>${t("challenges")}</span></button>
@@ -2398,7 +2413,7 @@ VIEWS.studio = (root) => {
   const renderChat = () => {
     const el = $("#sl");
     if (!st.chat.length) return;
-    el.innerHTML = st.chat.slice(-60).reverse().map((m) => m.sys ? `<div class="sm small mut" style="justify-content:center">${m.sys}</div>` : `<div class="sm">${avatar(m)}<div class="tx">${roleTag(m.role)}${uname(m)}<br>${m.giftId ? GIFT_E[m.giftId] + " " : ""}${esc(m.text)}</div>
+    el.innerHTML = st.chat.filter((m) => m.src !== "yt" || (P.showYt && st.ytOn !== false)).slice(-60).reverse().map((m) => m.src === "yt" ? `<div class="sm ytrow">${avatar0({ name: m.name, color: "#ff3d3d", avatar: m.yav })}<div class="tx">${YTB}<b style="color:${m.ymod ? "#5ec8ff" : "#ff8a84"}">${esc(m.name)}</b>${m.ysc ? ` <b class="ysc">${esc(m.ysc)}</b>` : ""}<br>${esc(m.text)}</div></div>` : m.sys ? `<div class="sm small mut" style="justify-content:center">${m.sys}</div>` : `<div class="sm">${avatar(m)}<div class="tx">${roleTag(m.role)}${uname(m)}<br>${m.giftId ? GIFT_E[m.giftId] + " " : ""}${esc(m.text)}</div>
       ${job.role === "host" && m.uid !== S.user.id ? `<button class="mini" data-mod="${m.id}">${MOD_SVG.replace("<svg", '<svg width="16" height="16" fill="currentColor"')}</button><button class="mini" data-pin="${m.id}">${ic("pin")}</button><button class="mini" data-inv="${m.uid}" data-n="${esc(m.name)}">${ic("users")}</button>` : ""}</div>`).join("");
     $$("[data-pin]", el).forEach((b) => (b.onclick = () => { ws.send({ t: "pin", id: b.dataset.pin }); toast(t("pin") + " ✓"); }));
     $$("[data-mod]", el).forEach((b) => (b.onclick = () => { const m = st.chat.find((x) => x.id === b.dataset.mod); if (m) userSheet(m, { myRole: "owner", hostId: S.user.id }); }));
@@ -2418,8 +2433,10 @@ VIEWS.studio = (root) => {
       case "yt": ytPaint(m); break;
       case "slevel": { const e = $("#slv"); if (e) e.innerHTML = sLvlHtml(m.level) + (m.top ? " " + topHtml(m.top) : ""); break; }
       case "slevelup": sLevelUpFx(m, null); break;
+      case "ytchat": st.ytOn = m.on; { const b = $("#aytc"); if (b) b.classList.toggle("on", m.on); } renderChat(); toast(m.on ? t("ytChatOnT") : t("ytChatOffT")); break;
       case "hello":
         if (m.yt) ytPaint(m.yt);
+        if (m.meta) { st.ytOn = m.meta.ytOn; const b = $("#aytc"); if (b) { b.classList.toggle("hide", !m.meta.ytChan); b.classList.toggle("on", !!m.meta.ytOn); } }
         st.chat = m.history || []; renderChat(); st.viewers = m.viewers; st.pubs = m.publishers || [];
         if (m.requests) { st.reqs = m.requests; dot($("#areq"), st.reqs.length); }
         if (m.redeems) { st.redeems = m.redeems; dot($("#arw"), m.redeems.filter((x) => x.state === "new").length); }
@@ -2489,6 +2506,7 @@ VIEWS.studio = (root) => {
   const askEnd = () => confirmBox(t("endQ"), endLive);
   $("#sx").onclick = askEnd; $("#aend").onclick = askEnd;
   $("#ssh").onclick = () => shareLink(location.origin + "/w/" + job.room, job.title);
+  { const b = $("#aytc"); if (b) b.onclick = () => { haptic(); ws.send({ t: "ytchat", on: !b.classList.contains("on") }); }; }
   $("#aov").onclick = () => { st.overlay = !st.overlay; store.set("overlay", st.overlay); $("#aov").classList.toggle("on", st.overlay); haptic(); Native.post("overlay", { on: st.overlay, room: job.room, token: S.token, server: location.origin }); };
   if (isAndroid()) $("#acam").onclick = () => { st.cam = !st.cam; $("#acam").classList.toggle("on", st.cam); haptic(); Native.post("camBubble", { on: st.cam }); };
   $("#arw").onclick = () => rewardsSheet(st, ws);
@@ -2713,6 +2731,7 @@ VIEWS.settings = (root) => {
     ${sec(t("secWatch"),
       row("chat", t("chatOnStream"), "", sw("p:chatOnStream", P.chatOnStream)) +
       row("vol", t("autoSound"), "", sw("p:autoSound", P.autoSound)) +
+      row("live", t("showYt"), "", sw("p:showYt", P.showYt)) +
       row("spark", t("fxSound"), "", sw("p:fxSound", P.fxSound)) +
       row("zap", t("reduceFx"), t("reduceFxD"), sw("p:reduceFx", P.reduceFx)) +
       row("gauge", t("showLat"), "", sw("p:showLat", P.showLat)))}

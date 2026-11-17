@@ -636,6 +636,31 @@ async function paypal(env, method, path, body) {
   const r = await fetch(base + path, { method, headers: { authorization: "Bearer " + auth.access_token, "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
   return { status: r.status, data: await r.json().catch(() => ({})) };
 }
+// channel URL / @handle / UC id → channel id
+async function resolveYtChannel(env, v) {
+  if (!v) return "";
+  let m = v.match(/(UC[\w-]{22})/); if (m) return m[1];
+  m = v.match(/@([\w.\-]{3,30})/) || v.match(/^([\w.\-]{3,30})$/); if (!m) return "";
+  const h = m[1];
+  if (env.YT_API_KEY) {
+    const r = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=id&forHandle=@${encodeURIComponent(h)}&key=${env.YT_API_KEY}`).then((x) => x.json()).catch(() => ({}));
+    if (r.items && r.items[0]) return r.items[0].id;
+  }
+  const html = await fetch(`https://www.youtube.com/@${encodeURIComponent(h)}`, { headers: YT_H }).then((x) => x.text()).catch(() => "");
+  m = html.match(/"(?:externalId|channelId)":"(UC[\w-]{22})"/); return m ? m[1] : "";
+}
+const YT_H = { "accept-language": "en-US,en;q=0.9", cookie: "CONSENT=YES+cb; SOCS=CAI", "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36" };
+// current live video of a channel: the /live page (free); falls back to search.list (100 quota) now and then
+async function ytLiveVideo(chan, key, tries) {
+  const html = await fetch(`https://www.youtube.com/channel/${chan}/live`, { headers: YT_H }).then((x) => x.text()).catch(() => "");
+  const m = html.match(/<link rel="canonical" href="https:\/\/www\.youtube\.com\/watch\?v=([\w-]{11})"/);
+  if (m && /"isLiveNow":true|"isLive":true|isLiveBroadcast/.test(html)) return m[1];
+  if (key && tries % 8 === 3) {
+    const r = await fetch(`https://www.googleapis.com/youtube/v3/search?part=id&channelId=${chan}&eventType=live&type=video&maxResults=1&key=${key}`).then((x) => x.json()).catch(() => ({}));
+    if (r.items && r.items[0] && r.items[0].id) return r.items[0].id.videoId;
+  }
+  return null;
+}
 async function roomPost(env, room, path, body) {
   if (!room) return; try { await env.ROOM.get(env.ROOM.idFromName("r:" + room)).fetch("https://room" + path, { method: "POST", body: JSON.stringify(body) }); } catch (e) {}
 }
@@ -721,6 +746,7 @@ export class Hub {
       try { this.sql.exec("ALTER TABLE users ADD COLUMN " + c); } catch (e) {}
     }
     try { this.sql.exec("ALTER TABLE users ADD COLUMN ytkey TEXT DEFAULT ''"); } catch (e) {}
+    try { this.sql.exec("ALTER TABLE users ADD COLUMN ytchan TEXT DEFAULT ''"); } catch (e) {}
     for (const c of ["sxp INTEGER DEFAULT 0", "mxp INTEGER DEFAULT 0", "mkey TEXT DEFAULT ''", "lmrank INTEGER DEFAULT 0"]) {
       try { this.sql.exec("ALTER TABLE users ADD COLUMN " + c); } catch (e) {}
     }
@@ -888,7 +914,7 @@ export class Hub {
       avatar: u.av ? "/api/avatar/" + u.id + "?v=" + u.av : "", created: u.created,
       ...(self ? { email: u.email || "", notify: u.notify !== 0, prefs: this.prefsOf(u), coins: u.coins | 0, vipUntil: u.vipUntil || 0,
         owned: this.jarr(u.owned), equip: this.jobj(u.equip), earned: u.earned | 0, admin: this.isAdmin(u),
-        yt: u.ytkey ? "••••" + u.ytkey.slice(-4) : "", streamer: this.streamerOf(u) } : {}) };
+        yt: u.ytkey ? "••••" + u.ytkey.slice(-4) : "", ytchan: u.ytchan || "", ytChatOk: !!this.env.YT_API_KEY, streamer: this.streamerOf(u) } : {}) };
   }
   limited(k, max, win) {
     const r = this.one("SELECT * FROM hits WHERE k=?", k);
@@ -1013,6 +1039,11 @@ export class Hub {
         this.sql.exec("UPDATE users SET ytkey=? WHERE id=?", k, u.id);
         u.ytkey = k;
       }
+      if (b.ytchan !== undefined) {
+        const c = await resolveYtChannel(this.env, String(b.ytchan || "").trim());
+        if (b.ytchan && !c) return J2({ error: "bad_ytchan" });
+        this.sql.exec("UPDATE users SET ytchan=? WHERE id=?", c || "", u.id); u.ytchan = c || "";
+      }
       let prefs = this.prefsOf(u);
       if (b.prefs && typeof b.prefs === "object") {
         const P = b.prefs;
@@ -1022,6 +1053,7 @@ export class Hub {
         if ("slow" in P) prefs.slow = Math.min(60, Math.max(0, P.slow | 0));
         if ("guestChat" in P) prefs.guestChat = !!P.guestChat;
         if ("rec" in P) prefs.rec = !!P.rec;
+        if ("ytChat" in P) prefs.ytChat = !!P.ytChat;
       }
       this.sql.exec("UPDATE users SET name=?, color=?, bio=?, email=?, notify=?, link=?, prefs=? WHERE id=?", name, color, bio, email, notify, link, JSON.stringify(prefs), u.id);
       return J2({ user: this.pubUser(this.one("SELECT * FROM users WHERE id=?", u.id), true) });
@@ -1134,6 +1166,7 @@ export class Hub {
         await this.env.ROOM.get(this.env.ROOM.idFromName("r:" + room)).fetch("https://room/init", {
           method: "POST",
           body: JSON.stringify({ room, host: u.id, hostName: u.name, title, prefs: this.prefsOf(u),
+            ytChan: b.youtube && u.ytkey && u.ytchan && this.prefsOf(u).ytChat !== false ? u.ytchan : "",
             followers: this.all("SELECT uid FROM follows WHERE target=?", u.id).map((r) => r.uid) }),
         });
         if (this.env.RESEND_API_KEY && t - (u.lastAlert || 0) > 30 * 60000) {
@@ -1713,7 +1746,8 @@ export class Room {
 
     if (p === "/init") {
       this.meta = { room: body.room, host: body.host, hostName: body.hostName, title: body.title, started: now(), ended: false,
-        prefs: body.prefs || {}, followers: (body.followers || []).slice(0, 5000) };
+        prefs: body.prefs || {}, followers: (body.followers || []).slice(0, 5000), ytChan: body.ytChan || "", ytOn: !!body.ytChan };
+      this.ytc = null;
       this.history = []; this.pubs = {}; this.guests = []; this.requests = []; this.poll = null; this.challenges = [];
       this.hype = { v: 0, t: now(), lvl: 1 }; this.pinned = null; this.redeems = []; this.wt = {}; this.lastTick = 0;
       await this.state.storage.put({ meta: this.meta, history: [], pubs: {}, guests: [], requests: [], poll: null, challenges: [], hype: this.hype, pinned: null });
@@ -1829,7 +1863,7 @@ export class Room {
       server.serializeAttachment(att);
       const h = this.hypeNow();
       this.send(server, {
-        t: "hello", yt: this.yt || null, me: att, meta: this.meta && { room: this.meta.room, host: this.meta.host, hostName: this.meta.hostName, title: this.meta.title, started: this.meta.started, ended: this.meta.ended }, history: this.history, publishers: this.publishers(),
+        t: "hello", yt: this.yt || null, me: att, meta: this.meta && { room: this.meta.room, host: this.meta.host, hostName: this.meta.hostName, title: this.meta.title, started: this.meta.started, ended: this.meta.ended, ytChan: !!this.meta.ytChan, ytOn: !!this.meta.ytOn }, history: this.history, publishers: this.publishers(),
         viewers: this.counts(), poll: this.pollOut(), hype: { v: Math.round(h.v), lvl: h.lvl },
         challenges: this.challenges, pinned: this.pinned, guests: this.guests,
         requests: this.isHost(uid) ? this.requests : undefined,
@@ -1880,6 +1914,13 @@ export class Room {
     switch (m.t) {
       case "ping":
         return this.send(ws, { t: "pong", at: m.at });
+      case "ytchat": {
+        if (!this.meta || me.uid !== this.meta.host) return;
+        this.meta.ytOn = !!m.on && !!this.meta.ytChan; await this.state.storage.put("meta", this.meta);
+        this.bcast({ t: "ytchat", on: this.meta.ytOn });
+        if (this.meta.ytOn) await this.state.storage.setAlarm(now() + 2000);
+        return;
+      }
       case "chat": {
         if (me.anon) return this.send(ws, { t: "err", e: "login" });
         const text = String(m.text || "").trim().slice(0, 200);
@@ -2164,6 +2205,43 @@ export class Room {
     await this.loaded;
     this.state.waitUntil(this.syncHub());
   }
+  // ---- YouTube live chat → Wahj chat (official Data API; quota-friendly polling) ----
+  async ytStep(t) {
+    const c = this.ytc || (this.ytc = { next: 0, tries: 0, seen: [] }), key = this.env.YT_API_KEY;
+    if (t < c.next) return;
+    const yt = (msg) => this.env.HUB.get(this.env.HUB.idFromName("hub")).fetch("https://hub/diag-add", { method: "POST", body: JSON.stringify({ ip: "yt", ua: "", src: "yt", room: this.meta.room, msg }) }).catch(() => {});
+    if (!c.chatId) {
+      if (!c.vid) c.vid = await ytLiveVideo(this.meta.ytChan, key, c.tries);
+      if (c.vid) {
+        const v = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${c.vid}&key=${key}`).then((r) => r.json()).catch(() => ({}));
+        c.chatId = (v.items && v.items[0] && v.items[0].liveStreamingDetails && v.items[0].liveStreamingDetails.activeLiveChatId) || null;
+        if (v.error) yt("youtube chat: videos error " + JSON.stringify(v.error).slice(0, 200));
+      }
+      if (!c.chatId) { c.tries++; c.next = t + (c.tries < 40 ? 15000 : 60000); if (c.tries === 4) yt("youtube chat: live video not found yet on channel " + this.meta.ytChan); return; }
+      c.first = true; yt("youtube chat: connected video=" + c.vid);
+    }
+    const r = await fetch(`https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${encodeURIComponent(c.chatId)}&part=snippet,authorDetails&maxResults=200&key=${key}` + (c.page ? "&pageToken=" + encodeURIComponent(c.page) : "")).then((x) => x.json()).catch(() => ({}));
+    if (r.error) {
+      yt("youtube chat error " + (r.error.code || "") + " " + String(r.error.message || "").slice(0, 160));
+      if (r.error.code === 403) c.next = t + 600000; else { c.chatId = null; c.vid = null; c.page = null; c.next = t + 20000; }
+      return;
+    }
+    c.page = r.nextPageToken || c.page;
+    if (!c.first) {
+      for (const it of r.items || []) {
+        const sn = it.snippet || {}, au = it.authorDetails || {};
+        if (sn.type !== "textMessageEvent" && sn.type !== "superChatEvent") continue;
+        if (c.seen.includes(it.id)) continue;
+        c.seen.push(it.id); if (c.seen.length > 400) c.seen.splice(0, 200);
+        const text = String(sn.displayMessage || "").slice(0, 300); if (!text) continue;
+        const msg = { t: "chat", id: "yt" + rid(8), uid: "", name: String(au.displayName || "YouTube").slice(0, 40), color: "#ff5b52", text, at: t, src: "yt",
+          yav: au.profileImageUrl || "", ymod: !!(au.isChatModerator || au.isChatOwner), ysc: sn.superChatDetails ? sn.superChatDetails.amountDisplayString : "" };
+        this.pushHistory(msg); this.bcast(msg);
+      }
+    }
+    c.first = false;
+    c.next = t + Math.max(8000, r.pollingIntervalMillis || 8000);
+  }
   async alarm() {
     await this.loaded;
     const t = now();
@@ -2178,6 +2256,10 @@ export class Room {
     const next = [];
     if (this.poll && !this.poll.done) next.push(this.poll.ends);
     if (this.pinned && this.pinned.until) next.push(this.pinned.until + 200);
+    if (this.meta && this.meta.ytChan && this.meta.ytOn && !this.meta.ended && this.env.YT_API_KEY) {
+      try { await this.ytStep(t); } catch (e) {}
+      if (this.ytc && this.sockets().length) next.push(Math.max(t + 3000, this.ytc.next));
+    }
     if (this.sockets().length) next.push(t + 30000);
     if (next.length) await this.state.storage.setAlarm(Math.min(...next));
   }

@@ -726,3 +726,10 @@ svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-l
 .clipc .cn{font-weight:800;font-size:13px;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .clipc .cm2{font-size:11.5px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 a.clipl{color:#c8a2ff;text-decoration:underline;cursor:pointer}
+/* YouTube chat */
+.ytb{display:inline-grid;place-items:center;width:18px;height:13px;margin-inline-end:5px;vertical-align:-1px}
+.ytb svg{width:18px;height:13px;fill:#ff0000;stroke:none;filter:drop-shadow(0 0 3px rgba(255,0,0,.5))}
+.ysc{background:linear-gradient(120deg,#ffd700,#ff9a3d);color:#2b1600;border-radius:99px;padding:1px 7px;font-size:11px}
+.cm.ytm{border-inline-start:2px solid rgba(255,0,0,.55)}
+.act .ytb{width:24px;height:18px;margin:0}.act .ytb svg{width:24px;height:18px}
+.act.on .ytb svg{fill:#fff}
