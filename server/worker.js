@@ -118,7 +118,7 @@ async function ytForward(env, room, n, buf, yt) {
     }
   } catch (e) { ok = false; msg = String(e).slice(0, 200); }
   // tell the studio (first segment, and on every failure)
-  if (!ok || n === 0 || (n > 0 && n % 10 === 0)) await hub(env, "/yt-stat", { room, ok, code, msg }).catch(() => {});
+  if (!ok || n <= 1 || n % 10 === 0) await hub(env, "/yt-stat", { room, ok, code, msg, n }).catch(() => {});
 }
 
 async function sendMail(env, to, subject, html) {
@@ -1130,6 +1130,7 @@ export class Hub {
         this.sql.exec("INSERT INTO streams(id,uid,title,game,cat,started,beat,gameIcon) VALUES(?,?,?,?,?,?,?,?)",
           room, u.id, title, String(b.game || "").slice(0, 60), String(b.cat || "").slice(0, 20), t, t, String(b.gameIcon || "").slice(0, 300));
         if (b.youtube && u.ytkey) this.sql.exec("UPDATE streams SET yt=1 WHERE id=?", room);
+        if (b.youtube || u.ytkey) this.sql.exec("INSERT INTO diag(t,ip,ua,src,room,msg) VALUES(?,?,?,?,?,?)", t, "", "", "yt", room, `youtube requested=${!!b.youtube} key=${u.ytkey ? "saved" : "missing"} → ${b.youtube && u.ytkey ? "ON" : "off"}`);
         await this.env.ROOM.get(this.env.ROOM.idFromName("r:" + room)).fetch("https://room/init", {
           method: "POST",
           body: JSON.stringify({ room, host: u.id, hostName: u.name, title, prefs: this.prefsOf(u),
@@ -1228,7 +1229,7 @@ export class Hub {
     if (p === "/yt-stat") {
       const s = this.one("SELECT uid FROM streams WHERE id=?", String(b.room));
       if (s) await this.env.ROOM.get(this.env.ROOM.idFromName("r:" + b.room)).fetch("https://room/yt", { method: "POST", body: JSON.stringify({ ok: !!b.ok, code: b.code | 0 }) }).catch(() => {});
-      if (!b.ok) this.sql.exec("INSERT INTO diag(t,ip,ua,src,room,msg) VALUES(?,?,?,?,?,?)", t, "", "", "yt", String(b.room), ("youtube code " + b.code + " " + (b.msg || "")).slice(0, 400));
+      this.sql.exec("INSERT INTO diag(t,ip,ua,src,room,msg) VALUES(?,?,?,?,?,?)", t, "", "", "yt", String(b.room), ((b.ok ? "youtube OK seg=" : "youtube FAIL seg=") + b.n + " code " + b.code + " " + (b.msg || "")).slice(0, 400));
       return J2({ ok: true });
     }
     if (p === "/rec-get") {

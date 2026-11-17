@@ -1823,7 +1823,7 @@ VIEWS.speed = (root) => {
   </div></div>`;
   $("#sb").onclick = () => go(S.token ? "me" : "home");
   let alive = true;
-  const setG = (v, max, unit) => { $("#gv").textContent = v < 10 ? v.toFixed(1) : Math.round(v); $("#gu").textContent = unit; $("#garc").setAttribute("stroke-dasharray", `${ARC * Math.min(1, Math.log10(1 + v) / Math.log10(1 + max))} ${C}`); };
+  const setG = (v, max, unit) => { if (!$("#gv")) return; $("#gv").textContent = v < 10 ? v.toFixed(1) : Math.round(v); $("#gu").textContent = unit; $("#garc").setAttribute("stroke-dasharray", `${ARC * Math.min(1, Math.log10(1 + v) / Math.log10(1 + max))} ${C}`); };
   const run = async () => {
     const b = $("#sgo"); b.disabled = true; $("#sv").innerHTML = "";
     ["rp", "rj", "rd", "ru"].forEach((i) => ($("#" + i).textContent = "–"));
