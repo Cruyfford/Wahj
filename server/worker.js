@@ -300,9 +300,9 @@ export default {
       if (p === "/api/recs") {
         return J(await hub(env, "/recs", { handle: url.searchParams.get("u") || "", token: bearer(req) }));
       }
-      mr = p.match(/^\/api\/rec\/([a-z0-9]+|all)\/delete$/);
+      mr = p.match(/^\/api\/(rec|past)\/([a-z0-9]+|all)\/delete$/);
       if (mr && req.method === "POST") {
-        const r = await hub(env, "/rec-del", { id: mr[1], token: bearer(req) });
+        const r = await hub(env, mr[1] === "past" ? "/past-del" : "/rec-del", { id: mr[2], token: bearer(req) });
         if (!r.ok) return J(r, 400);
         if (env.REC) ctx.waitUntil((async () => {
           for (const id of r.ids) {
@@ -763,6 +763,7 @@ export class Hub {
     try { this.sql.exec("ALTER TABLE streams ADD COLUMN yt INTEGER DEFAULT 0"); } catch (e) {}
     try { this.sql.exec("ALTER TABLE streams ADD COLUMN ytinit INTEGER DEFAULT 0"); } catch (e) {}
     try { this.sql.exec("ALTER TABLE streams ADD COLUMN ytmeta TEXT DEFAULT ''"); } catch (e) {}
+    try { this.sql.exec("ALTER TABLE streams ADD COLUMN hidden INTEGER DEFAULT 0"); } catch (e) {}
     try { this.sql.exec("ALTER TABLE streams ADD COLUMN rec INTEGER DEFAULT 0"); } catch (e) {}
     this.sql.exec("CREATE TABLE IF NOT EXISTS clips(id TEXT PRIMARY KEY, room TEXT, host TEXT, uid TEXT, title TEXT, game TEXT, dur REAL, size INTEGER, ext TEXT, views INTEGER DEFAULT 0, t INTEGER, deleted INTEGER DEFAULT 0, thumb INTEGER DEFAULT 0)");
     this.sql.exec("CREATE TABLE IF NOT EXISTS donations(id TEXT PRIMARY KEY, host TEXT, uid TEXT, name TEXT, coins INTEGER, usd TEXT, kind TEXT, msg TEXT, status TEXT, t INTEGER)");
@@ -1072,7 +1073,7 @@ export class Hub {
       const followers = this.one("SELECT COUNT(*) n FROM follows WHERE target=?", u.id).n;
       const following = this.one("SELECT COUNT(*) n FROM follows WHERE uid=?", u.id).n;
       const st = this.one("SELECT COUNT(*) n, MAX(peak) p, SUM(CASE WHEN ended>0 THEN ended-started ELSE 0 END) d FROM streams WHERE uid=?", u.id);
-      const past = this.all("SELECT * FROM streams WHERE uid=? ORDER BY started DESC LIMIT 30", u.id).map((s) => {
+      const past = this.all("SELECT * FROM streams WHERE uid=? AND hidden=0 ORDER BY started DESC LIMIT 30", u.id).map((s) => {
         const o = this.streamOut(s);
         const r = this.one("SELECT dur, segs, init FROM recs WHERE id=? AND deleted=0", s.id);
         if (r && r.init && r.segs > 0) o.rec = { dur: Math.round(r.dur) };
@@ -1292,6 +1293,19 @@ export class Hub {
       const out = { recs };
       if (own) { out.myBytes = recs.reduce((a, r) => a + r.bytes, 0); out.totalBytes = this.recTotal(); out.limit = REC_LIMIT; }
       return J2(out);
+    }
+    if (p === "/past-del") {
+      // removes ended streams from the owner's history, together with their recordings
+      const u = this.user(b.token);
+      if (!u) return J2({ ok: false, error: "auth" });
+      const rows = b.id === "all" ? this.all("SELECT id FROM streams WHERE uid=? AND ended>0 AND hidden=0", u.id) : this.all("SELECT id FROM streams WHERE id=? AND uid=? AND ended>0", String(b.id), u.id);
+      if (!rows.length) return J2({ ok: false, error: "not_found" });
+      for (const r of rows) {
+        this.sql.exec("UPDATE streams SET hidden=1, rec=0 WHERE id=?", r.id);
+        this.sql.exec("UPDATE recs SET deleted=1, bytes=0 WHERE id=?", r.id);
+        this.sql.exec("DELETE FROM recsegs WHERE rec=?", r.id);
+      }
+      return J2({ ok: true, ids: rows.map((r) => r.id) });
     }
     if (p === "/rec-del") {
       const u = this.user(b.token);

@@ -976,7 +976,7 @@ const T = {
     sPing: "قياس الاستجابة…", sDown: "قياس التنزيل…", sUp: "قياس الرفع…", ms: "مللي ثانية", mbps: "ميغابت/ث",
     vGreat: "ممتاز ✓ يمكنك البث بجودة {q}", vOk: "جيد — يُنصح بالبث بجودة {q}", vBad: "الرفع ضعيف — البث قد يتقطع. جرّب شبكة أخرى أو جودة 540p",
     sound: "الصوت", voiceLink: "صوت الضيوف", you: "أنت", hostTag: "البثّاث", guestTag: "ضيف", chAccepted: "قَبِل التحدي!", chDone: "نجح في التحدي!",
-    chFailed: "فشل التحدي", secs: "ث", profile: "حسابي", noPast: "لا توجد بثوث سابقة", pendingLive: "البث لم يبدأ بعد…", camNA: "الكاميرا أثناء اللعب غير مدعومة في آيفون",
+    chFailed: "فشل التحدي", secs: "ث", profile: "حسابي", noPast: "لا توجد بثوث سابقة", delAll: "حذف الكل", delPastQ: "حذف هذا البث من السجل مع تسجيله؟", delPastAllQ: "حذف كل البثوث السابقة مع تسجيلاتها نهائياً؟", pendingLive: "البث لم يبدأ بعد…", camNA: "الكاميرا أثناء اللعب غير مدعومة في آيفون",
   },
   en: {
     tag: "Stream your games live — under a second of delay", login: "Sign in", register: "Create account", handle: "Username",
@@ -1064,7 +1064,7 @@ const T = {
     sPing: "Measuring ping…", sDown: "Measuring download…", sUp: "Measuring upload…", ms: "ms", mbps: "Mbps",
     vGreat: "Excellent ✓ you can stream at {q}", vOk: "Good — streaming at {q} is recommended", vBad: "Upload is weak — the stream may stutter. Try another network or 540p",
     sound: "Sound", voiceLink: "Guest voice", you: "You", hostTag: "HOST", guestTag: "GUEST", chAccepted: "accepted the challenge!", chDone: "completed the challenge!",
-    chFailed: "failed the challenge", secs: "s", profile: "Profile", noPast: "No past streams", pendingLive: "Stream hasn't started yet…", camNA: "Face cam while gaming isn't supported on iPhone",
+    chFailed: "failed the challenge", secs: "s", profile: "Profile", noPast: "No past streams", delAll: "Delete all", delPastQ: "Remove this stream and its recording from your history?", delPastAllQ: "Delete all past streams and their recordings permanently?", pendingLive: "Stream hasn't started yet…", camNA: "Face cam while gaming isn't supported on iPhone",
   },
 };
 /* ---------- languages: ar/en built in, ~85 more translated automatically on the server ---------- */
@@ -3445,9 +3445,9 @@ function profileHtml(r, self) {
         ${self ? `<button class="mini" data-del="${s.id}" style="position:absolute;top:8px;inset-inline-end:8px;background:rgba(0,0,0,.55);color:#ff7b88">${ic("x")}</button>
           <button class="mini" data-dl="${s.id}" style="position:absolute;top:8px;inset-inline-start:8px;background:rgba(0,0,0,.55)">${ic("download")} ${t("download")}</button>` : ""}</div>
       <div class="meta"><div class="tt">${esc(s.title)}</div><div class="small mut" style="margin-top:4px">${s.game ? esc(s.game) + " · " : ""}${new Date(s.started).toLocaleDateString(S.lang)}</div></div></div>`).join("")}</div>` : ""; })()}
-  <div class="h2">${t("past")}</div>
+  <div class="row" style="justify-content:space-between;align-items:center"><div class="h2">${t("past")}</div>${self && r.streams.some((s) => !s.live) ? `<button class="mini" id="pdelall" style="color:#ff7b88">${ic("x")} ${t("delAll")}</button>` : ""}</div>
   <div class="sl">${r.streams.length ? r.streams.map((s) => `<div class="sm" data-id="${s.id}" data-rec="${s.rec && !s.live ? 1 : ""}" style="align-items:center">${s.gameIcon ? gIcon(s.gameIcon, "gi", 40) : `<div class="ph2" style="width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--card2)">${eic("game", "brand")}</div>`}
-    <div class="tx"><b>${esc(s.title)}</b><br><span class="mut small">${esc(s.game || "")} · ${new Date(s.started).toLocaleDateString(S.lang)} · ${t("peak")} ${s.peak}</span></div>${s.live ? '<span class="badge red">LIVE</span>' : s.recPending && self ? `<span class="badge" style="background:rgba(255,184,0,.18);color:#ffd36b">${t("recUploading")}</span>` : s.rec ? `<span class="badge" style="background:var(--grad)">▶ ${fmtDur(s.rec.dur * 1000)}</span>${self ? `<button class="mini" data-del="${s.id}" style="color:#ff7b88">${ic("x")}</button>` : ""}` : ""}</div>`).join("") : `<p class="mut small" style="text-align:center;padding:16px">${t("noPast")}</p>`}</div>`;
+    <div class="tx"><b>${esc(s.title)}</b><br><span class="mut small">${esc(s.game || "")} · ${new Date(s.started).toLocaleDateString(S.lang)} · ${t("peak")} ${s.peak}</span></div>${s.live ? '<span class="badge red">LIVE</span>' : s.recPending && self ? `<span class="badge" style="background:rgba(255,184,0,.18);color:#ffd36b">${t("recUploading")}</span>` : s.rec ? `<span class="badge" style="background:var(--grad)">▶ ${fmtDur(s.rec.dur * 1000)}</span>` : ""}${self && !s.live ? `<button class="mini" data-pdel="${s.id}" style="color:#ff7b88;margin-inline-start:6px">${ic("x")}</button>` : ""}</div>`).join("") : `<p class="mut small" style="text-align:center;padding:16px">${t("noPast")}</p>`}</div>`;
 }
 function pickPhoto(cb) {
   const i = document.createElement("input"); i.type = "file"; i.accept = "image/*";
@@ -3516,6 +3516,9 @@ function editProfile() {
 
 function bindStreams(el, r, own) {
   $$("[data-del]", el).forEach((b) => (b.onclick = (e) => { e.stopPropagation(); deleteRec(b.dataset.del, () => go(current === "me" ? "me" : "home")); }));
+  const pdel = (id) => confirmBox(id === "all" ? t("delPastAllQ") : t("delPastQ"), async () => { const r = await api(`/api/past/${id}/delete`, {}); if (r.error) return toast(terr(r.error)); toast(t("saved")); go(current === "me" ? "me" : "home"); });
+  $$("[data-pdel]", el).forEach((b) => (b.onclick = (e) => { e.stopPropagation(); pdel(b.dataset.pdel); }));
+  if ($("#pdelall", el)) $("#pdelall", el).onclick = () => pdel("all");
   $$(".sl [data-h]", el).forEach((x) => (x.onclick = () => go("user", x.dataset.h)));
   if (r.user) api("/api/clips?host=" + encodeURIComponent(r.user.handle)).then((x) => { const pc = $("#pclips"); if (pc && x.clips && x.clips.length) { pc.innerHTML = `<div class="h2">${eic("clip", "brand")} ${t("clips")} · ${x.clips.length}</div><div class="clipg">${x.clips.map(clipCard).join("")}</div>`; bindClips(pc); } });
   $$("[data-dl]", el).forEach((b) => (b.onclick = (e) => {
