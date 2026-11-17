@@ -1007,7 +1007,8 @@ export class Hub {
         if (link && !/^https?:\/\/[^\s<>"']+\.[^\s<>"']+$/i.test(link)) return J2({ error: "bad_link" });
       }
       if (b.ytkey !== undefined) {
-        const k = String(b.ytkey).trim();
+        let k = String(b.ytkey).trim();
+        const cm = k.match(/[?&]cid=([A-Za-z0-9_-]+)/); if (cm) k = cm[1];   // pasted the full HLS ingest URL
         if (k && !/^[A-Za-z0-9_-]{8,64}$/.test(k)) return J2({ error: "bad_ytkey" });
         this.sql.exec("UPDATE users SET ytkey=? WHERE id=?", k, u.id);
         u.ytkey = k;
