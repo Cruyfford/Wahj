@@ -1233,7 +1233,7 @@ const avatar = (u, cls = "", style = "") => { const a = avatar0(u, cls, style); 
 const avatar0 = (u, cls = "", style = "") => (u && u.avatar)
   ? `<div class="av ${cls}" style="background:${esc(u.color || "#7C5CFF")};overflow:hidden;${style}"><img src="${esc(u.avatar)}" alt="" style="width:100%;height:100%;object-fit:cover"></div>`
   : `<div class="av ${cls}" style="background:${esc((u && u.color) || "#7C5CFF")};${style}">${esc(((u && (u.name || u.handle)) || "?").trim().charAt(0).toUpperCase())}</div>`;
-const fmtN = (n) => (n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + "K" : String(n | 0));
+const fmtN = (n) => { n = +n || 0; const u = [[1e9, "B"], [1e6, "M"], [1e3, "K"]].find(([v]) => n >= v); if (!u) return String(n | 0); const x = n / u[0]; return (x >= 100 ? Math.floor(x) : x >= 10 ? x.toFixed(0) : x.toFixed(1).replace(/\.0$/, "")) + u[1]; };
 const fmtDur = (ms) => { const s = Math.max(0, ms / 1000 | 0); const h = s / 3600 | 0, m = (s % 3600) / 60 | 0, x = s % 60; return (h ? h + ":" : "") + String(m).padStart(h ? 2 : 1, "0") + ":" + String(x).padStart(2, "0"); };
 const CATS = ["all", "action", "sports", "br", "racing", "strategy", "retro", "chill"];
 const CAT_EMO = { action: eic("swords", "fire"), sports: eic("ball", "green"), br: eic("chute", "cyan"), racing: eic("car", "pink"), strategy: eic("rook", "violet"), retro: eic("alien", "green"), chill: eic("chat", "cyan"), all: eic("game", "brand") };

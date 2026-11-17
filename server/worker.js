@@ -1036,7 +1036,8 @@ export class Hub {
         const o = this.streamOut(s);
         const r = this.one("SELECT dur, segs, init FROM recs WHERE id=? AND deleted=0", s.id);
         if (r && r.init && r.segs > 0) o.rec = { dur: Math.round(r.dur) };
-        else if (s.rec && !(r && r.deleted)) o.recPending = true;
+        // waiting for the phone to upload (gives up showing it after 3 days)
+        else if (s.rec && !(r && r.deleted) && (!s.ended || now() - s.ended < 3 * 86400000)) o.recPending = true;
         return o;
       });
       const games = this.all("SELECT game, MAX(gameIcon) icon, COUNT(*) n FROM streams WHERE uid=? AND game<>'' GROUP BY lower(game) ORDER BY n DESC LIMIT 8", u.id);
@@ -1201,7 +1202,9 @@ export class Hub {
         yt = { key: u.ytkey, init: st.ytinit | 0, segs: this.all("SELECT n, dur FROM ytsegs WHERE room=? ORDER BY n DESC LIMIT 5", r.room).reverse() };
       }
       let rec = this.one("SELECT * FROM recs WHERE id=?", r.room);
-      let store = this.prefsOf(u).rec !== false && !(rec && rec.deleted) && this.recTotal() + (b.bytes | 0) <= REC_LIMIT;
+      // the per-stream choice ("record this stream") wins over the default in settings
+      const wanted = st.rec ? true : this.prefsOf(u).rec !== false;
+      let store = wanted && !(rec && rec.deleted) && this.recTotal() + (b.bytes | 0) <= REC_LIMIT;
       if (!store) {
         this.sql.exec("UPDATE pubs SET beat=? WHERE pub=?", t, r.pub);
         if (yt) return J2({ ok: true, store: false, yt });
