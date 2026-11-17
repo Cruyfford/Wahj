@@ -317,7 +317,9 @@ object RecUploader {
                 val base = java.io.File(ctx.filesDir, "rec")
                 for (d in base.listFiles() ?: emptyArray()) {
                     if (!java.io.File(d, "done").exists() && System.currentTimeMillis() - d.lastModified() < 6 * 3600_000L) continue
-                    val meta = java.io.File(d, "meta.txt").takeIf { it.exists() }?.readLines() ?: run { d.deleteRecursively(); continue }
+                    val mf = java.io.File(d, "meta.txt")
+                    if (!mf.exists()) { d.deleteRecursively(); continue }
+                    val meta = mf.readLines()
                     val (server, room, key) = Triple(meta[0], meta[1], meta[2]); val wifi = meta.getOrNull(3) == "true"
                     if (wifi && !onWifi(ctx)) continue
                     val idx = java.io.File(d, "index.txt").takeIf { it.exists() }?.readLines()?.filter { it.contains("|") } ?: emptyList()
