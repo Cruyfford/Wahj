@@ -40,6 +40,13 @@ final class ReplayAudio: NSObject, RTCAudioDevice {
     private var thread: Thread?
     private var sampleTime: Float64 = 0
     private var out = [Int16](repeating: 0, count: 480)
+    // diagnostics
+    private var nApp = 0, nMic = 0, nBad = 0, nChunks = 0, nDeliverErr = 0, peak: Float = 0, lastDiag: CFTimeInterval = 0
+    private var loggedApp = false, loggedMic = false
+    private func fmtInfo(_ sb: CMSampleBuffer) -> String {
+        guard let fd = CMSampleBufferGetFormatDescription(sb), let a = CMAudioFormatDescriptionGetStreamBasicDescription(fd)?.pointee else { return "?" }
+        return "rate=\(Int(a.mSampleRate)) ch=\(a.mChannelsPerFrame) bits=\(a.mBitsPerChannel) flags=\(a.mFormatFlags) frames=\(CMSampleBufferGetNumSamples(sb))"
+    }
     private static let chunk = 480
     private static let maxRing = 48000 / 5 // 200 ms
 
@@ -61,6 +68,7 @@ final class ReplayAudio: NSObject, RTCAudioDevice {
     func initializeRecording() -> Bool { isRecordingInitialized = true; return true }
     func startRecording() -> Bool {
         guard !isRecording else { return true }
+        Diag.log("audio: WebRTC started recording (delegate=\(delegate != nil))")
         isRecording = true
         let t = Thread { [weak self] in self?.loop() }
         t.name = "wahj.audio"
@@ -77,7 +85,9 @@ final class ReplayAudio: NSObject, RTCAudioDevice {
 
     // MARK: input from ReplayKit
     func pushApp(_ sb: CMSampleBuffer) {
-        guard let (mono, rate) = Self.monoSamples(sb) else { return }
+        if !loggedApp { loggedApp = true; Diag.log("audio: first game-audio buffer \(fmtInfo(sb))") }
+        guard let (mono, rate) = Self.monoSamples(sb) else { nBad += 1; return }
+        nApp += 1
         lock.lock()
         let res = appRs.run(mono, rate: rate)
         appRing.append(contentsOf: res)
@@ -86,7 +96,9 @@ final class ReplayAudio: NSObject, RTCAudioDevice {
         lock.unlock()
     }
     func pushMic(_ sb: CMSampleBuffer) {
-        guard micEnabled, let (mono, rate) = Self.monoSamples(sb) else { return }
+        if !loggedMic { loggedMic = true; Diag.log("audio: first mic buffer \(fmtInfo(sb)) enabled=\(micEnabled)") }
+        guard micEnabled, let (mono, rate) = Self.monoSamples(sb) else { nBad += 1; return }
+        nMic += 1
         lock.lock()
         let res = micRs.run(mono, rate: rate)
         micRing.append(contentsOf: res)
@@ -129,6 +141,16 @@ final class ReplayAudio: NSObject, RTCAudioDevice {
 
     private func deliver(_ samples: [Int16]) {
         onMixed?(samples)
+        nChunks += 1
+        for v in samples { let a = abs(Float(v)) / 32767; if a > peak { peak = a } }
+        let now = CACurrentMediaTime()
+        if now - lastDiag > 15 {
+            if lastDiag > 0 {
+                let db = peak > 0 ? 20 * log10(peak) : -99
+                Diag.log(String(format: "audio: 15s game=%d mic=%d bad=%d chunks=%d (want ~1500) peak=%.0fdBFS deliverErr=%d muted=%@", nApp, nMic, nBad, nChunks, db, nDeliverErr, muted ? "yes" : "no"))
+            }
+            lastDiag = now; nApp = 0; nMic = 0; nBad = 0; nChunks = 0; nDeliverErr = 0; peak = 0
+        }
         guard let d = delegate else { return }
         var pcm = samples
         var flags = AudioUnitRenderActionFlags()
@@ -139,7 +161,8 @@ final class ReplayAudio: NSObject, RTCAudioDevice {
         let frames = UInt32(pcm.count)
         pcm.withUnsafeMutableBytes { raw in
             var abl = AudioBufferList(mNumberBuffers: 1, mBuffers: AudioBuffer(mNumberChannels: 1, mDataByteSize: frames * 2, mData: raw.baseAddress))
-            _ = d.deliverRecordedData(&flags, &ts, 1, frames, &abl, nil, nil)
+            let st = d.deliverRecordedData(&flags, &ts, 1, frames, &abl, nil, nil)
+            if st != noErr { nDeliverErr += 1 }
         }
     }
 
@@ -148,55 +171,68 @@ final class ReplayAudio: NSObject, RTCAudioDevice {
         guard let fd = CMSampleBufferGetFormatDescription(sb),
               let asbdP = CMAudioFormatDescriptionGetStreamBasicDescription(fd) else { return nil }
         let asbd = asbdP.pointee
+        // ask how big the AudioBufferList must be (non-interleaved stereo needs 2 buffers)
+        var need = 0
+        _ = CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer(sb, bufferListSizeNeededOut: &need, bufferListOut: nil, bufferListSize: 0,
+            blockBufferAllocator: nil, blockBufferMemoryAllocator: nil, flags: 0, blockBufferOut: nil)
+        guard need > 0 else { return nil }
+        let raw = UnsafeMutableRawPointer.allocate(byteCount: need, alignment: 16)
+        defer { raw.deallocate() }
+        let ablP = raw.bindMemory(to: AudioBufferList.self, capacity: 1)
         var block: CMBlockBuffer?
-        var abl = AudioBufferList()
-        let st = CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer(
-            sb, bufferListSizeNeededOut: nil, bufferListOut: &abl, bufferListSize: MemoryLayout<AudioBufferList>.size,
-            blockBufferAllocator: nil, blockBufferMemoryAllocator: nil, flags: 0, blockBufferOut: &block)
-        guard st == noErr, let data = abl.mBuffers.mData else { return nil }
+        let st = CMSampleBufferGetAudioBufferListWithRetainedBlockBuffer(sb, bufferListSizeNeededOut: nil, bufferListOut: ablP, bufferListSize: need,
+            blockBufferAllocator: nil, blockBufferMemoryAllocator: nil, flags: kCMSampleBufferFlag_AudioBufferList_Assure16ByteAlignment, blockBufferOut: &block)
+        guard st == noErr else { return nil }
+        let bufs = UnsafeMutableAudioBufferListPointer(ablP)
         let flags = asbd.mFormatFlags
         let isFloat = flags & kAudioFormatFlagIsFloat != 0
         let bigEndian = flags & kAudioFormatFlagIsBigEndian != 0
-        let nonInter = flags & kAudioFormatFlagIsNonInterleaved != 0
-        let ch = nonInter ? 1 : max(1, Int(asbd.mChannelsPerFrame))
         let bits = Int(asbd.mBitsPerChannel)
-        let bytes = Int(abl.mBuffers.mDataByteSize)
-        guard bits == 16 || bits == 32 else { return nil }
-        let frames = bytes / (bits / 8) / ch
-        guard frames > 0 else { return nil }
-        var mono = [Float](repeating: 0, count: frames)
-        if bits == 16 {
-            let p = data.assumingMemoryBound(to: Int16.self)
-            for f in 0..<frames {
+        guard bits == 16 || bits == 32 || bits == 24 else { return nil }
+        let bps = bits / 8
+        var mono: [Float] = []
+        var nb = 0
+        for buf in bufs {
+            guard let data = buf.mData else { continue }
+            let ch = max(1, Int(buf.mNumberChannels))
+            let frames = Int(buf.mDataByteSize) / bps / ch
+            guard frames > 0 else { continue }
+            if mono.isEmpty { mono = [Float](repeating: 0, count: frames) }
+            let n = min(frames, mono.count)
+            let p = data.assumingMemoryBound(to: UInt8.self)
+            for f in 0..<n {
                 var acc: Float = 0
                 for c in 0..<ch {
-                    var v = p[f * ch + c]
-                    if bigEndian { v = Int16(bigEndian: v) }
-                    acc += Float(v) / 32768
+                    let o = (f * ch + c) * bps
+                    var v: Float
+                    if bits == 16 {
+                        var x = UInt16(p[o]) | UInt16(p[o + 1]) << 8
+                        if bigEndian { x = x.byteSwapped }
+                        v = Float(Int16(bitPattern: x)) / 32768
+                    } else if bits == 24 {
+                        var x = Int32(p[o]) | Int32(p[o + 1]) << 8 | Int32(p[o + 2]) << 16
+                        if bigEndian { x = Int32(p[o + 2]) | Int32(p[o + 1]) << 8 | Int32(p[o]) << 16 }
+                        if x & 0x800000 != 0 { x |= ~0xFFFFFF }
+                        v = Float(x) / 8388608
+                    } else if isFloat {
+                        var x = UInt32(p[o]) | UInt32(p[o + 1]) << 8 | UInt32(p[o + 2]) << 16 | UInt32(p[o + 3]) << 24
+                        if bigEndian { x = x.byteSwapped }
+                        v = Float(bitPattern: x)
+                    } else {
+                        var x = UInt32(p[o]) | UInt32(p[o + 1]) << 8 | UInt32(p[o + 2]) << 16 | UInt32(p[o + 3]) << 24
+                        if bigEndian { x = x.byteSwapped }
+                        v = Float(Int32(bitPattern: x)) / 2147483648
+                    }
+                    acc += v
                 }
-                mono[f] = acc / Float(ch)
+                mono[f] += acc / Float(ch)
             }
-        } else if isFloat {
-            let p = data.assumingMemoryBound(to: Float.self)
-            for f in 0..<frames {
-                var acc: Float = 0
-                for c in 0..<ch { acc += p[f * ch + c] }
-                mono[f] = acc / Float(ch)
-            }
-        } else {
-            let p = data.assumingMemoryBound(to: Int32.self)
-            for f in 0..<frames {
-                var acc: Float = 0
-                for c in 0..<ch {
-                    var v = p[f * ch + c]
-                    if bigEndian { v = Int32(bigEndian: v) }
-                    acc += Float(v) / 2147483648
-                }
-                mono[f] = acc / Float(ch)
-            }
+            nb += 1
         }
+        guard !mono.isEmpty else { return nil }
+        if nb > 1 { let k = 1 / Float(nb); for i in 0..<mono.count { mono[i] *= k } }
         return (mono, asbd.mSampleRate > 0 ? asbd.mSampleRate : 44100)
-    }
+
 }
 
 /// Continuous linear resampler to 48 kHz.

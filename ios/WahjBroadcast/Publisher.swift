@@ -141,8 +141,10 @@ final class Publisher: NSObject, RTCPeerConnectionDelegate {
                     } else if kind == "audio" {
                         let kbps = self.lastA.1 > 0 ? (bytes - self.lastA.0) * 8 / ((ts - self.lastA.1) / 1000) : 0
                         self.lastA = (bytes, ts)
-                        a = String(format: "a %.0fkbps", kbps)
+                        a = String(format: "a %.0fkbps total=%.0fKB packets=%.0f", kbps, bytes / 1000, num(x["packetsSent"]))
                     }
+                case "media-source":
+                    if ((x["kind"] as? String) ?? "") == "audio" { a += String(format: " level=%.3f", num(x["audioLevel"])) }
                 case "remote-inbound-rtp":
                     if ((x["kind"] as? String) ?? "") == "video" {
                         rtt = String(format: "rtt=%.0fms", num(x["roundTripTime"]) * 1000)
