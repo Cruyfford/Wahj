@@ -115,7 +115,7 @@ class MainActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         val d = intent.data ?: return
         if (d.host == "w") web.loadUrl(server + "/w" + (d.path ?: ""))
-        if (d.host == "c") { val id = (d.path ?: "").trim('/').filter { it.isLetterOrDigit() }; web.evaluateJavaScript("window.Wahj && Wahj.go('clip','$id')", null) }
+        if (d.host == "c") { val id = (d.path ?: "").trim('/').filter { it.isLetterOrDigit() }; web.evaluateJavascript("window.Wahj && Wahj.go('clip','$id')", null) }
         if (d.host == "wallet") web.evaluateJavascript("window.Wahj && Wahj.go('wallet')", null)
     }
 

@@ -112,9 +112,11 @@ async def main():
             data = urllib.request.urlopen(urllib.request.Request(B + f"/clips/{cid}.{meta['ext']}", headers=UA)).read()
             open("e2e-clip." + meta["ext"], "wb").write(data)
             print("CLIP OK id=%s dur=%.1fs ext=%s bytes=%d" % (cid, meta["dur"], meta["ext"], len(data)))
-            import subprocess
-            pr = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=codec_type,codec_name,width,height", "-of", "compact", "e2e-clip." + meta["ext"]], capture_output=True, text=True)
-            print("ffprobe:", pr.stdout.strip() or pr.stderr.strip()[:300])
+            try:
+                import subprocess
+                pr = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=codec_type,codec_name,width,height", "-of", "compact", "e2e-clip." + meta["ext"]], capture_output=True, text=True)
+                print("ffprobe:", pr.stdout.strip() or pr.stderr.strip()[:300])
+            except Exception as e: print("ffprobe n/a:", e)
             await b.screenshot(path="e2e-clip.png")
             post(f"/api/clip/{cid}/del", {}, vt)
         except Exception as e:
