@@ -49,33 +49,44 @@ let _i18nV = "";
 function I18N_V() { if (!_i18nV) { let h = 5381; for (let i = 0; i < EN_TXT.length; i++) h = ((h << 5) + h + EN_TXT.charCodeAt(i)) | 0; _i18nV = (h >>> 0).toString(36); } return _i18nV; }
 const I18N_LANGS = new Set("af am az be bg bn bs ca ceb cs cy da de el es et fa fi fr ga gl gu ha he hi hr ht hu hy id ig is it ja jv ka kk km kn ko lb lo lt lv mg mk ml mn mr ms my ne nl no pa pl ps pt ro ru sd si sk sl so sq sr su sv sw ta th tl tr uk ur uz vi xh yo zh zu".split(" "));
 const _i18nMem = {};
+const LANG_EN = { af: "Afrikaans", am: "Amharic", az: "Azerbaijani", be: "Belarusian", bg: "Bulgarian", bn: "Bengali", bs: "Bosnian", ca: "Catalan", ceb: "Cebuano", cs: "Czech", cy: "Welsh", da: "Danish", de: "German", el: "Greek", es: "Spanish", et: "Estonian", fa: "Persian (Farsi)", fi: "Finnish", fr: "French", ga: "Irish", gl: "Galician", gu: "Gujarati", ha: "Hausa", he: "Hebrew", hi: "Hindi", hr: "Croatian", ht: "Haitian Creole", hu: "Hungarian", hy: "Armenian", id: "Indonesian", ig: "Igbo", is: "Icelandic", it: "Italian", ja: "Japanese", jv: "Javanese", ka: "Georgian", kk: "Kazakh", km: "Khmer", kn: "Kannada", ko: "Korean", lb: "Luxembourgish", lo: "Lao", lt: "Lithuanian", lv: "Latvian", mg: "Malagasy", mk: "Macedonian", ml: "Malayalam", mn: "Mongolian", mr: "Marathi", ms: "Malay", my: "Burmese", ne: "Nepali", nl: "Dutch", no: "Norwegian (Bokmål)", pa: "Punjabi", pl: "Polish", ps: "Pashto", pt: "Portuguese", ro: "Romanian", ru: "Russian", sd: "Sindhi", si: "Sinhala", sk: "Slovak", sl: "Slovenian", so: "Somali", sq: "Albanian", sr: "Serbian (Cyrillic)", su: "Sundanese", sv: "Swedish", sw: "Swahili", ta: "Tamil", te: "Telugu", th: "Thai", tl: "Filipino (Tagalog)", tr: "Turkish", uk: "Ukrainian", ur: "Urdu", uz: "Uzbek (Latin)", vi: "Vietnamese", xh: "Xhosa", yo: "Yoruba", zh: "Simplified Chinese", zu: "Zulu" };
+const I18N_MODELS = ["@cf/meta/llama-3.3-70b-instruct-fp8-fast", "@cf/google/gemma-3-12b-it"];
+async function i18nBatch(env, lang, part) {
+  const sys = `You are a professional app localizer. Translate the JSON values of a mobile GAME LIVE-STREAMING app (like Twitch/Kick) from English into ${LANG_EN[lang]}.
+Rules: use the natural terms gamers in that language actually use ("Go live" = start a live broadcast, "stream" = live broadcast, "streamer", "chat", "followers", "coins", "VIP", "co-stream", "clip").
+Keep it short like real app UI. Keep every {placeholder} exactly as written. Keep "Wahj", "Wahj Live", "VIP", "PayPal", "YouTube", "Wi-Fi", "XP", "LIVE" unchanged. Keep emoji-free. Do not translate keys.
+Return ONLY a JSON object with exactly the same keys.`;
+  for (const model of I18N_MODELS) {
+    try {
+      const r = await env.AI.run(model, { messages: [{ role: "system", content: sys }, { role: "user", content: JSON.stringify(part) }], max_tokens: 4096, temperature: 0.2 });
+      let txt = r && (typeof r.response === "string" ? r.response : JSON.stringify(r.response || ""));
+      const a = txt.indexOf("{"), b = txt.lastIndexOf("}");
+      if (a < 0 || b < a) continue;
+      const o = JSON.parse(txt.slice(a, b + 1)), out = {};
+      for (const k in part) {
+        const v = typeof o[k] === "string" ? o[k].trim() : "";
+        const ph = part[k].match(/\{\w+\}/g) || [];
+        if (v && ph.every((p) => v.includes(p))) out[k] = v;
+      }
+      if (Object.keys(out).length >= Object.keys(part).length * 0.7) return out;
+    } catch (e) {}
+  }
+  return {};
+}
 async function i18n(env, lang) {
-  if (!I18N_LANGS.has(lang)) return { error: "lang" };
+  if (!I18N_LANGS.has(lang) || !LANG_EN[lang]) return { error: "lang" };
   const v = I18N_V(), key = `i18n/${lang}-${v}.json`;
   if (_i18nMem[key]) return { v, lang, d: _i18nMem[key] };
   if (env.REC) { const o = await env.REC.get(key); if (o) { const d = await o.json(); _i18nMem[key] = d; return { v, lang, d }; } }
   if (!env.AI) return { error: "ai_off" };
-  const en = JSON.parse(EN_TXT), keys = Object.keys(en), out = {};
-  let i = 0, fails = 0;
-  const one = async (k) => {
-    const src = en[k];
-    // protect {placeholders} as numbered tokens the model leaves alone
-    const ph = [...new Set(src.match(/\{\w+\}/g) || [])];
-    let text = src; ph.forEach((p, j) => (text = text.split(p).join(`{${j}}`)));
-    try {
-      const r = await env.AI.run("@cf/meta/m2m100-1.2b", { text, source_lang: "en", target_lang: lang });
-      let tr = String((r && r.translated_text) || "").trim();
-      if (!tr || ph.some((p, j) => !tr.includes(`{${j}}`))) { fails++; return; }
-      ph.forEach((p, j) => (tr = tr.split(`{${j}}`).join(p)));
-      out[k] = tr;
-    } catch (e) { fails++; }
-  };
-  const worker = async () => { while (i < keys.length) { const k = keys[i++]; await one(k); } };
-  await Promise.all(Array.from({ length: 24 }, worker));
+  const en = JSON.parse(EN_TXT), keys = Object.keys(en), parts = [];
+  for (let i = 0; i < keys.length; i += 40) { const p = {}; keys.slice(i, i + 40).forEach((k) => (p[k] = en[k])); parts.push(p); }
+  const res = await Promise.all(parts.map((p) => i18nBatch(env, lang, p)));
+  const out = Object.assign({}, ...res);
   if (!Object.keys(out).length) return { error: "ai_fail" };
-  // only cache a good result; partial ones are returned but retried next time
-  if (Object.keys(out).length > keys.length * 0.8) { _i18nMem[key] = out; if (env.REC) await env.REC.put(key, JSON.stringify(out), { httpMetadata: { contentType: "application/json" } }); }
-  return { v, lang, d: out, partial: fails > 0 };
+  const partial = Object.keys(out).length < keys.length * 0.97;
+  if (!partial) { _i18nMem[key] = out; if (env.REC) await env.REC.put(key, JSON.stringify(out), { httpMetadata: { contentType: "application/json" } }); }
+  return { v, lang, d: out, partial, n: Object.keys(out).length, of: keys.length };
 }
 
 // ---- YouTube simulcast over HLS ingest (same fMP4 segments the phone already uploads) ----
