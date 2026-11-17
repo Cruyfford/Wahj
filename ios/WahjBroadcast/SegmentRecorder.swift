@@ -93,7 +93,7 @@ final class SegmentRecorder: NSObject, AVAssetWriterDelegate {
         guard let type = UTType(AVFileType.mp4.rawValue) else { return false }
         let w = AVAssetWriter(contentType: type)
         w.outputFileTypeProfile = .mpeg4AppleHLS
-        w.preferredOutputSegmentInterval = CMTime(seconds: 6, preferredTimescale: 1)
+        w.preferredOutputSegmentInterval = CMTime(seconds: 2, preferredTimescale: 1)  // YouTube HLS ingest wants 1–4 s segments
         w.initialSegmentStartTime = time
         w.delegate = self
         let vs: [String: Any] = [
@@ -101,7 +101,7 @@ final class SegmentRecorder: NSObject, AVAssetWriterDelegate {
             AVVideoWidthKey: Int(canvas.width), AVVideoHeightKey: Int(canvas.height),
             AVVideoCompressionPropertiesKey: [
                 AVVideoAverageBitRateKey: 1_500_000,   // leaves upstream bandwidth for the live stream
-                AVVideoMaxKeyFrameIntervalDurationKey: 2,
+                AVVideoMaxKeyFrameIntervalDurationKey: 1,
                 AVVideoExpectedSourceFrameRateKey: 30,
                 AVVideoAllowFrameReorderingKey: false,
                 AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel,
@@ -164,9 +164,9 @@ final class SegmentRecorder: NSObject, AVAssetWriterDelegate {
             upload(path: "init?w=\(Int(canvas.width))&h=\(Int(canvas.height))", data: data)
         } else {
             let d = segmentReport?.trackReports.first(where: { $0.mediaType == .video })?.duration
-            let dur = d.map { CMTimeGetSeconds($0) } ?? 6
+            let dur = d.map { CMTimeGetSeconds($0) } ?? 2
             let n = seg; seg += 1
-            upload(path: "seg?n=\(n)&dur=\(String(format: "%.3f", dur.isFinite ? dur : 6))", data: data)
+            upload(path: "seg?n=\(n)&dur=\(String(format: "%.3f", dur.isFinite ? dur : 2))", data: data)
         }
     }
 
@@ -177,7 +177,7 @@ final class SegmentRecorder: NSObject, AVAssetWriterDelegate {
             return
         }
         lock.lock()
-        if pendingUploads >= 4 { lock.unlock(); NSLog("rec: upload backlog, dropping segment"); return }
+        if pendingUploads >= 8 { lock.unlock(); NSLog("rec: upload backlog, dropping segment"); return }
         pendingUploads += 1
         lock.unlock()
         let url = job.serverURL + "/api/rec/\(job.room)/" + path

@@ -3,6 +3,7 @@
 import APP_HTML from "./app.html";
 import GAMES from "./games.json";
 import HLS_JS from "./lib/hls.txt";
+import { parseInit, remux } from "./ts.js";
 import EN_TXT from "./lib/en.txt";
 
 const SFU = "https://rtc.live.cloudflare.com/v1";
@@ -101,24 +102,29 @@ async function i18n(env, lang) {
 
 // ---- YouTube simulcast over HLS ingest (same fMP4 segments the phone already uploads) ----
 async function ytForward(env, room, n, buf, yt) {
+  // YouTube HLS ingest only accepts MPEG-TS segments → remux the phone's fMP4 segments on the fly
   const base = "https://a.upload.youtube.com/http_upload_hls?cid=" + encodeURIComponent(yt.key) + "&copy=0&file=";
-  const init = "init" + yt.init + ".mp4";
-  const put = (file, body, type) => fetch(base + file, { method: "PUT", body, headers: { "content-type": type } });
+  const put = (file, body, type) => fetch(base + file, { method: "PUT", body, headers: { "content-type": type, "user-agent": "Wahj / Live / 1.0" } });
   let ok = true, code = 0, msg = "";
-  try {
-    const r = await put(n < 0 ? init : "s" + yt.init + "_" + n + ".m4s", buf, n < 0 ? "video/mp4" : "video/iso.segment");
+  if (n < 0) { ok = !!yt.meta; msg = yt.meta ? "init parsed" + (yt.meta.a ? " +audio" : " no-audio") : "init parse failed"; }
+  else try {
+    if (!yt.meta) throw new Error("no init");
+    const ts = remux(buf, yt.meta);
+    if (!ts) throw new Error("remux: no video samples");
+    const r = await put("s" + yt.init + "_" + n + ".ts", ts, "video/mp2t");
     code = r.status; ok = r.ok;
     if (!ok) msg = (await r.text().catch(() => "")).slice(0, 200);
-    if (ok && n >= 0 && yt.segs.length) {
+    if (ok && yt.segs.length) {
       const td = Math.ceil(Math.max(...yt.segs.map((x) => x.dur), 2));
-      let m = `#EXTM3U\n#EXT-X-VERSION:7\n#EXT-X-TARGETDURATION:${td}\n#EXT-X-MEDIA-SEQUENCE:${yt.segs[0].n}\n#EXT-X-DISCONTINUITY-SEQUENCE:${yt.init}\n#EXT-X-INDEPENDENT-SEGMENTS\n#EXT-X-MAP:URI="${init}"\n`;
-      for (const sg of yt.segs) m += `#EXTINF:${(+sg.dur).toFixed(3)},\ns${yt.init}_${sg.n}.m4s\n`;
+      let m = `#EXTM3U\n#EXT-X-VERSION:3\n#EXT-X-TARGETDURATION:${td}\n#EXT-X-MEDIA-SEQUENCE:${yt.segs[0].n}\n#EXT-X-DISCONTINUITY-SEQUENCE:${yt.init}\n`;
+      for (const sg of yt.segs) m += `#EXTINF:${(+sg.dur).toFixed(3)},\ns${yt.init}_${sg.n}.ts\n`;
       const p = await put("live.m3u8", m, "application/vnd.apple.mpegurl");
       if (!p.ok) { ok = false; code = p.status; msg = "playlist " + (await p.text().catch(() => "")).slice(0, 200); }
     }
-  } catch (e) { ok = false; msg = String(e).slice(0, 200); }
-  // tell the studio (first segment, and on every failure)
-  if (!ok || n <= 1 || n % 10 === 0) await hub(env, "/yt-stat", { room, ok, code, msg, n }).catch(() => {});
+    if (ok) msg = (ts.length / 1024 | 0) + "KB ts";
+  } catch (e) { ok = false; msg = String(e && e.message || e).slice(0, 200); }
+  // tell the studio (first segments, every 10th, and on every failure)
+  if (!ok || n <= 3 || n % 10 === 0) await hub(env, "/yt-stat", { room, ok, code, msg, n }).catch(() => {});
 }
 
 async function sendMail(env, to, subject, html) {
@@ -251,7 +257,8 @@ export default {
         if (buf.byteLength < 8 || buf.byteLength > 25e6) return J({ error: "size" }, 400);
         const n = mr[2] === "init" ? -1 : Math.max(0, +url.searchParams.get("n") | 0);
         const dur = Math.min(30, Math.max(0, +url.searchParams.get("dur") || 0));
-        const r = await hub(env, "/rec-seg", { pub, key: rkey, room: mr[1], n, dur, bytes: buf.byteLength,
+        let ytmeta = null; if (n < 0) { try { ytmeta = parseInit(buf); } catch (e) {} }
+        const r = await hub(env, "/rec-seg", { pub, key: rkey, room: mr[1], n, dur, bytes: buf.byteLength, ytmeta,
           w: +url.searchParams.get("w") || 0, h: +url.searchParams.get("h") || 0 });
         if (!r.ok) return J(r, r.error === "auth" ? 401 : 409);
         if (r.yt) ctx.waitUntil(ytForward(env, mr[1], n, buf, r.yt));
@@ -755,6 +762,7 @@ export class Hub {
     this.sql.exec("CREATE TABLE IF NOT EXISTS sanctions(host TEXT, uid TEXT, kind TEXT, until INTEGER, by TEXT, t INTEGER, PRIMARY KEY(host, uid, kind))");
     try { this.sql.exec("ALTER TABLE streams ADD COLUMN yt INTEGER DEFAULT 0"); } catch (e) {}
     try { this.sql.exec("ALTER TABLE streams ADD COLUMN ytinit INTEGER DEFAULT 0"); } catch (e) {}
+    try { this.sql.exec("ALTER TABLE streams ADD COLUMN ytmeta TEXT DEFAULT ''"); } catch (e) {}
     try { this.sql.exec("ALTER TABLE streams ADD COLUMN rec INTEGER DEFAULT 0"); } catch (e) {}
     this.sql.exec("CREATE TABLE IF NOT EXISTS clips(id TEXT PRIMARY KEY, room TEXT, host TEXT, uid TEXT, title TEXT, game TEXT, dur REAL, size INTEGER, ext TEXT, views INTEGER DEFAULT 0, t INTEGER, deleted INTEGER DEFAULT 0, thumb INTEGER DEFAULT 0)");
     this.sql.exec("CREATE TABLE IF NOT EXISTS donations(id TEXT PRIMARY KEY, host TEXT, uid TEXT, name TEXT, coins INTEGER, usd TEXT, kind TEXT, msg TEXT, status TEXT, t INTEGER)");
@@ -1226,14 +1234,16 @@ export class Hub {
       if (st.yt && u.ytkey && !st.ended) {
         if (b.n < 0) {
           // new init segment (encoder restarted / orientation change) → fresh playlist after a discontinuity
-          this.sql.exec("UPDATE streams SET ytinit=ytinit+1 WHERE id=?", r.room);
+          this.sql.exec("UPDATE streams SET ytinit=ytinit+1, ytmeta=? WHERE id=?", b.ytmeta ? JSON.stringify(b.ytmeta) : "", r.room);
+          st.ytmeta = b.ytmeta ? JSON.stringify(b.ytmeta) : "";
           this.sql.exec("DELETE FROM ytsegs WHERE room=?", r.room);
           st.ytinit = (st.ytinit | 0) + 1;
         } else {
           this.sql.exec("INSERT OR REPLACE INTO ytsegs VALUES(?,?,?)", r.room, b.n, +b.dur || 0);
           this.sql.exec("DELETE FROM ytsegs WHERE room=? AND n<?", r.room, b.n - 6);
         }
-        yt = { key: u.ytkey, init: st.ytinit | 0, segs: this.all("SELECT n, dur FROM ytsegs WHERE room=? ORDER BY n DESC LIMIT 5", r.room).reverse() };
+        let meta = null; try { meta = st.ytmeta ? JSON.parse(st.ytmeta) : null; } catch (e) {}
+        yt = { key: u.ytkey, init: st.ytinit | 0, meta, segs: this.all("SELECT n, dur FROM ytsegs WHERE room=? ORDER BY n DESC LIMIT 5", r.room).reverse() };
       }
       let rec = this.one("SELECT * FROM recs WHERE id=?", r.room);
       // the per-stream choice ("record this stream") wins over the default in settings

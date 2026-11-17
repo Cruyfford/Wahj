@@ -26,7 +26,7 @@ class SegmentRecorder(private val server: String, private val room: String, priv
         java.io.File(this, "meta.txt").writeText("$server\n$room\n$recKey\n$wifiOnly")
     } else null
     private var savedN = 0
-    companion object { private const val TAG = "WahjRec"; private const val SEG_US = 6_000_000L }
+    companion object { private const val TAG = "WahjRec"; private const val SEG_US = 2_000_000L }
 
     private var W = 1280
     private var H = 720
@@ -145,7 +145,7 @@ class SegmentRecorder(private val server: String, private val room: String, priv
                 setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible)
                 setInteger(MediaFormat.KEY_BIT_RATE, 2_000_000)
                 setInteger(MediaFormat.KEY_FRAME_RATE, 30)
-                setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 2)
+                setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1)
                 setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileBaseline)
                 setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel31)
             }
