@@ -31,9 +31,20 @@ final class SegmentRecorder: NSObject, AVAssetWriterDelegate {
     private var audioAnchor: CMTime = .invalid
     private var audioCount: Int64 = 0
 
+    // deferred mode: segments go to disk during the stream, then iOS uploads them in the background after it ends
+    private var deferred: Bool { (job.deferred ?? false) && !(job.yt ?? false) }
+    private lazy var dir: URL = {
+        let base = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent("rec", isDirectory: true)
+        let d = base.appendingPathComponent(job.room, isDirectory: true)
+        try? FileManager.default.createDirectory(at: d, withIntermediateDirectories: true)
+        return d
+    }()
+    private var saved: [(file: URL, path: String)] = []
+
     init(job: WahjJob) {
         self.job = job
         super.init()
+        SegmentRecorder.cleanup()
         var asbd = AudioStreamBasicDescription(mSampleRate: 48000, mFormatID: kAudioFormatLinearPCM,
                                                mFormatFlags: kLinearPCMFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsPacked,
                                                mBytesPerPacket: 2, mFramesPerPacket: 1, mBytesPerFrame: 2, mChannelsPerFrame: 1,
@@ -160,6 +171,11 @@ final class SegmentRecorder: NSObject, AVAssetWriterDelegate {
     }
 
     private func upload(path: String, data: Data) {
+        if deferred {
+            let f = dir.appendingPathComponent(String(format: "%05d.part", saved.count))
+            do { try data.write(to: f); lock.lock(); saved.append((f, path)); lock.unlock() } catch { Diag.log("rec: disk write failed \(error.localizedDescription)") }
+            return
+        }
         lock.lock()
         if pendingUploads >= 4 { lock.unlock(); NSLog("rec: upload backlog, dropping segment"); return }
         pendingUploads += 1
@@ -183,6 +199,38 @@ final class SegmentRecorder: NSObject, AVAssetWriterDelegate {
         }
     }
 
+    /// Hands every saved segment to a background URLSession: iOS keeps uploading after the extension exits.
+    private func handOff() {
+        lock.lock(); let items = saved; lock.unlock()
+        guard !items.isEmpty, let key = job.recKey else { return }
+        let cfg = URLSessionConfiguration.background(withIdentifier: "wahj.rec." + job.room)
+        cfg.sharedContainerIdentifier = WahjNames.appGroup
+        cfg.allowsCellularAccess = !(job.wifiOnly ?? false)
+        cfg.isDiscretionary = false
+        cfg.timeoutIntervalForResource = 7 * 24 * 3600
+        let session = URLSession(configuration: cfg, delegate: BGUploadLog.shared, delegateQueue: nil)
+        var bytes = 0
+        for it in items {
+            guard let url = URL(string: job.serverURL + "/api/rec/\(job.room)/" + it.path) else { continue }
+            var r = URLRequest(url: url); r.httpMethod = "POST"
+            r.setValue(key, forHTTPHeaderField: "x-rec"); r.setValue("application/octet-stream", forHTTPHeaderField: "content-type")
+            session.uploadTask(with: r, fromFile: it.file).resume()
+            bytes += (try? it.file.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+        }
+        session.finishTasksAndInvalidate()
+        Diag.log("rec: handed \(items.count) segments (\(bytes / 1_000_000)MB) to background upload wifiOnly=\(job.wifiOnly ?? false)")
+    }
+
+    /// Removes recordings older than 3 days (already uploaded or abandoned).
+    static func cleanup() {
+        let base = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].appendingPathComponent("rec", isDirectory: true)
+        guard let list = try? FileManager.default.contentsOfDirectory(at: base, includingPropertiesForKeys: [.contentModificationDateKey]) else { return }
+        for d in list {
+            let m = (try? d.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate) ?? Date()
+            if Date().timeIntervalSince(m) > 3 * 86400 { try? FileManager.default.removeItem(at: d) }
+        }
+    }
+
     /// Flushes the last segment and waits briefly for uploads (called when the broadcast ends).
     func finish(timeout: TimeInterval = 4) {
         guard !finishing else { return }
@@ -194,11 +242,24 @@ final class SegmentRecorder: NSObject, AVAssetWriterDelegate {
             w.finishWriting { sem.signal() }
         }
         _ = sem.wait(timeout: .now() + 2)
+        if deferred { handOff(); return }
         let end = Date().addingTimeInterval(timeout)
         while Date() < end {
             lock.lock(); let p = pendingUploads; lock.unlock()
             if p == 0 { break }
             Thread.sleep(forTimeInterval: 0.1)
         }
+    }
+}
+
+
+/// Logs background upload results while the extension is still alive (the system finishes the rest).
+final class BGUploadLog: NSObject, URLSessionTaskDelegate {
+    static let shared = BGUploadLog()
+    private var ok = 0, fail = 0
+    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        let code = (task.response as? HTTPURLResponse)?.statusCode ?? 0
+        if error == nil && code == 200 { ok += 1 } else { fail += 1; if fail <= 3 { Diag.log("rec: bg upload failed code=\(code) \(error?.localizedDescription ?? "")") } }
+        if (ok + fail) % 10 == 0 { Diag.log("rec: bg uploads ok=\(ok) fail=\(fail)") }
     }
 }

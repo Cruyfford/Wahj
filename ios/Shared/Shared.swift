@@ -31,6 +31,11 @@ struct WahjJob: Codable {
     var token: String?
     var title: String?
     var rec: Bool?
+    var save: Bool?
+    var deferred: Bool?
+    var recKey: String?
+    var wifiOnly: Bool?
+    var yt: Bool?
 
     var serverURL: String {
         if let s = server, !s.isEmpty { return s }

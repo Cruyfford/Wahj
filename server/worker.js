@@ -158,18 +158,33 @@ export default {
       let mr = p.match(/^\/api\/rec\/([a-z0-9]+)\/(init|seg)$/);
       if (mr && req.method === "POST") {
         if (!env.REC) return J({ error: "rec_off" }, 503);
-        const pub = req.headers.get("x-pub") || "";
+        const pub = req.headers.get("x-pub") || "", rkey = req.headers.get("x-rec") || "";
         const buf = await req.arrayBuffer();
         if (buf.byteLength < 8 || buf.byteLength > 25e6) return J({ error: "size" }, 400);
         const n = mr[2] === "init" ? -1 : Math.max(0, +url.searchParams.get("n") | 0);
         const dur = Math.min(30, Math.max(0, +url.searchParams.get("dur") || 0));
-        const r = await hub(env, "/rec-seg", { pub, room: mr[1], n, dur, bytes: buf.byteLength,
+        const r = await hub(env, "/rec-seg", { pub, key: rkey, room: mr[1], n, dur, bytes: buf.byteLength,
           w: +url.searchParams.get("w") || 0, h: +url.searchParams.get("h") || 0 });
         if (!r.ok) return J(r, r.error === "auth" ? 401 : 409);
         if (r.yt) ctx.waitUntil(ytForward(env, mr[1], n, buf, r.yt));
         if (r.store === false) return J({ ok: true });
         await env.REC.put(`rec/${mr[1]}/${n < 0 ? "init.mp4" : n + ".m4s"}`, buf, { httpMetadata: { contentType: n < 0 ? "video/mp4" : "video/iso.segment" } });
         return J({ ok: true });
+      }
+      // whole recording as one fragmented MP4 (init + segments streamed back-to-back) — for saving to Photos/Files
+      mr = p.match(/^\/api\/rec\/([a-z0-9]+)\/download\.mp4$/);
+      if (mr && env.REC) {
+        const r = await hub(env, "/rec-get", { id: mr[1] });
+        if (!r.rec || !r.rec.init) return new Response("not found", { status: 404, headers: CORS });
+        const keys = ["init.mp4", ...r.segs.map((x) => x.n + ".m4s")];
+        const { readable, writable } = new TransformStream();
+        ctx.waitUntil((async () => {
+          const w = writable.getWriter();
+          try { for (const k of keys) { const o = await env.REC.get(`rec/${mr[1]}/${k}`); if (!o) continue; const rd = o.body.getReader(); for (;;) { const { done, value } = await rd.read(); if (done) break; await w.write(value); } } } catch (e) {}
+          await w.close();
+        })());
+        const name = (r.rec.title || "wahj").replace(/[^\w\u0600-\u06FF -]/g, "").slice(0, 40) || "wahj";
+        return new Response(readable, { headers: { "content-type": "video/mp4", "content-disposition": `attachment; filename*=UTF-8''${encodeURIComponent(name)}.mp4`, ...CORS } });
       }
       mr = p.match(/^\/api\/rec\/([a-z0-9]+)\/(index\.m3u8|init\.mp4|\d+\.m4s)$/);
       if (mr) {
@@ -322,6 +337,30 @@ export default {
         await hub(env, "/order-new", { id: r.data.id, uid: me.user.id, pack: b.pack, coins: pack.coins, usd: pack.usd });
         return J({ id: r.data.id, url: link.href });
       }
+      if (p === "/api/donate" && req.method === "POST") {
+        const b = await req.json().catch(() => ({}));
+        const r = await hub(env, "/donate", { ...b, token: bearer(req) });
+        if (r.error || !r.pending) return J(r, r.error ? 400 : 200);
+        if (!env.PAYPAL_CLIENT_ID || !env.PAYPAL_SECRET) return J({ error: "pay_off" }, 400);
+        const pp = await paypal(env, "POST", "/v2/checkout/orders", {
+          intent: "CAPTURE",
+          purchase_units: [{ reference_id: r.id, custom_id: "don:" + r.id, description: `Wahj Live — support ${String(r.hostName).slice(0, 40)}`,
+            amount: { currency_code: "USD", value: r.usd } }],
+          payment_source: { paypal: { experience_context: { brand_name: "Wahj Live", user_action: "PAY_NOW", shipping_preference: "NO_SHIPPING",
+            return_url: url.origin + "/pay/return", cancel_url: url.origin + "/pay/cancel" } } },
+        });
+        const link = (pp.data.links || []).find((l) => l.rel === "payer-action" || l.rel === "approve");
+        if (!pp.data.id || !link) return J({ error: "pay_fail" }, 502);
+        const me = await hub(env, "/me", { token: bearer(req) });
+        await hub(env, "/order-new", { id: pp.data.id, uid: me.user.id, pack: "don:" + r.id, coins: 0, usd: r.usd });
+        return J({ id: pp.data.id, url: link.href });
+      }
+      if ((p === "/api/goal") && req.method === "POST") {
+        const b = await req.json().catch(() => ({}));
+        return J(await hub(env, "/goal", { ...b, token: bearer(req) }));
+      }
+      mr = p.match(/^\/api\/support\/([\w.-]+)$/);
+      if (mr) return J(await hub(env, "/support-info", { host: mr[1] }));
       if (p === "/api/pay/status") {
         return J(await hub(env, "/order-get", { id: url.searchParams.get("id") || "", token: bearer(req) }));
       }
@@ -338,7 +377,7 @@ export default {
           if (!done) return payPage(false, "لم يكتمل الدفع");
           await hub(env, "/order-paid", { id });
         }
-        return payPage(true, `تمت إضافة ${o.order.coins} كوينز 🪙`);
+        return payPage(true, String(o.order.pack).startsWith("don:") ? "شكراً لدعمك! وصل دعمك للستريمر" : `تمت إضافة ${o.order.coins} كوينز`);
       }
       if (p === "/api/me") return J(await hub(env, "/me", { token: bearer(req) }));
       if (p === "/api/profile" && req.method === "POST") {
@@ -568,6 +607,11 @@ export class Hub {
     this.sql.exec("CREATE TABLE IF NOT EXISTS sanctions(host TEXT, uid TEXT, kind TEXT, until INTEGER, by TEXT, t INTEGER, PRIMARY KEY(host, uid, kind))");
     try { this.sql.exec("ALTER TABLE streams ADD COLUMN yt INTEGER DEFAULT 0"); } catch (e) {}
     try { this.sql.exec("ALTER TABLE streams ADD COLUMN ytinit INTEGER DEFAULT 0"); } catch (e) {}
+    try { this.sql.exec("ALTER TABLE streams ADD COLUMN rec INTEGER DEFAULT 0"); } catch (e) {}
+    this.sql.exec("CREATE TABLE IF NOT EXISTS donations(id TEXT PRIMARY KEY, host TEXT, uid TEXT, name TEXT, coins INTEGER, usd TEXT, kind TEXT, msg TEXT, status TEXT, t INTEGER)");
+    this.sql.exec("CREATE TABLE IF NOT EXISTS goals(host TEXT PRIMARY KEY, title TEXT, target INTEGER, cur INTEGER, t INTEGER)");
+    this.sql.exec("CREATE TABLE IF NOT EXISTS supporters(host TEXT, uid TEXT, total INTEGER, PRIMARY KEY(host, uid))");
+    this.sql.exec("CREATE TABLE IF NOT EXISTS reckeys(room TEXT PRIMARY KEY, uid TEXT, k TEXT, t INTEGER)");
     this.sql.exec("CREATE TABLE IF NOT EXISTS ytsegs(room TEXT, n INTEGER, dur REAL, PRIMARY KEY(room, n))");
     this.sql.exec(`CREATE TABLE IF NOT EXISTS chan(uid TEXT, host TEXT, xp INTEGER DEFAULT 0, points INTEGER DEFAULT 0, day TEXT DEFAULT '',
       streak INTEGER DEFAULT 0, watch INTEGER DEFAULT 0, PRIMARY KEY(uid, host))`);
@@ -618,6 +662,33 @@ export class Hub {
     this.topC = null;
     const level = sLevelOf((u.sxp | 0) + xp);
     return { level, levelUp: level > before };
+  }
+  // ---- streamer support: every coin of gifts, subs and donations counts toward supporters + the goal ----
+  goalOf(host) { const g = this.one("SELECT title, target, cur FROM goals WHERE host=?", String(host)); return g || null; }
+  topSupporters(host, n = 10) {
+    return this.all("SELECT uid, total FROM supporters WHERE host=? ORDER BY total DESC LIMIT ?", String(host), n)
+      .map((r, i) => { const u = this.one("SELECT * FROM users WHERE id=? AND deleted=0", r.uid); return u ? { rank: i + 1, total: r.total, ...this.pubUser(u) } : null; }).filter(Boolean);
+  }
+  async roomOf(host, path, body) {
+    const live = this.one("SELECT id FROM streams WHERE uid=? AND ended=0 AND beat>? ORDER BY started DESC", String(host), now() - 120000);
+    if (live) await this.env.ROOM.get(this.env.ROOM.idFromName("r:" + live.id)).fetch("https://room" + path, { method: "POST", body: JSON.stringify(body) }).catch(() => {});
+  }
+  async support(host, uid, coins) {
+    coins = Math.floor(coins); if (!host || coins <= 0) return;
+    if (uid) this.sql.exec("INSERT INTO supporters VALUES(?,?,?) ON CONFLICT(host, uid) DO UPDATE SET total=total+excluded.total", String(host), String(uid), coins);
+    const g = this.goalOf(host);
+    if (g) { this.sql.exec("UPDATE goals SET cur=cur+? WHERE host=?", coins, String(host)); await this.roomOf(host, "/goal", { goal: this.goalOf(host) }); }
+  }
+  async finishDonation(d) {
+    this.sql.exec("UPDATE donations SET status='paid', t=? WHERE id=?", now(), d.id);
+    const host = this.one("SELECT * FROM users WHERE id=?", d.host); if (!host) return;
+    const share = this.shareFor(host.id);
+    this.addCoins(host.id, Math.floor(d.coins * share), "donation_in", d.name);
+    this.addSxp(host.id, d.coins / 2);
+    await this.support(host.id, d.uid, d.coins);
+    const u = d.uid ? this.one("SELECT * FROM users WHERE id=?", d.uid) : null;
+    await this.roomOf(host.id, "/donation", { id: d.id, uid: d.uid, name: d.name, color: u ? u.color : "#ffd36b", look: u ? this.lookOf(u) : {}, avatar: u ? this.pubUser(u).avatar : "",
+      coins: d.coins, usd: d.kind === "paypal" ? d.usd : "", msg: d.msg });
   }
   roleOf(host, uid) {
     if (!uid) return "";
@@ -837,12 +908,13 @@ export class Hub {
         const o = this.streamOut(s);
         const r = this.one("SELECT dur, segs, init FROM recs WHERE id=? AND deleted=0", s.id);
         if (r && r.init && r.segs > 0) o.rec = { dur: Math.round(r.dur) };
+        else if (s.rec && !(r && r.deleted)) o.recPending = true;
         return o;
       });
       const games = this.all("SELECT game, MAX(gameIcon) icon, COUNT(*) n FROM streams WHERE uid=? AND game<>'' GROUP BY lower(game) ORDER BY n DESC LIMIT 8", u.id);
       const viewer = b.token ? this.user(b.token) : null;
       const subsCount = this.one("SELECT COUNT(*) n FROM subs WHERE host=? AND until>?", u.id, t).n;
-      return J2({ streamer: this.streamerOf(u), mySub: viewer ? this.subOf(viewer.id, u.id) : null, subsCount, user: this.pubUser(u), followers, following, streamsCount: st.n || 0, bestPeak: st.p || 0, hours: Math.round((st.d || 0) / 360000) / 10, games: games.map((g) => ({ name: g.game, icon: g.icon === "local" ? "" : g.icon, n: g.n })), streams: past });
+      return J2({ goal: this.goalOf(u.id), topSupporters: this.topSupporters(u.id, 5), streamer: this.streamerOf(u), mySub: viewer ? this.subOf(viewer.id, u.id) : null, subsCount, user: this.pubUser(u), followers, following, streamsCount: st.n || 0, bestPeak: st.p || 0, hours: Math.round((st.d || 0) / 360000) / 10, games: games.map((g) => ({ name: g.game, icon: g.icon === "local" ? "" : g.icon, n: g.n })), streams: past });
     }
     if (p === "/password") {
       const u = this.user(b.token);
@@ -948,10 +1020,17 @@ export class Hub {
         room, pub, role, uid: u.id, name: u.name,
         quality: b.quality || "720", fps: +b.fps || 30, mic: b.mic !== false,
         privacy: b.privacy || {}, at: t,
-        rec: role === "host" && !!this.env.REC && this.prefsOf(u).rec !== false && this.recTotal() < REC_LIMIT,
+        rec: role === "host" && !!this.env.REC && (b.record !== undefined ? !!b.record : this.prefsOf(u).rec !== false) && this.recTotal() < REC_LIMIT,
       };
       // YouTube simulcast rides on the same HLS segments (no second encoder on the phone)
       job.save = job.rec;
+      if (job.save) {
+        // record on the phone, upload after the stream (keeps upstream bandwidth for the live video)
+        job.deferred = b.deferred !== false;
+        job.recKey = rid(24); job.wifiOnly = !!b.wifiOnly;
+        this.sql.exec("INSERT OR REPLACE INTO reckeys VALUES(?,?,?,?)", room, u.id, job.recKey, t);
+        if (role === "host") this.sql.exec("UPDATE streams SET rec=1 WHERE id=?", room);
+      }
       if (role === "host" && b.youtube && u.ytkey && this.env.REC) { job.yt = true; job.rec = true; }
       if (b.device) this.sql.exec("INSERT OR REPLACE INTO pending VALUES(?,?,?)", String(b.device), JSON.stringify(job), t);
       this.sql.exec("DELETE FROM pending WHERE created<?", t - 3600000);
@@ -975,7 +1054,8 @@ export class Hub {
       return J2({ ok: true, uid: r.uid, role: r.role, name: u.name, color: u.color });
     }
     if (p === "/rec-seg") {
-      const r = this.one("SELECT * FROM pubs WHERE pub=? AND room=?", String(b.pub), String(b.room));
+      let r = this.one("SELECT * FROM pubs WHERE pub=? AND room=?", String(b.pub), String(b.room));
+      if (!r && b.key) { const k = this.one("SELECT * FROM reckeys WHERE room=? AND k=?", String(b.room), String(b.key)); if (k && t - k.t < 7 * 86400000) r = { uid: k.uid, room: k.room, role: "host", pub: "" }; }
       if (!r || r.role !== "host") return J2({ ok: false, error: "auth" });
       const u = this.one("SELECT * FROM users WHERE id=?", r.uid);
       const st = this.one("SELECT * FROM streams WHERE id=?", r.room) || {};
@@ -1002,7 +1082,7 @@ export class Hub {
       }
       if (!rec) {
         const s = this.one("SELECT * FROM streams WHERE id=?", r.room) || {};
-        this.sql.exec("INSERT INTO recs(id,uid,title,game,gameIcon,started) VALUES(?,?,?,?,?,?)", r.room, r.uid, s.title || "", s.game || "", s.gameIcon === "local" ? "/api/gameicon/" + r.room : s.gameIcon || "", s.started || t);
+        this.sql.exec("INSERT INTO recs(id,uid,title,game,gameIcon,started,ended) VALUES(?,?,?,?,?,?,?)", r.room, r.uid, s.title || "", s.game || "", s.gameIcon === "local" ? "/api/gameicon/" + r.room : s.gameIcon || "", s.started || t, s.ended || 0);
       }
       if (b.n < 0) {
         this.sql.exec("UPDATE recs SET init=1, w=?, h=?, bytes=bytes+? WHERE id=?", b.w | 0, b.h | 0, b.bytes | 0, r.room);
@@ -1104,6 +1184,7 @@ export class Hub {
       this.addCoins(from.id, -cost, "gift", b.gift + "x" + n + ">" + b.to);
       const share = Math.floor(cost * this.shareFor(String(b.to)));
       const lv = this.addSxp(b.to, cost / 2);
+      await this.support(String(b.to), from.id, cost);
       this.addCoins(String(b.to), share, "gift_in", b.gift + "x" + n + "<" + from.id);
       this.sql.exec("UPDATE users SET earned=earned+? WHERE id=?", share, String(b.to));
       return J2({ ok: true, coins: (from.coins | 0) - cost, cost, share, n, host: lv });
@@ -1118,6 +1199,7 @@ export class Hub {
       this.addCoins(u.id, -SUB_PRICE, "sub", h.handle);
       const share = Math.floor(SUB_PRICE * this.shareFor(h.id));
       this.addSxp(h.id, 250);
+      await this.support(h.id, u.id, SUB_PRICE);
       this.addCoins(h.id, share, "sub_in", u.handle);
       this.sql.exec("UPDATE users SET earned=earned+? WHERE id=?", share, h.id);
       const cur = this.one("SELECT * FROM subs WHERE uid=? AND host=?", u.id, h.id);
@@ -1170,6 +1252,48 @@ export class Hub {
     if (p === "/loy-reward") {
       const r = DEFAULT_REWARDS.find((x) => x.id === b.id) || this.one("SELECT id, title, cost FROM rewards WHERE id=? AND host=?", String(b.id), String(b.host));
       return J2({ reward: r || null, custom: !!(r && !DEFAULT_REWARDS.includes(r)) });
+    }
+    // ---- support: donations (coins / PayPal), goal, top supporters ----
+    if (p === "/donate") {
+      const u = this.user(b.token); if (!u) return J2({ error: "auth" });
+      const h = this.one("SELECT * FROM users WHERE (id=? OR handle=?) AND deleted=0", String(b.host), String(b.host).toLowerCase());
+      if (!h || h.id === u.id) return J2({ error: "not_found" });
+      const msg = String(b.msg || "").replace(/\s+/g, " ").trim().slice(0, 150);
+      if (this.limited("don:" + u.id, 6, 60000)) return J2({ error: "slow" });
+      const d = { id: "d" + rid(10), host: h.id, uid: u.id, name: u.name, msg };
+      if (b.kind === "paypal") {
+        const usd = Math.round(Math.max(1, Math.min(500, +b.usd || 0)) * 100) / 100;
+        Object.assign(d, { coins: Math.round(usd * 100), usd: usd.toFixed(2), kind: "paypal" });
+        this.sql.exec("INSERT INTO donations VALUES(?,?,?,?,?,?,?,?,?,?)", d.id, d.host, d.uid, d.name, d.coins, d.usd, d.kind, d.msg, "pending", t);
+        return J2({ ok: true, pending: true, id: d.id, usd: d.usd, hostName: h.name });
+      }
+      const c = Math.floor(+b.coins || 0);
+      if (c < 10 || c > 1000000) return J2({ error: "bad_amount" });
+      if ((u.coins | 0) < c) return J2({ error: "no_coins" });
+      this.addCoins(u.id, -c, "donate", h.handle);
+      Object.assign(d, { coins: c, usd: "", kind: "coins" });
+      this.sql.exec("INSERT INTO donations VALUES(?,?,?,?,?,?,?,?,?,?)", d.id, d.host, d.uid, d.name, d.coins, d.usd, d.kind, d.msg, "pending", t);
+      await this.finishDonation(d);
+      return J2({ ok: true, coins: (u.coins | 0) - c });
+    }
+    if (p === "/goal") {
+      const u = this.user(b.token); if (!u) return J2({ error: "auth" });
+      if (b.clear) this.sql.exec("DELETE FROM goals WHERE host=?", u.id);
+      else {
+        const title = String(b.title || "").trim().slice(0, 60), target = Math.floor(+b.target || 0);
+        if (!title || target < 100 || target > 100000000) return J2({ error: "bad_goal" });
+        const g = this.goalOf(u.id);
+        this.sql.exec("INSERT OR REPLACE INTO goals VALUES(?,?,?,?,?)", u.id, title, target, b.reset || !g ? 0 : g.cur, t);
+      }
+      const goal = this.goalOf(u.id);
+      await this.roomOf(u.id, "/goal", { goal });
+      return J2({ ok: true, goal });
+    }
+    if (p === "/support-info") {
+      const h = this.one("SELECT * FROM users WHERE (id=? OR handle=?) AND deleted=0", String(b.host), String(b.host).toLowerCase());
+      if (!h) return J2({ error: "not_found" });
+      return J2({ goal: this.goalOf(h.id), top: this.topSupporters(h.id, 10),
+        recent: this.all("SELECT name, coins, usd, kind, msg, t FROM donations WHERE host=? AND status='paid' ORDER BY t DESC LIMIT 10", h.id) });
     }
     // ---- moderation: owner > mod > vip(promoted) > viewer ----
     if (p === "/mod") {
@@ -1260,6 +1384,11 @@ export class Hub {
       const o = this.one("SELECT * FROM orders WHERE id=?", String(b.id));
       if (!o || o.status === "paid") return J2({ ok: true });
       this.sql.exec("UPDATE orders SET status='paid' WHERE id=?", o.id);
+      if (String(o.pack).startsWith("don:")) {
+        const d = this.one("SELECT * FROM donations WHERE id=? AND status='pending'", String(o.pack).slice(4));
+        if (d) await this.finishDonation(d);
+        return J2({ ok: true, donation: true });
+      }
       this.addCoins(o.uid, o.coins, "purchase", o.id);
       return J2({ ok: true });
     }
@@ -1422,6 +1551,14 @@ export class Room {
       await this.state.storage.put({ meta: this.meta, history: [], pubs: {}, guests: [], requests: [], poll: null, challenges: [], hype: this.hype, pinned: null });
       return R({ ok: true });
     }
+    if (p === "/donation") {
+      const d = body, t = now();
+      this.bcast({ t: "donation", ...d });
+      this.pushHistory({ id: "dn" + rid(6), uid: d.uid, name: d.name, color: d.color, look: d.look, text: d.msg || "", don: d.usd ? "$" + d.usd : d.coins, at: t });
+      this.addHype(Math.min(80, 10 + d.coins / 15));
+      return R({ ok: true });
+    }
+    if (p === "/goal") { this.bcast({ t: "goal", goal: body.goal }); return R({ ok: true }); }
     if (p === "/mod-apply") {
       const a = body, t = now();
       const sys = (key) => { const ev = { t: "modlog", key, name: a.name || "", by: a.by || "", mins: a.mins || 0, at: t }; this.bcast(ev); };

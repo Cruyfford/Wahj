@@ -158,6 +158,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onResume() {
+        RecUploader.kick(this)
         super.onResume()
         StreamService.appFront = true
         val p = pendingAfterOverlay

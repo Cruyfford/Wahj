@@ -681,6 +681,28 @@ svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-l
 .frm:has(> .av.lg)::before{inset:-6px}
 .frm:has(> .av.lg)::after{inset:-7px}
 .frm:has(> .av.lg)>.av{box-shadow:0 0 0 4px var(--bg)}
+/* ===== streamer support ===== */
+.donbtn{background:linear-gradient(140deg,rgba(255,215,0,.22),rgba(255,154,61,.18))!important;box-shadow:0 0 14px rgba(255,200,0,.25)}
+.goal{padding:10px 12px;border-radius:16px;background:rgba(20,14,40,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,215,0,.28)}
+.goal .gtop{display:flex;align-items:center;gap:7px;font-size:12.5px}
+.goal .gtop b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.goal .gtop span{font-weight:800;color:#ffd36b;font-size:11.5px;white-space:nowrap}
+.goal .gbar{height:8px;border-radius:99px;background:rgba(255,255,255,.1);margin-top:7px;overflow:hidden}
+.goal .gbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#ff4d8d,#ffd700,#ff9a3d,#ff4d8d);background-size:300% 100%;animation:unflowx 3s linear infinite;box-shadow:0 0 12px rgba(255,200,0,.6);transition:width .8s cubic-bezier(.2,1,.3,1)}
+.goal.big{padding:14px;margin-top:12px}.goal.big .gtop{font-size:15px}.goal.big .gbar{height:12px}
+.goal.done{border-color:rgba(46,229,157,.6)}
+.goal .gdone{margin-top:8px;text-align:center;font-weight:900;color:#2ee59d}
+.wgoal{position:absolute;z-index:6;top:calc(var(--st) + 64px);inset-inline-end:14px;width:min(220px,55vw)}
+.wgoal:empty{display:none}
+.donp{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:12px}
+.donp button{padding:11px 0;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid var(--line);font-weight:800;font-size:13px;color:#fff}
+.donp button.on{background:linear-gradient(120deg,#ffd700,#ff9a3d);color:#2b1600;border-color:transparent}
+.donalert{position:fixed;z-index:32;left:50%;top:calc(var(--st) + 80px);width:min(340px,88vw);transform:translateX(-50%);padding:14px 16px;border-radius:22px;pointer-events:none;
+  background:linear-gradient(150deg,rgba(60,40,0,.94),rgba(110,40,10,.94));border:1px solid rgba(255,215,0,.55);box-shadow:0 18px 50px rgba(255,170,0,.4);animation:grand 7.6s cubic-bezier(.2,1.2,.3,1) forwards}
+.donalert .dah{display:flex;align-items:center;gap:10px}
+.donalert .dan{font-weight:900;font-size:16px}
+.donalert .daa{font-size:13px;color:#ffe9b0}.donalert .daa b{color:#ffd700;font-size:16px}
+.donalert .dam{margin-top:10px;padding:10px 12px;border-radius:14px;background:rgba(0,0,0,.3);font-size:14.5px;line-height:1.6;font-weight:600}
 </style></head><body>
 <svg width="0" height="0" style="position:absolute">
   <defs>
@@ -694,6 +716,7 @@ svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-l
     <linearGradient id="g-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd2ad"/><stop offset="1" stop-color="#b8632c"/></linearGradient>
     <linearGradient id="g-brand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c5cff"/><stop offset=".55" stop-color="#ff4d8d"/><stop offset="1" stop-color="#ff9a3d"/></linearGradient>
   </defs>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></symbol>
   <symbol id="i-crown" viewBox="0 0 24 24"><path d="M3 18h18M4 18 3 7l5 4 4-7 4 7 5-4-1 11"/></symbol>
   <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></symbol>
   <symbol id="i-fire" viewBox="0 0 24 24"><path d="M12 22c4 0 7-2.7 7-7 0-5-4-7-5-11-2 2-2 4-2 6-1-1-2-2-2-4-2 2-5 5-5 9 0 4.3 3 7 7 7z"/><path d="M12 22c-2 0-3-1.5-3-3.3 0-2 1.5-3 3-4.7 1.5 1.7 3 2.7 3 4.7 0 1.8-1 3.3-3 3.3z"/></symbol>
@@ -859,6 +882,12 @@ const T = {
     openShortcuts: "فتح الاختصارات", errs: { bad_handle: "اسم المستخدم: ٣–٢٠ حرفاً إنجليزياً أو أرقام", weak_password: "كلمة المرور ٦ أحرف على الأقل", taken: "الاسم محجوز", bad_login: "بيانات الدخول غير صحيحة", rate: "محاولات كثيرة، انتظر قليلاً", net: "تعذّر الاتصال", auth: "سجّل الدخول أولاً", not_invited: "لم تتم دعوتك", login: "سجّل الدخول للمشاركة", slow: "انتظر لحظة", guests_full: "اكتمل عدد الضيوف (٣)", bad_email: "البريد الإلكتروني غير صحيح", email_taken: "هذا البريد مسجّل مسبقاً", bad_code: "الرمز غير صحيح أو منتهي", mail_off: "إرسال البريد غير مفعّل في السيرفر بعد", bad_link: "الرابط غير صحيح", no_points: "نقاطك غير كافية", need_text: "اكتب رسالتك أولاً", too_many: "الحد ١٢ مكافأة", no_coins: "رصيدك غير كافٍ", vip_only: "خاص بمشتركي VIP", owned: "تملكه مسبقاً", self: "لا يمكنك إهداء نفسك", pay_off: "الدفع غير مفعّل بعد", pay_fail: "تعذّر إنشاء الدفع", forbidden: "غير مسموح", not_found: "غير موجود", bad_old: "كلمة المرور الحالية غير صحيحة", bad_image: "الصورة غير مدعومة", fx_off: "البثّاث أوقف المؤثرات", ch_off: "البثّاث أوقف التحديات", co_off: "البثّاث لا يقبل طلبات البث المشترك", bad_ytkey: "مفتاح يوتيوب غير صحيح" },
     sentFx: "أرسل", hypeTrain: "قطار الحماس", latency: "تأخير", guestsN: "ضيوف", layoutSplit: "شاشة مقسومة", layoutFocus: "تركيز",
     declined: "تم الرفض", errorT: "خطأ",
+    support: "ادعم", supportT: "ادعم {n}", donCoins: "كوينز", donPaypal: "PayPal", donMsg: "رسالة تظهر على شاشة البث (اختياري)", donSend: "أرسل الدعم", donCustom: "مبلغ آخر",
+    donOk: "شكراً لدعمك!", donPayOpen: "أكمل الدفع في PayPal — يظهر دعمك على البث فور اكتماله", donated: "دعم بـ", goalT: "هدف الدعم", goalTitle: "اسم الهدف (مثلاً: جهاز جديد)", goalTarget: "المبلغ المطلوب (كوينز)",
+    goalSave: "حفظ الهدف", goalClear: "إزالة الهدف", goalReset: "تصفير التقدم", goalDone: "اكتمل الهدف!", topSup: "أكثر الداعمين", recentDon: "آخر الدعم", noSup: "لا يوجد داعمون بعد — كن الأول!",
+    supCount: "الدعم يشمل التبرعات والهدايا والاشتراكات", bad_amount: "المبلغ غير صحيح", bad_goal: "اكتب اسم الهدف ومبلغاً لا يقل عن 100", slow: "انتظر قليلاً", pay_off: "الدفع الحقيقي غير مفعّل بعد",
+    recThis: "سجّل هذا البث", recThisD: "يُحفظ على جوالك أثناء البث ثم يُرفع لحسابك بعد انتهائه — بدون أي تأثير على سرعة البث", recWifi: "ارفع التسجيلات على Wi‑Fi فقط", recWifiD: "يُؤجَّل الرفع حتى تتصل بشبكة Wi‑Fi",
+    recLocal: "يُسجَّل على جوالك", recUploading: "جارٍ رفع التسجيل…", download: "تنزيل", recDefault: "التسجيل مفعّل افتراضياً",
     modT: "الإشراف", mods: "المشرفون", vipsR: "المميزون (ترقية)", sanctions: "العقوبات الحالية", roleMod: "مشرف", roleVip: "مميز", roleOwner: "صاحب القناة",
     mTimeout: "تايم أوت (منع الكتابة)", mKick: "طرد 10 دقائق", mBan: "حظر نهائي", mUnban: "رفع كل العقوبات", mUntimeout: "إلغاء التايم أوت", mPromote: "ترقية مميز", mDemote: "إزالة الترقية",
     mAddMod: "تعيين مشرف", mRemoveMod: "إزالة الإشراف", mDel: "حذف الرسالة", mClear: "مسح الشات بالكامل", mProfile: "الملف الشخصي", mAddByHandle: "أضف مشرفاً باسم المستخدم", mAdd: "إضافة",
@@ -936,6 +965,12 @@ const T = {
     openShortcuts: "Open Shortcuts", errs: { bad_handle: "Username: 3–20 latin letters/digits", weak_password: "Password needs 6+ characters", taken: "Username taken", bad_login: "Wrong username or password", rate: "Too many attempts, wait a bit", net: "Connection failed", auth: "Sign in first", not_invited: "You were not invited", login: "Sign in to take part", slow: "Slow down a moment", guests_full: "Guest slots are full (3)", bad_email: "Invalid email address", email_taken: "Email already registered", bad_code: "Wrong or expired code", mail_off: "Email sending isn't enabled on the server yet", bad_link: "Invalid link", no_points: "Not enough points", need_text: "Write your message first", too_many: "Max 12 rewards", no_coins: "Not enough coins", vip_only: "VIP only", owned: "Already owned", self: "You can't gift yourself", pay_off: "Payments aren't enabled yet", pay_fail: "Couldn't start the payment", forbidden: "Not allowed", not_found: "Not found", bad_old: "Current password is wrong", bad_image: "Unsupported image", fx_off: "The streamer turned effects off", ch_off: "The streamer turned challenges off", co_off: "The streamer isn't accepting co-stream requests", bad_ytkey: "Invalid YouTube stream key" },
     sentFx: "sent", hypeTrain: "HYPE TRAIN", latency: "Delay", guestsN: "guests", layoutSplit: "Split screen", layoutFocus: "Focus",
     declined: "Declined", errorT: "Error",
+    support: "Support", supportT: "Support {n}", donCoins: "Coins", donPaypal: "PayPal", donMsg: "Message shown on stream (optional)", donSend: "Send support", donCustom: "Other amount",
+    donOk: "Thanks for your support!", donPayOpen: "Finish paying in PayPal — your support shows on stream as soon as it completes", donated: "supported with", goalT: "Support goal", goalTitle: "Goal name (e.g. new phone)", goalTarget: "Target amount (coins)",
+    goalSave: "Save goal", goalClear: "Remove goal", goalReset: "Reset progress", goalDone: "Goal reached!", topSup: "Top supporters", recentDon: "Recent support", noSup: "No supporters yet — be the first!",
+    supCount: "Support includes donations, gifts and subscriptions", bad_amount: "Invalid amount", bad_goal: "Enter a goal name and at least 100", slow: "Slow down a bit", pay_off: "Real payments aren't enabled yet",
+    recThis: "Record this stream", recThisD: "Saved on your phone while live, uploaded to your profile after — zero impact on stream speed", recWifi: "Upload recordings on Wi‑Fi only", recWifiD: "Uploads wait until you're on Wi‑Fi",
+    recLocal: "Recording on your phone", recUploading: "Uploading recording…", download: "Download", recDefault: "Record by default",
     modT: "Moderation", mods: "Moderators", vipsR: "Promoted (VIP)", sanctions: "Active sanctions", roleMod: "Mod", roleVip: "VIP", roleOwner: "Owner",
     mTimeout: "Timeout (mute)", mKick: "Kick 10 minutes", mBan: "Ban permanently", mUnban: "Lift all sanctions", mUntimeout: "Remove timeout", mPromote: "Promote VIP", mDemote: "Remove promotion",
     mAddMod: "Make moderator", mRemoveMod: "Remove moderator", mDel: "Delete message", mClear: "Clear the whole chat", mProfile: "Profile", mAddByHandle: "Add a moderator by username", mAdd: "Add",
@@ -2079,6 +2114,78 @@ function loadHls() {
   return (hlsLoading = hlsLoading || new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = "/hls.js"; sc.onload = () => res(window.Hls); sc.onerror = rej; document.head.appendChild(sc); }));
 }
 
+/* ---------- streamer support: donations, goal, top supporters ---------- */
+const donAmt = (d) => (d.usd ? "$" + d.usd : fmtN(d.coins) + " " + t("coins"));
+function goalHtml(g, big) {
+  if (!g) return "";
+  const pct = Math.min(100, (g.cur / Math.max(1, g.target)) * 100);
+  return `<div class="goal ${big ? "big" : ""} ${pct >= 100 ? "done" : ""}"><div class="gtop">${eic("target", "gold")}<b>${esc(g.title)}</b><span dir="ltr">${fmtN(g.cur)} / ${fmtN(g.target)}</span></div>
+    <div class="gbar"><i style="width:${pct}%"></i></div>${pct >= 100 ? `<div class="gdone">${eic("party", "gold")} ${t("goalDone")}</div>` : ""}</div>`;
+}
+function supportSheet(host) {
+  if (!S.token) return toast(terr("login"));
+  Promise.all([api("/api/support/" + encodeURIComponent(host.id)), shopData()]).then(([info, shop]) => {
+    let kind = "coins", amt = 100;
+    const presets = { coins: [50, 100, 500, 1000, 5000], paypal: [1, 3, 5, 10, 20] };
+    sheet(`<div style="text-align:center">${avatar(host, "lg", "margin:0 auto")}<h3 style="margin-top:10px">${esc(t("supportT", { n: host.name }))}</h3></div>
+      ${goalHtml(info.goal, true)}
+      <div class="seg" id="dk" style="margin-top:12px"><button class="on" data-k="coins">${eic("coin", "gold")} ${t("donCoins")}</button><button data-k="paypal">${t("donPaypal")}</button></div>
+      <div class="donp" id="dp"></div>
+      <div class="field" style="margin-top:8px"><input class="inp" id="dc" type="number" inputmode="decimal" placeholder="${t("donCustom")}"></div>
+      <div class="field"><textarea class="inp" id="dm" maxlength="150" rows="2" placeholder="${t("donMsg")}"></textarea></div>
+      <button class="btn p" id="ds">${eic("heart")} ${t("donSend")}</button>
+      <p class="small mut" style="text-align:center;margin-top:8px" id="dbal"></p>`, (sh, close) => {
+      const paint = () => {
+        $("#dp", sh).innerHTML = presets[kind].map((v) => `<button class="${v === amt ? "on" : ""}" data-v="${v}">${kind === "paypal" ? "$" + v : fmtN(v)}</button>`).join("");
+        $$("#dp [data-v]", sh).forEach((b) => (b.onclick = () => { amt = +b.dataset.v; $("#dc", sh).value = ""; paint(); haptic(); }));
+        $("#dbal", sh).innerHTML = kind === "coins" ? `${t("wallet")}: ${coinHtml(S.user && S.user.coins)}` : (shop.pay ? "" : t("pay_off"));
+      };
+      $$("#dk button", sh).forEach((b) => (b.onclick = () => { kind = b.dataset.k; amt = presets[kind][1]; $$("#dk button", sh).forEach((x) => x.classList.toggle("on", x === b)); paint(); }));
+      $("#dc", sh).oninput = (e) => { const v = +e.target.value; if (v > 0) { amt = v; $$("#dp button", sh).forEach((x) => x.classList.remove("on")); } };
+      paint();
+      $("#ds", sh).onclick = async () => {
+        const b = $("#ds", sh); b.disabled = true;
+        const body = { host: host.id, kind, msg: $("#dm", sh).value.trim() };
+        if (kind === "coins") body.coins = Math.floor(amt); else body.usd = amt;
+        const r = await api("/api/donate", body); b.disabled = false;
+        if (r.error) { if (r.error === "no_coins") { close(); toast(t("noCoins")); return go("wallet"); } return toast(terr(r.error) === r.error ? t(r.error) : terr(r.error)); }
+        if (r.url) { close(); if (Native.has()) Native.post("open", { url: r.url }); else window.open(r.url, "_blank"); return toast(t("donPayOpen"), 7000); }
+        if (S.user) { S.user.coins = r.coins; store.set("user", S.user); }
+        close(); haptic("success"); toast(t("donOk"));
+      };
+    });
+  });
+}
+function donationAlert(d, canvas) {
+  const el = document.createElement("div"); el.className = "donalert";
+  el.innerHTML = `<div class="dah">${avatar(d, "md")}<div><div class="dan">${uname(d, "span")}</div><div class="daa">${t("donated")} <b>${donAmt(d)}</b></div></div></div>${d.msg ? `<div class="dam">${esc(d.msg)}</div>` : ""}`;
+  ($("#app") || document.body).appendChild(el); setTimeout(() => el.remove(), 8000);
+  FX.play(d.coins >= 1000 ? "fireworks" : "confetti", null, null, canvas || $("#fx"));
+  FX.tone([784, 1046, 1318, 1568], 0.6, "triangle", 0.07); haptic("success");
+}
+function goalSheet(onSave) {
+  api("/api/support/" + encodeURIComponent(S.user.id)).then((info) => {
+    const g = info.goal;
+    sheet(`<h3>${eic("target", "gold")} ${t("goalT")}</h3>${goalHtml(g, true)}
+      <p class="small mut" style="margin:8px 0">${t("supCount")}</p>
+      <div class="field"><input class="inp" id="gt" maxlength="60" placeholder="${t("goalTitle")}" value="${esc(g ? g.title : "")}"></div>
+      <div class="field"><input class="inp" id="gn" type="number" inputmode="numeric" placeholder="${t("goalTarget")}" value="${g ? g.target : ""}"></div>
+      <button class="btn p" id="gs">${t("goalSave")}</button>
+      ${g ? `<div class="row" style="margin-top:10px"><button class="btn g" id="gr">${t("goalReset")}</button><button class="btn g" id="gc" style="color:#ff7b88">${t("goalClear")}</button></div>` : ""}
+      ${info.recent && info.recent.length ? `<div class="h2">${t("recentDon")}</div><div class="sl">${info.recent.map((d) => `<div class="sm"><div class="tx"><b>${esc(d.name)}</b> · ${donAmt(d)}${d.msg ? `<br><span class="small mut">${esc(d.msg)}</span>` : ""}</div></div>`).join("")}</div>` : ""}`, (sh, close) => {
+      const save = async (extra) => { const r = await api("/api/goal", extra); if (r.error) return toast(terr(r.error) === r.error ? t(r.error) : terr(r.error)); haptic("success"); close(); onSave && onSave(r.goal); };
+      $("#gs", sh).onclick = () => save({ title: $("#gt", sh).value.trim(), target: +$("#gn", sh).value });
+      const gr = $("#gr", sh); if (gr) gr.onclick = () => save({ title: g.title, target: g.target, reset: true });
+      const gc = $("#gc", sh); if (gc) gc.onclick = () => save({ clear: true });
+    });
+  });
+}
+function supportersHtml(list) {
+  if (!list || !list.length) return "";
+  return `<div class="h2">${eic("heart", "pink")} ${t("topSup")}</div><div class="sl">${list.map((u) => `<div class="sm" data-h="${esc(u.handle)}" style="align-items:center">
+    <b class="mut" style="width:28px;text-align:center">${u.rank <= 3 ? MEDAL[u.rank] : "#" + u.rank}</b>${avatar(u, "md")}<div class="tx"><b>${uname(u, "span")}</b></div><span class="pt">${eic("coin", "gold")} ${fmtN(u.total)}</span></div>`).join("")}</div>`;
+}
+
 /* ---------- moderation ---------- */
 const MOD_SVG = '<svg viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.4 9.3-8 11-4.6-1.7-8-6-8-11V5zm-3.5 9.5l1.5-1.5 1.5 1.5 3.5-3.5 1.5 1.5-5 5z"/></svg>';
 const VIPR_SVG = '<svg viewBox="0 0 24 24"><path d="M6 3h12l4 6-10 12L2 9z"/></svg>';
@@ -2235,13 +2342,15 @@ const GIFT_N = { rose: ["وردة", "Rose"], heart: ["قلب", "Heart"], control
 let SHOPDATA = null;
 async function shopData() { if (!SHOPDATA) SHOPDATA = await api("/api/shop"); return SHOPDATA; }
 async function refreshMe() { const r = await api("/api/wallet", {}); if (r.user) { S.user = { ...S.user, ...r.user }; store.set("user", S.user); } return r; }
-function giftSheet(send) {
+function giftSheet(send, onSupport) {
   shopData().then((d) => {
     const gifts = Object.entries(d.gifts || {});
     let n = 1;
     sheet(`<div class="row"><h3 style="margin:0">${eic("gift", "pink")} ${t("gifts")}</h3><span class="sp"></span><button class="chip" id="gw">${coinHtml(S.user && S.user.coins)} +</button></div>
+      ${onSupport ? `<button class="btn" id="gsup" style="margin-top:12px;background:linear-gradient(120deg,#ffd700,#ff9a3d);color:#2b1600">${eic("coin")} ${t("support")} · ${t("donCoins")} / ${t("donPaypal")}</button>` : ""}
       <div class="giftg" style="margin-top:12px">${gifts.map(([id, g]) => `<button class="gift" data-g="${id}"><span class="e">${artHtml("g_" + id, "art")}</span><small>${GIFT_N[id] ? GIFT_N[id][S.lang === "ar" ? 0 : 1] : id}</small>${coinHtml(g.price)}</button>`).join("")}</div>
       <div class="seg" id="gn" style="margin-top:12px">${[1, 5, 10, 99].map((k) => `<button class="${k === 1 ? "on" : ""}" data-n="${k}">×${k}</button>`).join("")}</div>`, (sh, close) => {
+      { const b = $("#gsup", sh); if (b) b.onclick = () => { close(); setTimeout(onSupport, 250); }; }
       $("#gw", sh).onclick = () => { close(); go("wallet"); };
       $$("#gn button", sh).forEach((b) => (b.onclick = () => { n = +b.dataset.n; $$("#gn button", sh).forEach((x) => x.classList.toggle("on", x === b)); }));
       $$("[data-g]", sh).forEach((b) => (b.onclick = () => {
@@ -2517,6 +2626,7 @@ VIEWS.watch = (root, id) => {
       <span class="stat"><span class="badge red" style="padding:2px 7px">LIVE</span></span>
       <span class="stat" id="wv">${ic("eye")} 0</span></div>
     <div class="pinned hide" id="wpin"></div>
+    <div id="wgoal" class="wgoal"></div>
     <div class="chatov" id="wc"></div>
     <div class="hype" id="whype"><i style="height:0%"></i></div><div class="hypel" id="whl">x1</div>
     <div id="wpoll"></div>
@@ -2550,7 +2660,7 @@ VIEWS.watch = (root, id) => {
     const m = chatMsgs.get(c.dataset.id); if (!m || !m.uid) return;
     userSheet(m, { myRole, hostId: meta && meta.host });
   });
-  const chatHtml = (m) => `${roleTag(m.role)}${lvlHtml(m.lvl)}${m.sub ? `<span class="bdg bdg-sub">${eic("star")}${m.sub}</span>` : ""}${m.host ? `<span class="tag">${t("hostTag")}</span>` : m.guest ? `<span class="tag" style="background:var(--grad2)">${t("guestTag")}</span>` : ""}${uname(m)} ${m.giftId ? GIFT_E[m.giftId] + " " : ""}${esc(m.text)}`;
+  const chatHtml = (m) => m.don ? `${eic("coin", "gold")} ${uname(m)} ${t("donated")} <b>${typeof m.don === "string" ? m.don : fmtN(m.don) + " " + t("coins")}</b>${m.text ? " — " + esc(m.text) : ""}` : `${roleTag(m.role)}${lvlHtml(m.lvl)}${m.sub ? `<span class="bdg bdg-sub">${eic("star")}${m.sub}</span>` : ""}${m.host ? `<span class="tag">${t("hostTag")}</span>` : m.guest ? `<span class="tag" style="background:var(--grad2)">${t("guestTag")}</span>` : ""}${uname(m)} ${m.giftId ? GIFT_E[m.giftId] + " " : ""}${esc(m.text)}`;
   const offline = (txt) => {
     $$(".wtop .badge.red").forEach((b) => (b.parentElement.style.display = "none"));
     if ($(".offline", stageEl)) return;
@@ -2585,6 +2695,7 @@ VIEWS.watch = (root, id) => {
         chatEl.innerHTML = "";
         (m.history || []).slice(-12).forEach((x) => addChat(chatHtml(x), x.hl ? "hl" : "", true, x));
         if (S.user && meta.host === S.user.id) myRole = "owner";
+        api("/api/support/" + encodeURIComponent(meta.host)).then((r) => { const g = $("#wgoal"); if (g) g.innerHTML = goalHtml(r.goal); });
         stage.setPubs(m.publishers); sawPubs = sawPubs || m.publishers.length > 0;
         if (!m.publishers.length) addChat(t("pendingLive"), "sys");
         $("#wv").innerHTML = ic("eye") + " " + fmtN(m.viewers);
@@ -2596,6 +2707,8 @@ VIEWS.watch = (root, id) => {
       case "viewers": $("#wv").innerHTML = ic("eye") + " " + fmtN(m.n); break;
       case "chat": addChat(chatHtml(m), m.hl ? "hl" : "", true, m); break;
       case "modlog": addChat(`${eic("shield", "green")} ${modLine(m)}`, "sys"); break;
+      case "donation": donationAlert(m, $("#fx")); addChat(`${eic("coin", "gold")} ${uname(m)} ${t("donated")} <b>${donAmt(m)}</b>${m.msg ? " — " + esc(m.msg) : ""}`, "hl"); break;
+      case "goal": { const g = $("#wgoal"); if (g) g.innerHTML = goalHtml(m.goal); break; }
       case "delmsg": { const c = $(`.cm[data-id="${m.id}"]`, chatEl); if (c) c.remove(); break; }
       case "purge": $$(`.cm[data-uid="${m.uid}"]`, chatEl).forEach((c) => c.remove()); break;
       case "clearchat": chatEl.innerHTML = ""; addChat(`${eic("broom", "cyan")} ${t("chatCleared")}`, "sys"); break;
@@ -2720,7 +2833,7 @@ VIEWS.watch = (root, id) => {
   let lastR = 0;
   $("#wr").onclick = () => { const e = ["hrt", "fir", "str", "blt", "crn", "gg"][Math.random() * 6 | 0]; FX.floaty($("#wfx"), e); if (Date.now() - lastR > 250) { ws.send({ t: "react", e }); lastR = Date.now(); } haptic(); FX.audio(); };
   $("#wpts").onclick = () => { if (!S.token) return toast(terr("login")); pointsSheet(root._loy, hostInfo, (id, text) => ws.send({ t: "redeem", id, text })); };
-  $("#wgf").onclick = () => { FX.audio(); if (!S.token) return toast(terr("login")); giftSheet((g, n) => ws.send({ t: "gift", gift: g, n })); };
+  $("#wgf").onclick = () => { FX.audio(); if (!S.token) return toast(terr("login")); giftSheet((g, n) => ws.send({ t: "gift", gift: g, n }), () => { if (meta) supportSheet({ id: meta.host, name: meta.hostName || (hostInfo && hostInfo.name) || "", ...(hostInfo || {}) }); }); };
   $("#we").onclick = () => {
     FX.audio();
     sheet(`<h3>${t("react")}</h3><div class="emoji">${Object.keys(REACT).map((e) => `<button data-e="${e}">${eic(REACT[e][0], REACT[e][1])}</button>`).join("")}</div>
@@ -2776,7 +2889,7 @@ function shareLink(url, text) {
 VIEWS.golive = (root, arg = {}) => {
   if (!S.token) { toast(terr("auth")); return go("auth"); }
   const joining = !!arg.joinRoom;
-  const cfg = Object.assign({ title: "", game: "", gameIcon: "", gameId: "", gamePkg: "", autoLaunch: true, cat: "action", quality: "720", fps: 30, mic: true, privacy: { dnd: true, callGuard: true, bannerGuard: true } }, store.get("golive", {}));
+  const cfg = Object.assign({ record: !(S.user && S.user.prefs && S.user.prefs.rec === false), title: "", game: "", gameIcon: "", gameId: "", gamePkg: "", autoLaunch: true, cat: "action", quality: "720", fps: 30, mic: true, privacy: { dnd: true, callGuard: true, bannerGuard: true } }, store.get("golive", {}));
   cfg.privacy = Object.assign({ dnd: true, callGuard: true, bannerGuard: true }, cfg.privacy || {});
   const nat = Native.has();
   const webCap = !nat && navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia && !/iphone|ipad|android/i.test(navigator.userAgent);
@@ -2794,6 +2907,7 @@ VIEWS.golive = (root, arg = {}) => {
     <div class="tile" style="padding:4px 14px;margin-top:14px">
       <div class="tg"><div class="ic">${ic("mic")}</div><div class="tx"><b>${t("mic")}</b><span>${t("micD")}</span></div>${sw("mic", cfg.mic)}</div>
       ${nat && !joining ? `<div class="tg"><div class="ic">${ic("game")}</div><div class="tx"><b>${t("autoLaunch")}</b><span>${t("autoLaunchD")}</span></div>${sw("autoLaunch", cfg.autoLaunch)}</div>` : ""}
+      ${!joining ? `<div class="tg"><div class="ic" style="color:#ff5c7a">${ic("live")}</div><div class="tx"><b>${t("recThis")}</b><span>${t("recThisD")}</span></div>${sw("record", cfg.record)}</div>` : ""}
       ${!joining ? (S.user && S.user.yt ? `<div class="tg"><div class="ic ytic">▶</div><div class="tx"><b>${t("ytAlso")}</b><span>${t("ytAlsoD")}</span></div>${sw("youtube", cfg.youtube)}</div>`
         : `<div class="tg" id="gyt"><div class="ic ytic">▶</div><div class="tx"><b>${t("ytAdd")}</b><span>${t("ytAlsoD")}</span></div><span class="mut">›</span></div>`) : ""}
     </div>
@@ -2828,7 +2942,7 @@ VIEWS.golive = (root, arg = {}) => {
   $$("#gf button").forEach((b) => (b.onclick = () => { cfg.fps = +b.dataset.f; $$("#gf button").forEach((x) => x.classList.toggle("on", x === b)); }));
   $$("[data-sw]").forEach((s) => (s.onclick = () => {
     const k = s.dataset.sw; s.classList.toggle("on"); const on = s.classList.contains("on"); haptic();
-    if (k === "mic") cfg.mic = on; else if (k === "autoLaunch") cfg.autoLaunch = on; else if (k === "youtube") cfg.youtube = on; else cfg.privacy[k] = on;
+    if (k === "mic") cfg.mic = on; else if (k === "autoLaunch") cfg.autoLaunch = on; else if (k === "youtube") cfg.youtube = on; else if (k === "record") cfg.record = on; else cfg.privacy[k] = on;
     if (k === "dnd" && on && isAndroid()) Native.post("perm", { kind: "dnd" });
   }));
   const fg = $("#gfg"); if (fg) fg.onclick = focusGuide;
@@ -2838,7 +2952,7 @@ VIEWS.golive = (root, arg = {}) => {
     store.set("golive", { ...cfg, gameIconData: "" });
     if (!nat && !webCap) return toast(t("needApp"));
     const b = $("#gs"); b.disabled = true;
-    const r = await api("/api/go-live", { ...cfg, youtube: !joining && !!cfg.youtube && !!(S.user && S.user.yt), gameIconData: cfg.gameIconData || undefined, joinRoom: arg.joinRoom, device: S.native && S.native.device });
+    const r = await api("/api/go-live", { ...cfg, record: !joining && !!cfg.record, wifiOnly: !!store.get("recWifi", false), youtube: !joining && !!cfg.youtube && !!(S.user && S.user.yt), gameIconData: cfg.gameIconData || undefined, joinRoom: arg.joinRoom, device: S.native && S.native.device });
     b.disabled = false;
     if (r.error) return toast(terr(r.error));
     S.live = { ...r.job, title: cfg.title, game: cfg.game, startedAt: Date.now(), launch: !joining && cfg.autoLaunch && cfg.game ? { name: cfg.game, pkg: cfg.gamePkg, appId: cfg.gameId } : null };
@@ -2888,10 +3002,11 @@ VIEWS.studio = (root) => {
     <button class="ibtn" id="ssh">${ic("share")}</button><button class="ibtn" id="sx" style="color:#ff7b88">${ic("stop")}</button></div>
   <div class="scroll" style="padding-bottom:calc(30px + var(--sb))">
     <div class="lvcard"><div class="row"><div><div class="small" style="color:#d6d1ee">${t("liveFor")}</div><div class="big" id="sd">0:00</div></div><div class="sp"></div>
-      <div style="text-align:end"><div class="small" style="color:#d6d1ee" id="sst">${t("starting")}</div>${job.rec && job.save !== false ? `<div class="small" style="color:#ff7b88;margin-top:3px">● ${t("recording")}</div>` : ""}<div style="font-weight:700;margin-top:4px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(job.title || "")}</div></div></div>
+      <div style="text-align:end"><div class="small" style="color:#d6d1ee" id="sst">${t("starting")}</div>${job.rec && job.save !== false ? `<div class="small" style="color:#ff7b88;margin-top:3px">● ${job.deferred && !job.yt ? t("recLocal") : t("recording")}</div>` : ""}<div style="font-weight:700;margin-top:4px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(job.title || "")}</div></div></div>
       <div class="kpis"><div class="kpi"><b id="kv">0</b><span>${t("viewers")}</span></div><div class="kpi"><b id="kp">0</b><span>${t("peak")}</span></div><div class="kpi"><b id="kh">x1</b><span>${t("hypeLvl")}</span></div></div>
     </div>
     <div id="shint"></div>
+    <div id="sgoal" style="margin-top:12px"></div>
     ${job.yt ? `<div class="ytst" id="syt"><span class="ytic">▶</span><span id="sytT">${t("ytWait")}</span></div>` : ""}
     <div class="shield" id="sshield"><div class="ic">${ic("shield")}</div><div style="flex:1"><b id="sshT">${t("shieldOn")}</b><div class="small mut" id="sshD"></div></div></div>
     <div class="acts">
@@ -2902,6 +3017,7 @@ VIEWS.studio = (root) => {
       <button class="act" id="areq">${ic("users")}<span>${t("costream")}</span></button>
       <button class="act" id="apv">${ic("eye")}<span>${t("preview")}</span></button>
       <button class="act" id="arw">${eic("star", "gold")}<span>${t("rewards")}</span></button>
+      ${job.role === "host" ? `<button class="act" id="agoal">${eic("target", "gold")}<span>${t("goalT")}</span></button>` : ""}
       ${job.role === "host" ? `<button class="act" id="amod">${MOD_SVG.replace("<svg", '<svg width="22" height="22" fill="currentColor"')}<span>${t("modT")}</span></button>` : ""}
       <button class="act" id="aend" style="color:#ff7b88">${ic("stop")}<span>${t("end")}</span></button>
     </div>
@@ -2951,6 +3067,8 @@ VIEWS.studio = (root) => {
       case "chat": st.chat.push(m); renderChat(); break;
       case "modlog": st.chat.push({ sys: eic("shield", "green") + " " + modLine(m), id: "s" + m.at }); renderChat(); break;
       case "delmsg": st.chat = st.chat.filter((x) => x.id !== m.id); renderChat(); break;
+      case "donation": donationAlert(m, null); st.chat.push({ uid: m.uid, name: m.name, color: m.color, look: m.look, text: (m.msg ? m.msg + " · " : "") + donAmt(m), id: "dn" + Date.now() }); renderChat(); break;
+      case "goal": { const e = $("#sgoal"); if (e) e.innerHTML = goalHtml(m.goal); break; }
       case "purge": st.chat = st.chat.filter((x) => x.uid !== m.uid); renderChat(); break;
       case "clearchat": st.chat = []; $("#sl").innerHTML = ""; break;
       case "viewers": st.viewers = m.n; st.peak = Math.max(st.peak, m.n); upd(); break;
@@ -3011,6 +3129,8 @@ VIEWS.studio = (root) => {
   if (isAndroid()) $("#acam").onclick = () => { st.cam = !st.cam; $("#acam").classList.toggle("on", st.cam); haptic(); Native.post("camBubble", { on: st.cam }); };
   $("#arw").onclick = () => rewardsSheet(st, ws);
   { const am = $("#amod"); if (am) am.onclick = () => modsManager(S.user.id); }
+  { const ag = $("#agoal"); if (ag) ag.onclick = () => goalSheet((g) => { const e = $("#sgoal"); if (e) e.innerHTML = goalHtml(g); }); }
+  if (job.role === "host") api("/api/support/" + encodeURIComponent(S.user.id)).then((r) => { const e = $("#sgoal"); if (e) e.innerHTML = goalHtml(r.goal); });
   $("#apv").onclick = () => {
     const el = $("#spv"); const on = el.classList.toggle("hide") === false; $("#apv").classList.toggle("on", on);
     if (on) { previewStage = new Stage($("#spvs"), { muted: true }); previewStage.setPubs(st.pubs); } else if (previewStage) { previewStage.destroy(); previewStage = null; }
@@ -3085,21 +3205,24 @@ function profileHtml(r, self) {
     <div class="small mut" style="margin-top:8px">${t("joined")} ${esc(since)}</div>
   </div>
   ${streamerCard(r.streamer, self)}
+  ${r.goal ? `<div style="margin-top:14px">${goalHtml(r.goal, true)}</div>` : ""}
   <div class="kpis" style="grid-template-columns:repeat(3,1fr);margin-top:16px">
     ${kp(fmtN(r.followers), t("followers"))}${kp(fmtN(r.following), t("followingN"))}${kp(fmtN(r.streamsCount), t("streamsN"))}
     ${kp(r.hours, t("hoursN"))}${kp(fmtN(r.bestPeak), t("bestPeak"))}${kp(fmtN(r.subsCount || 0), t("subsN"))}
   </div>
   <div id="pact"></div>
+  ${supportersHtml(r.topSupporters)}
   ${r.games.length ? `<div class="h2">${ic("game")} ${t("gamesPlayed")}</div><div class="chips">${r.games.map((g) => `<span class="chip gchip">${g.icon ? gIcon(g.icon) : eic("game", "brand")}<span>${esc(g.name)}</span><b>${g.n}</b></span>`).join("")}</div>` : ""}
   ${(() => { const recs = r.streams.filter((s) => s.rec && !s.live); return recs.length ? `<div class="h2">${ic("live")} ${t("recordings")}</div><div class="grid">${recs.map((s) => `<div class="card" data-id="${s.id}" data-rec="1">
       <div class="th land">${s.gameIcon ? `<div class="thbg" style="background-image:url('${esc(s.gameIcon)}')"></div>` : `<div class="ph">${eic("game", "brand")}</div>`}<img src="/api/thumb/${s.id}" onerror="this.remove()" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
         <div style="position:absolute;inset:0;display:grid;place-items:center"><div style="width:44px;height:44px;border-radius:50%;background:rgba(0,0,0,.55);display:grid;place-items:center;font-size:18px;backdrop-filter:blur(8px)">▶</div></div>
         <span class="badge" style="position:absolute;bottom:8px;inset-inline-end:8px">${fmtDur(s.rec.dur * 1000)}</span>
-        ${self ? `<button class="mini" data-del="${s.id}" style="position:absolute;top:8px;inset-inline-end:8px;background:rgba(0,0,0,.55);color:#ff7b88">${ic("x")}</button>` : ""}</div>
+        ${self ? `<button class="mini" data-del="${s.id}" style="position:absolute;top:8px;inset-inline-end:8px;background:rgba(0,0,0,.55);color:#ff7b88">${ic("x")}</button>
+          <button class="mini" data-dl="${s.id}" style="position:absolute;top:8px;inset-inline-start:8px;background:rgba(0,0,0,.55)">${ic("download")} ${t("download")}</button>` : ""}</div>
       <div class="meta"><div class="tt">${esc(s.title)}</div><div class="small mut" style="margin-top:4px">${s.game ? esc(s.game) + " · " : ""}${new Date(s.started).toLocaleDateString(S.lang)}</div></div></div>`).join("")}</div>` : ""; })()}
   <div class="h2">${t("past")}</div>
   <div class="sl">${r.streams.length ? r.streams.map((s) => `<div class="sm" data-id="${s.id}" data-rec="${s.rec && !s.live ? 1 : ""}" style="align-items:center">${s.gameIcon ? gIcon(s.gameIcon, "gi", 40) : `<div class="ph2" style="width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--card2)">${eic("game", "brand")}</div>`}
-    <div class="tx"><b>${esc(s.title)}</b><br><span class="mut small">${esc(s.game || "")} · ${new Date(s.started).toLocaleDateString(S.lang)} · ${t("peak")} ${s.peak}</span></div>${s.live ? '<span class="badge red">LIVE</span>' : s.rec ? `<span class="badge" style="background:var(--grad)">▶ ${fmtDur(s.rec.dur * 1000)}</span>${self ? `<button class="mini" data-del="${s.id}" style="color:#ff7b88">${ic("x")}</button>` : ""}` : ""}</div>`).join("") : `<p class="mut small" style="text-align:center;padding:16px">${t("noPast")}</p>`}</div>`;
+    <div class="tx"><b>${esc(s.title)}</b><br><span class="mut small">${esc(s.game || "")} · ${new Date(s.started).toLocaleDateString(S.lang)} · ${t("peak")} ${s.peak}</span></div>${s.live ? '<span class="badge red">LIVE</span>' : s.recPending && self ? `<span class="badge" style="background:rgba(255,184,0,.18);color:#ffd36b">${t("recUploading")}</span>` : s.rec ? `<span class="badge" style="background:var(--grad)">▶ ${fmtDur(s.rec.dur * 1000)}</span>${self ? `<button class="mini" data-del="${s.id}" style="color:#ff7b88">${ic("x")}</button>` : ""}` : ""}</div>`).join("") : `<p class="mut small" style="text-align:center;padding:16px">${t("noPast")}</p>`}</div>`;
 }
 function pickPhoto(cb) {
   const i = document.createElement("input"); i.type = "file"; i.accept = "image/*";
@@ -3168,6 +3291,11 @@ function editProfile() {
 
 function bindStreams(el, r, own) {
   $$("[data-del]", el).forEach((b) => (b.onclick = (e) => { e.stopPropagation(); deleteRec(b.dataset.del, () => go(current === "me" ? "me" : "home")); }));
+  $$(".sl [data-h]", el).forEach((x) => (x.onclick = () => go("user", x.dataset.h)));
+  $$("[data-dl]", el).forEach((b) => (b.onclick = (e) => {
+    e.stopPropagation(); const url = location.origin + "/api/rec/" + b.dataset.dl + "/download.mp4";
+    if (Native.has()) Native.post("open", { url }); else window.open(url, "_blank");
+  }));
   $$("[data-id]", el).forEach((x) => (x.onclick = () => {
     const s = r.streams.find((q) => q.id === x.dataset.id) || {};
     if (x.dataset.rec) go("replay", { id: s.id, title: s.title, game: s.game, gameIcon: s.gameIcon, own, back: own ? { view: "me" } : { view: "user", arg: r.user.handle } });
@@ -3206,7 +3334,8 @@ VIEWS.settings = (root) => {
     ${u ? sec(t("modT"), row("shield", t("mods") + " · " + t("vipsR") + " · " + t("sanctions"), "", `<span class="mut">›</span>`, "xmods")) : ""}
     ${u ? sec(t("yt"), row("live", t("ytAdd"), u.yt ? t("ytLinked", { k: `<span dir="ltr">${esc(u.yt)}</span>` }) : t("ytNot"), `<span class="mut">›</span>`, "xyt")) : ""}
     ${u ? sec(t("recordings"),
-      row("live", t("recSave"), t("recSaveD"), sw("rec", rp.rec)) +
+      row("live", t("recDefault"), t("recThisD"), sw("rec", rp.rec)) +
+      row("globe", t("recWifi"), t("recWifiD"), sw("p:recWifi", store.get("recWifi", false))) +
       row("layers", t("storage"), `<span id="xstor">…</span>`, "") +
       `<div class="tg" id="xdelall" style="color:#ff7b88"><div class="ic">${ic("x")}</div><div class="tx"><b>${t("delAllRecs")}</b></div></div>`) : ""}
     ${u ? sec(t("secRoom"),
@@ -3285,6 +3414,8 @@ VIEWS.user = (root, handle) => {
       $("#pact").innerHTML = `<div class="row" style="margin-top:14px"><button class="btn ${fol ? "g" : "p"}" id="uf">${fol ? t("unfollow") : t("follow")}</button>
         <button class="btn" id="usb" style="background:linear-gradient(120deg,#00d1ff,#7c5cff);color:#fff">${r.mySub ? t("subscribed", { n: r.mySub.months }) : t("subscribe")}</button></div>`;
       $("#usb").onclick = () => subSheet(u, (sub) => { $("#usb").textContent = t("subscribed", { n: sub.months }); });
+      $("#pact").insertAdjacentHTML("beforeend", `<button class="btn" id="udon" style="margin-top:10px;background:linear-gradient(120deg,#ffd700,#ff9a3d);color:#2b1600">${eic("coin")} ${t("support")}</button>`);
+      $("#udon").onclick = () => supportSheet(u);
       $("#uf").onclick = async () => { fol = !fol; const fb = $("#uf"); fb.className = "btn " + (fol ? "g" : "p"); fb.textContent = fol ? t("unfollow") : t("follow"); haptic(); await api("/api/follow", { target: u.id, on: fol }); fol ? S.following.add(u.id) : S.following.delete(u.id); };
     }
     bindStreams($("#us"), r, false);

@@ -225,7 +225,8 @@ class StreamService : Service() {
         val vTrack = f.createVideoTrack("screen", videoSource)
         videoTrack = vTrack
         if (job.optBoolean("rec", false)) {
-            val r = recorder ?: SegmentRecorder(server, job.optString("room"), job.optString("pub")).also { recorder = it }
+            val r = recorder ?: (if (job.optBoolean("deferred") && !job.optBoolean("yt")) SegmentRecorder(server, job.optString("room"), job.optString("pub"), this, job.optString("recKey"), job.optBoolean("wifiOnly"))
+                else SegmentRecorder(server, job.optString("room"), job.optString("pub"))).also { recorder = it }
             vTrack.addSink(r)
         }
         val enc = RtpParameters.Encoding(null, true, null).apply {

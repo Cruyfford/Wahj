@@ -17,7 +17,15 @@ import java.util.concurrent.atomic.AtomicInteger
  * Records the outgoing (privacy-filtered) stream into HLS fMP4 segments and uploads them to the server (R2).
  * Video comes from the WebRTC track (letterboxed into a fixed 720p canvas), audio from the mixed mic+game buffer.
  */
-class SegmentRecorder(private val server: String, private val room: String, private val pub: String) : VideoSink {
+class SegmentRecorder(private val server: String, private val room: String, private val pub: String,
+                      private val ctx: android.content.Context? = null, private val recKey: String = "", private val wifiOnly: Boolean = false) : VideoSink {
+    /** deferred: segments are written to disk during the stream and uploaded after it ends (keeps upstream for the live video) */
+    private val deferred = ctx != null && recKey.isNotEmpty()
+    private val dir: java.io.File? = if (deferred) java.io.File(ctx!!.filesDir, "rec/$room").apply {
+        mkdirs()
+        java.io.File(this, "meta.txt").writeText("$server\n$room\n$recKey\n$wifiOnly")
+    } else null
+    private var savedN = 0
     companion object { private const val TAG = "WahjRec"; private const val SEG_US = 6_000_000L }
 
     private var W = 1280
@@ -260,6 +268,14 @@ class SegmentRecorder(private val server: String, private val room: String, priv
 
     private fun upload(path: String, data: ByteArray) {
         if (disabled) return
+        if (deferred) {
+            try {
+                val name = String.format("%05d.part", savedN++)
+                java.io.File(dir, name).writeBytes(data)
+                java.io.File(dir, "index.txt").appendText("$name|$path\n")
+            } catch (e: Exception) { Log.w(TAG, "disk write failed", e) }
+            return
+        }
         if (pending.get() >= 8) { Log.w(TAG, "backlog, dropping $path"); return }
         pending.incrementAndGet()
         upExec.execute {
@@ -285,5 +301,43 @@ class SegmentRecorder(private val server: String, private val room: String, priv
         val end = System.currentTimeMillis() + 5000
         while (pending.get() > 0 && System.currentTimeMillis() < end) Thread.sleep(100)
         upExec.shutdown()
+        if (deferred) { java.io.File(dir, "done").writeText("1"); RecUploader.kick(ctx!!) }
+    }
+}
+
+
+/** Uploads recordings saved on the phone once the stream is over (resumes on next app start if interrupted). */
+object RecUploader {
+    @Volatile private var running = false
+    fun kick(ctx: android.content.Context) {
+        if (running) return
+        running = true
+        Thread {
+            try {
+                val base = java.io.File(ctx.filesDir, "rec")
+                for (d in base.listFiles() ?: emptyArray()) {
+                    if (!java.io.File(d, "done").exists() && System.currentTimeMillis() - d.lastModified() < 6 * 3600_000L) continue
+                    val meta = java.io.File(d, "meta.txt").takeIf { it.exists() }?.readLines() ?: run { d.deleteRecursively(); continue }
+                    val (server, room, key) = Triple(meta[0], meta[1], meta[2]); val wifi = meta.getOrNull(3) == "true"
+                    if (wifi && !onWifi(ctx)) continue
+                    val idx = java.io.File(d, "index.txt").takeIf { it.exists() }?.readLines()?.filter { it.contains("|") } ?: emptyList()
+                    var ok = true
+                    for (line in idx) {
+                        val (name, path) = line.split("|", limit = 2)
+                        val f = java.io.File(d, name); if (!f.exists()) continue
+                        var code = 0
+                        for (a in 0 until 3) { code = Net.bytes("$server/api/rec/$room/$path", f.readBytes(), mapOf("x-rec" to key), "application/octet-stream"); if (code == 200 || code == 401) break; Thread.sleep(2000L * (a + 1)) }
+                        if (code == 200 || code == 401 || code == 409) f.delete() else { ok = false; break }
+                    }
+                    if (ok) d.deleteRecursively()
+                    Bus.emit("diag", "msg" to "android rec upload room=$room ok=$ok parts=${idx.size}")
+                }
+            } catch (e: Exception) { Log.w("WahjRec", "uploader", e) } finally { running = false }
+        }.start()
+    }
+    private fun onWifi(ctx: android.content.Context): Boolean {
+        val cm = ctx.getSystemService(android.content.Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        val c = cm.getNetworkCapabilities(cm.activeNetwork) ?: return false
+        return c.hasTransport(android.net.NetworkCapabilities.TRANSPORT_WIFI) || c.hasTransport(android.net.NetworkCapabilities.TRANSPORT_ETHERNET)
     }
 }
