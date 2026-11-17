@@ -98,6 +98,28 @@ async def main():
         audio = await b.evaluate("[...document.querySelectorAll('#ws audio')].map(a=>!!a.srcObject && a.srcObject.getAudioTracks().length)")
         print("audio elements:", audio)
         await b.screenshot(path="e2e-viewer.png")
+        # clips: let the viewer's rolling buffer fill, then clip + publish through the real UI
+        try:
+            vt = account("wahje2eviewer")
+            await b.evaluate("([t]) => { window.Wahj.S.token = t; }", [vt])
+            await b.wait_for_timeout(14000)
+            print("clip mime:", await b.evaluate("(window.MediaRecorder && ['video/mp4;codecs=avc1,mp4a.40.2','video/mp4','video/webm;codecs=vp8,opus','video/webm'].find(m=>MediaRecorder.isTypeSupported(m))) || 'none'"))
+            await b.click("#wclip"); await b.wait_for_selector("#cp", timeout=15000)
+            await b.wait_for_timeout(1500); await b.click("#cp")
+            await b.wait_for_selector(".clipok", timeout=30000)
+            cid = await b.evaluate("document.querySelector('#cr p').textContent.split('/c/')[1]")
+            meta = json.load(urllib.request.urlopen(urllib.request.Request(B + "/api/clip/" + cid, headers=UA)))["clip"]
+            data = urllib.request.urlopen(urllib.request.Request(B + f"/clips/{cid}.{meta['ext']}", headers=UA)).read()
+            open("e2e-clip." + meta["ext"], "wb").write(data)
+            print("CLIP OK id=%s dur=%.1fs ext=%s bytes=%d" % (cid, meta["dur"], meta["ext"], len(data)))
+            import subprocess
+            pr = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "stream=codec_type,codec_name,width,height", "-of", "compact", "e2e-clip." + meta["ext"]], capture_output=True, text=True)
+            print("ffprobe:", pr.stdout.strip() or pr.stderr.strip()[:300])
+            await b.screenshot(path="e2e-clip.png")
+            post(f"/api/clip/{cid}/del", {}, vt)
+        except Exception as e:
+            print("CLIP FAILED:", e)
+            await b.screenshot(path="e2e-clip.png")
         # recordings: upload fake init + 2 segments, check playlist, delete
         cfg = json.load(urllib.request.urlopen(urllib.request.Request(B + "/api/config", headers=UA)))
         print("recordings enabled:", cfg.get("rec"))

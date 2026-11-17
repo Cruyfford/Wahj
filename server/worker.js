@@ -187,6 +187,10 @@ export default {
         headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-cache" },
       });
     }
+    { const mm = p.match(/^\/clips\/([a-z0-9]+)\.(mp4|webm|jpg)$/);
+      if (mm && env.REC) return r2Range(req, env, `clips/${mm[1]}.${mm[2]}`); }
+    { const cm = p.match(/^\/c\/([a-z0-9]+)$/);
+      if (cm) { const r = await hub(env, "/clip-get", { id: cm[1], view: true }); return clipPage(url, r.clip); } }
     if (p === "/hls.js") return new Response(HLS_JS, { headers: { "content-type": "application/javascript", "cache-control": "public, max-age=604800" } });
     if (p === "/health") return J({ ok: true, v: VERSION, rev: env.NATIVE_REV || "" });
     if (!p.startsWith("/api/")) return new Response("Not found", { status: 404 });
@@ -200,6 +204,32 @@ export default {
       if (p === "/api/ice") return J({ iceServers: await iceServers(env) });
       // ---- automatic UI translation (Workers AI m2m100), cached in R2 per language + string-set version ----
       { const im = p.match(/^\/api\/i18n\/([a-z]{2,3})$/); if (im) return J(await i18n(env, im[1])); }
+      // ---- clips: upload (raw body), thumbnail, meta, lists, delete ----
+      if (p === "/api/clip" && req.method === "POST" && env.REC) {
+        const buf = await req.arrayBuffer();
+        if (buf.byteLength < 1000 || buf.byteLength > 60e6) return J({ error: "size" }, 400);
+        const ext = url.searchParams.get("ext") === "webm" ? "webm" : "mp4";
+        const r = await hub(env, "/clip-new", { token: bearer(req), room: url.searchParams.get("room") || "", title: url.searchParams.get("title") || "", dur: +url.searchParams.get("dur") || 0, size: buf.byteLength, ext });
+        if (r.error) return J(r, 400);
+        await env.REC.put(`clips/${r.id}.${ext}`, buf, { httpMetadata: { contentType: ext === "webm" ? "video/webm" : "video/mp4" } });
+        ctx.waitUntil(roomPost(env, url.searchParams.get("room") || "", "/clip", { id: r.id, name: r.name, title: r.title }));
+        return J({ ok: true, id: r.id, url: url.origin + "/c/" + r.id });
+      }
+      { const cm = p.match(/^\/api\/clip\/([a-z0-9]+)(\/thumb|\/del)?$/);
+        if (cm) {
+          if (cm[2] === "/thumb" && req.method === "POST" && env.REC) {
+            const buf = await req.arrayBuffer(); if (buf.byteLength > 2e6) return J({ error: "size" }, 400);
+            const r = await hub(env, "/clip-thumb", { token: bearer(req), id: cm[1] }); if (r.error) return J(r, 403);
+            await env.REC.put(`clips/${cm[1]}.jpg`, buf, { httpMetadata: { contentType: "image/jpeg" } }); return J({ ok: true });
+          }
+          if (cm[2] === "/del" && req.method === "POST") {
+            const r = await hub(env, "/clip-del", { token: bearer(req), id: cm[1] }); if (r.error) return J(r, 403);
+            if (env.REC) { await env.REC.delete(`clips/${cm[1]}.${r.ext}`); await env.REC.delete(`clips/${cm[1]}.jpg`); }
+            return J({ ok: true });
+          }
+          return J(await hub(env, "/clip-get", { id: cm[1], view: url.searchParams.get("view") === "1" }));
+        } }
+      if (p === "/api/clips") return J(await hub(env, "/clips", { host: url.searchParams.get("host") || "" }));
 
       // ---- diagnostics ----
       if (p === "/api/diag" && req.method === "POST") {
@@ -606,6 +636,40 @@ async function paypal(env, method, path, body) {
   const r = await fetch(base + path, { method, headers: { authorization: "Bearer " + auth.access_token, "content-type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
   return { status: r.status, data: await r.json().catch(() => ({})) };
 }
+async function roomPost(env, room, path, body) {
+  if (!room) return; try { await env.ROOM.get(env.ROOM.idFromName("r:" + room)).fetch("https://room" + path, { method: "POST", body: JSON.stringify(body) }); } catch (e) {}
+}
+// R2 object with HTTP Range support (iOS video playback requires byte ranges)
+async function r2Range(req, env, key) {
+  const head = await env.REC.head(key); if (!head) return new Response("not found", { status: 404, headers: CORS });
+  const size = head.size, type = (head.httpMetadata && head.httpMetadata.contentType) || "application/octet-stream";
+  const m = /bytes=(\d*)-(\d*)/.exec(req.headers.get("range") || "");
+  const base = { "content-type": type, "accept-ranges": "bytes", "cache-control": "public, max-age=86400", ...CORS };
+  if (!m) { const o = await env.REC.get(key); return new Response(o.body, { headers: { ...base, "content-length": String(size) } }); }
+  let start = m[1] === "" ? Math.max(0, size - (+m[2] || 0)) : +m[1], end = m[1] !== "" && m[2] !== "" ? Math.min(+m[2], size - 1) : size - 1;
+  if (start >= size || start > end) return new Response(null, { status: 416, headers: { ...base, "content-range": `bytes */${size}` } });
+  const o = await env.REC.get(key, { range: { offset: start, length: end - start + 1 } });
+  return new Response(o.body, { status: 206, headers: { ...base, "content-range": `bytes ${start}-${end}/${size}`, "content-length": String(end - start + 1) } });
+}
+function clipPage(url, c) {
+  const e = (x) => String(x || "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
+  if (!c) return new Response(`<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><body style="margin:0;background:#06050A;color:#fff;font-family:system-ui;display:grid;place-items:center;height:100vh"><h2>Clip not found · الكليب غير موجود</h2></body>`, { status: 404, headers: { "content-type": "text/html; charset=utf-8" } });
+  const vid = `${url.origin}/clips/${c.id}.${c.ext}`, img = `${url.origin}/clips/${c.id}.jpg`, who = c.host ? c.host.name : "";
+  return new Response(`<!doctype html><html dir="auto"><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>${e(c.title || "Clip")} · ${e(who)} · Wahj Live</title>
+<meta property="og:type" content="video.other"><meta property="og:title" content="${e(c.title || "Clip")} · ${e(who)}"><meta property="og:site_name" content="Wahj Live">
+<meta property="og:description" content="${e(who)} — Wahj Live"><meta property="og:image" content="${img}"><meta property="og:video" content="${vid}"><meta property="og:video:type" content="video/${c.ext}">
+<meta name="twitter:card" content="player"><meta name="twitter:image" content="${img}">
+<style>body{margin:0;background:radial-gradient(120% 80% at 50% 0,#1d1440,#06050A);color:#fff;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+.w{width:min(560px,100%);padding:18px;box-sizing:border-box}.v{width:100%;border-radius:20px;background:#000;box-shadow:0 20px 60px rgba(124,92,255,.35);max-height:72vh}
+h1{font-size:20px;margin:14px 0 4px}.m{color:#b9b3d6;font-size:14px}.b{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+a.btn{flex:1;text-align:center;padding:14px;border-radius:16px;text-decoration:none;font-weight:800;color:#fff;background:linear-gradient(120deg,#7C5CFF,#FF4D8D,#FF9A3D)}a.g{background:rgba(255,255,255,.08)}
+.logo{margin-top:22px;font-weight:900;font-size:18px;background:linear-gradient(120deg,#7C5CFF,#FF4D8D,#FF9A3D);-webkit-background-clip:text;color:transparent}</style></head>
+<body><div class="w"><div class="logo">Wahj Live · وهج</div><video class="v" src="${vid}" poster="${img}" controls playsinline autoplay muted loop></video>
+<h1>${e(c.title || "Clip")}</h1><div class="m">${e(who)}${c.game ? " · " + e(c.game) : ""} · ${c.views} views</div>
+<div class="b"><a class="btn" href="wahj://c/${c.id}">Open in Wahj · افتح في وهج</a><a class="btn g" href="${vid}" download>Download · تنزيل</a></div></div></body></html>`,
+    { headers: { "content-type": "text/html; charset=utf-8" } });
+}
 function payPage(ok, msg) {
   return new Response(`<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>Wahj</title>
 <body style="margin:0;background:#06050A;color:#fff;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center">
@@ -666,6 +730,7 @@ export class Hub {
     try { this.sql.exec("ALTER TABLE streams ADD COLUMN yt INTEGER DEFAULT 0"); } catch (e) {}
     try { this.sql.exec("ALTER TABLE streams ADD COLUMN ytinit INTEGER DEFAULT 0"); } catch (e) {}
     try { this.sql.exec("ALTER TABLE streams ADD COLUMN rec INTEGER DEFAULT 0"); } catch (e) {}
+    this.sql.exec("CREATE TABLE IF NOT EXISTS clips(id TEXT PRIMARY KEY, room TEXT, host TEXT, uid TEXT, title TEXT, game TEXT, dur REAL, size INTEGER, ext TEXT, views INTEGER DEFAULT 0, t INTEGER, deleted INTEGER DEFAULT 0, thumb INTEGER DEFAULT 0)");
     this.sql.exec("CREATE TABLE IF NOT EXISTS donations(id TEXT PRIMARY KEY, host TEXT, uid TEXT, name TEXT, coins INTEGER, usd TEXT, kind TEXT, msg TEXT, status TEXT, t INTEGER)");
     this.sql.exec("CREATE TABLE IF NOT EXISTS goals(host TEXT PRIMARY KEY, title TEXT, target INTEGER, cur INTEGER, t INTEGER)");
     this.sql.exec("CREATE TABLE IF NOT EXISTS supporters(host TEXT, uid TEXT, total INTEGER, PRIMARY KEY(host, uid))");
@@ -777,7 +842,11 @@ export class Hub {
     const rank = xp > 0 && !adm ? this.one("SELECT COUNT(*) n FROM users WHERE deleted=0 AND sxp>?" + this.noAdm, xp).n + 1 : 0;
     return { xp, level, cur: sXpFor(level), next: sXpFor(level + 1), mxp, mrank, rank, top: this.top3()[u.id] || 0, share: Math.round(this.shareFor(u.id) * 100) };
   }
-  recTotal() { return (this.one("SELECT SUM(bytes) b FROM recs WHERE deleted=0") || {}).b || 0; }
+  recTotal() { return ((this.one("SELECT SUM(bytes) b FROM recs WHERE deleted=0") || {}).b || 0) + ((this.one("SELECT SUM(size) b FROM clips WHERE deleted=0") || {}).b || 0); }
+  clipOut(c) {
+    const u = this.one("SELECT * FROM users WHERE id=?", c.uid), h = this.one("SELECT * FROM users WHERE id=?", c.host);
+    return { id: c.id, title: c.title, dur: c.dur, views: c.views, t: c.t, game: c.game || "", by: u ? this.pubUser(u) : null, host: h ? this.pubUser(h) : null, ext: c.ext };
+  }
   prefsOf(u) { try { return JSON.parse(u.prefs || "{}") || {}; } catch (e) { return {}; } }
   isAdmin(u) { return !!u && String(this.env.ADMIN_HANDLES || "cruyfford").split(",").map((x) => x.trim().toLowerCase()).includes(u.handle); }
   isVip(u) { return !!u && ((u.vipUntil || 0) > now() || this.isAdmin(u)); }
@@ -1311,6 +1380,42 @@ export class Hub {
       const r = DEFAULT_REWARDS.find((x) => x.id === b.id) || this.one("SELECT id, title, cost FROM rewards WHERE id=? AND host=?", String(b.id), String(b.host));
       return J2({ reward: r || null, custom: !!(r && !DEFAULT_REWARDS.includes(r)) });
     }
+    // ---- clips ----
+    if (p === "/clip-new") {
+      const u = this.user(b.token); if (!u) return J2({ error: "auth" });
+      if (this.limited("clip:" + u.id, 10, 3600000)) return J2({ error: "slow" });
+      const st = this.one("SELECT * FROM streams WHERE id=?", String(b.room));
+      if (!st) return J2({ error: "no_stream" });
+      if (this.recTotal() + (b.size | 0) > REC_LIMIT) return J2({ error: "rec_full" });
+      const id = rid(10), title = String(b.title || st.title || "").replace(/\s+/g, " ").trim().slice(0, 80);
+      this.sql.exec("INSERT INTO clips(id,room,host,uid,title,game,dur,size,ext,t) VALUES(?,?,?,?,?,?,?,?,?,?)", id, st.id, st.uid, u.id, title, st.game || "", Math.min(90, +b.dur || 0), b.size | 0, b.ext === "webm" ? "webm" : "mp4", t);
+      return J2({ ok: true, id, host: st.uid, name: u.name, title });
+    }
+    if (p === "/clip-thumb") {
+      const u = this.user(b.token); const c = this.one("SELECT * FROM clips WHERE id=?", String(b.id));
+      if (!u || !c || c.uid !== u.id) return J2({ error: "auth" });
+      this.sql.exec("UPDATE clips SET thumb=1 WHERE id=?", c.id); return J2({ ok: true });
+    }
+    if (p === "/clip-get") {
+      const c = this.one("SELECT * FROM clips WHERE id=? AND deleted=0", String(b.id));
+      if (!c) return J2({ error: "not_found" });
+      if (b.view) this.sql.exec("UPDATE clips SET views=views+1 WHERE id=?", c.id);
+      return J2({ clip: { ...this.clipOut(c), thumb: !!c.thumb } });
+    }
+    if (p === "/clips") {
+      let rows;
+      if (b.host) {
+        const h = this.one("SELECT id FROM users WHERE (id=? OR handle=?) AND deleted=0", String(b.host), String(b.host).toLowerCase());
+        rows = h ? this.all("SELECT * FROM clips WHERE host=? AND deleted=0 ORDER BY t DESC LIMIT 60", h.id) : [];
+      } else rows = this.all("SELECT * FROM clips WHERE deleted=0 AND t>? ORDER BY views DESC, t DESC LIMIT 20", t - 7 * 86400000);
+      return J2({ clips: rows.map((c) => ({ ...this.clipOut(c), thumb: !!c.thumb })) });
+    }
+    if (p === "/clip-del") {
+      const u = this.user(b.token); const c = this.one("SELECT * FROM clips WHERE id=?", String(b.id));
+      if (!u || !c || (c.uid !== u.id && c.host !== u.id && !this.isAdmin(u))) return J2({ error: "forbidden" });
+      this.sql.exec("UPDATE clips SET deleted=1 WHERE id=?", c.id);
+      return J2({ ok: true, ext: c.ext });
+    }
     // ---- support: donations (coins / PayPal), goal, top supporters ----
     if (p === "/donate") {
       const u = this.user(b.token); if (!u) return J2({ error: "auth" });
@@ -1617,6 +1722,7 @@ export class Room {
       return R({ ok: true });
     }
     if (p === "/goal") { this.bcast({ t: "goal", goal: body.goal }); return R({ ok: true }); }
+    if (p === "/clip") { this.bcast({ t: "clip", id: body.id, name: body.name, title: body.title }); return R({ ok: true }); }
     if (p === "/mod-apply") {
       const a = body, t = now();
       const sys = (key) => { const ev = { t: "modlog", key, name: a.name || "", by: a.by || "", mins: a.mins || 0, at: t }; this.bcast(ev); };

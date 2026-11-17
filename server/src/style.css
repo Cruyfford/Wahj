@@ -705,3 +705,24 @@ svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-l
 .langl button.on{background:var(--grad);border-color:transparent}.langl button.on span{color:#fff}
 .langl button.ld{opacity:.55;animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.3}}
+/* ===== clips ===== */
+.clipbtn{position:absolute;z-index:7;inset-inline-end:12px;top:42%;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 9px;border-radius:18px;
+  background:rgba(14,10,30,.62);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.14);color:#fff;font-size:10.5px;font-weight:800;box-shadow:0 6px 20px rgba(124,92,255,.35)}
+.clipbtn .ei{width:24px;height:24px;stroke:url(#g-brand)}
+.clipbtn.busy{animation:pulse .8s ease-in-out infinite}
+.clipv{width:100%;max-height:46vh;border-radius:18px;background:#000;margin-top:10px;display:block}
+.clipv.big{max-height:62vh;margin-top:0}
+.clipok{margin-top:12px;padding:12px;border-radius:14px;background:rgba(46,229,157,.12);border:1px solid rgba(46,229,157,.4);font-weight:800;text-align:center}
+.clipg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cliprow{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
+.cliprow .clipc{flex:0 0 44%;scroll-snap-align:start}
+.clipc{cursor:pointer;min-width:0}
+.clipc .ct{position:relative;aspect-ratio:16/10;border-radius:16px;overflow:hidden;background:linear-gradient(140deg,#1d1440,#3a1030)}
+.clipc .ct img{width:100%;height:100%;object-fit:cover;display:block}
+.clipc .ct .ph{position:absolute;inset:0;display:grid;place-items:center}
+.clipc .cd,.clipc .cv{position:absolute;bottom:6px;font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:99px;background:rgba(0,0,0,.6)}
+.clipc .cd{inset-inline-end:6px}.clipc .cv{inset-inline-start:6px;display:flex;gap:3px;align-items:center}.clipc .cv svg{width:11px;height:11px}
+.clipc .cplay{position:absolute;inset:0;display:grid;place-items:center;opacity:.9}.clipc .cplay svg{width:30px;height:30px;padding:9px;border-radius:50%;background:rgba(0,0,0,.45);fill:#fff;stroke:none}
+.clipc .cn{font-weight:800;font-size:13px;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.clipc .cm2{font-size:11.5px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+a.clipl{color:#c8a2ff;text-decoration:underline;cursor:pointer}

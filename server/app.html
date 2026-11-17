@@ -711,6 +711,27 @@ svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-l
 .langl button.on{background:var(--grad);border-color:transparent}.langl button.on span{color:#fff}
 .langl button.ld{opacity:.55;animation:pulse 1s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.3}}
+/* ===== clips ===== */
+.clipbtn{position:absolute;z-index:7;inset-inline-end:12px;top:42%;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 9px;border-radius:18px;
+  background:rgba(14,10,30,.62);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.14);color:#fff;font-size:10.5px;font-weight:800;box-shadow:0 6px 20px rgba(124,92,255,.35)}
+.clipbtn .ei{width:24px;height:24px;stroke:url(#g-brand)}
+.clipbtn.busy{animation:pulse .8s ease-in-out infinite}
+.clipv{width:100%;max-height:46vh;border-radius:18px;background:#000;margin-top:10px;display:block}
+.clipv.big{max-height:62vh;margin-top:0}
+.clipok{margin-top:12px;padding:12px;border-radius:14px;background:rgba(46,229,157,.12);border:1px solid rgba(46,229,157,.4);font-weight:800;text-align:center}
+.clipg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cliprow{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
+.cliprow .clipc{flex:0 0 44%;scroll-snap-align:start}
+.clipc{cursor:pointer;min-width:0}
+.clipc .ct{position:relative;aspect-ratio:16/10;border-radius:16px;overflow:hidden;background:linear-gradient(140deg,#1d1440,#3a1030)}
+.clipc .ct img{width:100%;height:100%;object-fit:cover;display:block}
+.clipc .ct .ph{position:absolute;inset:0;display:grid;place-items:center}
+.clipc .cd,.clipc .cv{position:absolute;bottom:6px;font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:99px;background:rgba(0,0,0,.6)}
+.clipc .cd{inset-inline-end:6px}.clipc .cv{inset-inline-start:6px;display:flex;gap:3px;align-items:center}.clipc .cv svg{width:11px;height:11px}
+.clipc .cplay{position:absolute;inset:0;display:grid;place-items:center;opacity:.9}.clipc .cplay svg{width:30px;height:30px;padding:9px;border-radius:50%;background:rgba(0,0,0,.45);fill:#fff;stroke:none}
+.clipc .cn{font-weight:800;font-size:13px;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.clipc .cm2{font-size:11.5px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+a.clipl{color:#c8a2ff;text-decoration:underline;cursor:pointer}
 </style></head><body>
 <svg width="0" height="0" style="position:absolute">
   <defs>
@@ -724,6 +745,8 @@ svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2;stroke-l
     <linearGradient id="g-bronze" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd2ad"/><stop offset="1" stop-color="#b8632c"/></linearGradient>
     <linearGradient id="g-brand" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c5cff"/><stop offset=".55" stop-color="#ff4d8d"/><stop offset="1" stop-color="#ff9a3d"/></linearGradient>
   </defs>
+  <symbol id="i-clip" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></symbol>
   <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></symbol>
   <symbol id="i-crown" viewBox="0 0 24 24"><path d="M3 18h18M4 18 3 7l5 4 4-7 4 7 5-4-1 11"/></symbol>
   <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></symbol>
@@ -843,7 +866,7 @@ const store = {
 };
 
 /* ---------------- app settings (this device) ---------------- */
-const P = Object.assign({ haptics: true, fxSound: true, reduceFx: false, showLat: true, chatOnStream: true, autoSound: true }, store.get("prefs", {}));
+const P = Object.assign({ clipBuf: true, haptics: true, fxSound: true, reduceFx: false, showLat: true, chatOnStream: true, autoSound: true }, store.get("prefs", {}));
 const setP = (k, v) => { P[k] = v; store.set("prefs", P); };
 
 /* ---------------- state ---------------- */
@@ -885,7 +908,10 @@ const T = {
     shieldPaused: "الصورة محجوبة الآن للخصوصية", privTitle: "لحظة خصوصية", privSub: "سيعود البث خلال ثوانٍ",
     offline: "البث غير متاح الآن", endedT: "انتهى البث", back: "رجوع", tapSound: "اضغط لتشغيل الصوت", follow: "متابعة",
     unfollow: "متابَع", followers: "متابِع", past: "بثوث سابقة", edit: "تعديل الملف", save: "حفظ", bio: "نبذة", color: "لون الحساب",
-    settings: "الإعدادات", language: "اللغة", search: "ابحث…", langLoading: "جارٍ تجهيز اللغة… (أول مرة فقط)", langFail: "تعذّر تحميل اللغة الآن، حاول لاحقاً", langAuto: "العربية والإنجليزية مترجمة يدوياً، وباقي اللغات مترجمة تلقائياً.", logout: "تسجيل الخروج", focusGuide: "دليل إخفاء الإشعارات في آيفون",
+    settings: "الإعدادات", language: "اللغة", clip: "كليب", clips: "الكليبات", topClips: "أفضل الكليبات هذا الأسبوع", clipMaking: "جارٍ حفظ الكليب…", clipTitle: "عنوان الكليب", clipPublish: "نشر الكليب", clipUploading: "جارٍ الرفع… {n}%",
+    clipDone: "تم نشر الكليب!", clipShare: "مشاركة", clipCopy: "نسخ الرابط", clipCopied: "تم نسخ الرابط", clipWait: "انتظر قليلاً — الكليب يحتاج بضع ثوانٍ من البث", clipUnsup: "جهازك لا يدعم صنع الكليبات",
+    clipMade: "صنع كليب", views: "مشاهدة", clipBy: "بواسطة", clipDel: "حذف الكليب", clipBuf: "تجهيز الكليبات أثناء المشاهدة", clipBufD: "يحفظ آخر 30 ثانية حتى تصنع كليب بضغطة (يستهلك بطارية أكثر قليلاً)", noClips: "لا توجد كليبات بعد",
+    search: "ابحث…", langLoading: "جارٍ تجهيز اللغة… (أول مرة فقط)", langFail: "تعذّر تحميل اللغة الآن، حاول لاحقاً", langAuto: "العربية والإنجليزية مترجمة يدوياً، وباقي اللغات مترجمة تلقائياً.", logout: "تسجيل الخروج", focusGuide: "دليل إخفاء الإشعارات في آيفون",
     focusSteps: "١. افتح تطبيق «الاختصارات» ← «الأتمتة» ← «أتمتة جديدة»<br>٢. اختر «تطبيق» ← وهج ← «عند الفتح»<br>٣. اختر «تشغيل فوري»<br>٤. أضف إجراء «تعيين التركيز» ← «عدم الإزعاج» ← تشغيل<br><br>الآن كل مرة تفتح وهج يتفعّل عدم الإزعاج تلقائياً ✓",
     openShortcuts: "فتح الاختصارات", errs: { bad_handle: "اسم المستخدم: ٣–٢٠ حرفاً إنجليزياً أو أرقام", weak_password: "كلمة المرور ٦ أحرف على الأقل", taken: "الاسم محجوز", bad_login: "بيانات الدخول غير صحيحة", rate: "محاولات كثيرة، انتظر قليلاً", net: "تعذّر الاتصال", auth: "سجّل الدخول أولاً", not_invited: "لم تتم دعوتك", login: "سجّل الدخول للمشاركة", slow: "انتظر لحظة", guests_full: "اكتمل عدد الضيوف (٣)", bad_email: "البريد الإلكتروني غير صحيح", email_taken: "هذا البريد مسجّل مسبقاً", bad_code: "الرمز غير صحيح أو منتهي", mail_off: "إرسال البريد غير مفعّل في السيرفر بعد", bad_link: "الرابط غير صحيح", no_points: "نقاطك غير كافية", need_text: "اكتب رسالتك أولاً", too_many: "الحد ١٢ مكافأة", no_coins: "رصيدك غير كافٍ", vip_only: "خاص بمشتركي VIP", owned: "تملكه مسبقاً", self: "لا يمكنك إهداء نفسك", pay_off: "الدفع غير مفعّل بعد", pay_fail: "تعذّر إنشاء الدفع", forbidden: "غير مسموح", not_found: "غير موجود", bad_old: "كلمة المرور الحالية غير صحيحة", bad_image: "الصورة غير مدعومة", fx_off: "البثّاث أوقف المؤثرات", ch_off: "البثّاث أوقف التحديات", co_off: "البثّاث لا يقبل طلبات البث المشترك", bad_ytkey: "مفتاح يوتيوب غير صحيح" },
     sentFx: "أرسل", hypeTrain: "قطار الحماس", latency: "تأخير", guestsN: "ضيوف", layoutSplit: "شاشة مقسومة", layoutFocus: "تركيز",
@@ -968,7 +994,10 @@ const T = {
     shieldPaused: "Video is hidden for privacy right now", privTitle: "Privacy moment", privSub: "The stream is back in a few seconds",
     offline: "This stream is not available", endedT: "Stream ended", back: "Back", tapSound: "Tap for sound", follow: "Follow",
     unfollow: "Following", followers: "followers", past: "Past streams", edit: "Edit profile", save: "Save", bio: "Bio", color: "Accent color",
-    settings: "Settings", language: "Language", search: "Search…", langLoading: "Preparing language… (first time only)", langFail: "Couldn't load that language right now, try later", langAuto: "Arabic and English are hand-translated; other languages are translated automatically.", logout: "Sign out", focusGuide: "Hide notifications on iPhone",
+    settings: "Settings", language: "Language", clip: "Clip", clips: "Clips", topClips: "Top clips this week", clipMaking: "Saving clip…", clipTitle: "Clip title", clipPublish: "Publish clip", clipUploading: "Uploading… {n}%",
+    clipDone: "Clip published!", clipShare: "Share", clipCopy: "Copy link", clipCopied: "Link copied", clipWait: "Hold on — a clip needs a few seconds of stream first", clipUnsup: "This device can't make clips",
+    clipMade: "made a clip", views: "views", clipBy: "by", clipDel: "Delete clip", clipBuf: "Prepare clips while watching", clipBufD: "Keeps the last 30 seconds so you can clip in one tap (uses slightly more battery)", noClips: "No clips yet",
+    search: "Search…", langLoading: "Preparing language… (first time only)", langFail: "Couldn't load that language right now, try later", langAuto: "Arabic and English are hand-translated; other languages are translated automatically.", logout: "Sign out", focusGuide: "Hide notifications on iPhone",
     focusSteps: "1. Open Shortcuts → Automation → New Automation<br>2. Choose App → Wahj → Is Opened<br>3. Choose Run Immediately<br>4. Add action Set Focus → Do Not Disturb → On<br><br>Now Do Not Disturb turns on automatically every time you open Wahj ✓",
     openShortcuts: "Open Shortcuts", errs: { bad_handle: "Username: 3–20 latin letters/digits", weak_password: "Password needs 6+ characters", taken: "Username taken", bad_login: "Wrong username or password", rate: "Too many attempts, wait a bit", net: "Connection failed", auth: "Sign in first", not_invited: "You were not invited", login: "Sign in to take part", slow: "Slow down a moment", guests_full: "Guest slots are full (3)", bad_email: "Invalid email address", email_taken: "Email already registered", bad_code: "Wrong or expired code", mail_off: "Email sending isn't enabled on the server yet", bad_link: "Invalid link", no_points: "Not enough points", need_text: "Write your message first", too_many: "Max 12 rewards", no_coins: "Not enough coins", vip_only: "VIP only", owned: "Already owned", self: "You can't gift yourself", pay_off: "Payments aren't enabled yet", pay_fail: "Couldn't start the payment", forbidden: "Not allowed", not_found: "Not found", bad_old: "Current password is wrong", bad_image: "Unsupported image", fx_off: "The streamer turned effects off", ch_off: "The streamer turned challenges off", co_off: "The streamer isn't accepting co-stream requests", bad_ytkey: "Invalid YouTube stream key" },
     sentFx: "sent", hypeTrain: "HYPE TRAIN", latency: "Delay", guestsN: "guests", layoutSplit: "Split screen", layoutFocus: "Focus",
@@ -2162,6 +2191,106 @@ function loadHls() {
   return (hlsLoading = hlsLoading || new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = "/hls.js"; sc.onload = () => res(window.Hls); sc.onerror = rej; document.head.appendChild(sc); }));
 }
 
+/* ---------- clips: rolling recorder of the received stream (last ~20-40 s) ---------- */
+class ClipBuffer {
+  constructor(getStream) {
+    this.get = getStream; this.recs = []; this.timer = null;
+    this.mime = window.MediaRecorder ? ["video/mp4;codecs=avc1,mp4a.40.2", "video/mp4", "video/webm;codecs=vp8,opus", "video/webm"].find((m) => { try { return MediaRecorder.isTypeSupported(m); } catch (e) { return false; } }) : null;
+  }
+  get ok() { return !!this.mime; }
+  start() { if (!this.ok || this.timer) return; this.tick(); this.timer = setInterval(() => this.tick(), 20000); }
+  tick() {
+    const ms = this.get(); if (!ms || !ms.getVideoTracks().length) return;
+    try {
+      const r = new MediaRecorder(ms, { mimeType: this.mime, videoBitsPerSecond: 2500000, audioBitsPerSecond: 128000 });
+      const o = { r, chunks: [], t0: Date.now() };
+      r.ondataavailable = (e) => e.data && e.data.size && o.chunks.push(e.data);
+      r.start(1000); this.recs.push(o);
+      while (this.recs.length > 2) { const x = this.recs.shift(); try { x.r.stop(); } catch (e) {} }
+    } catch (e) { console.warn("clip rec", e); }
+  }
+  async take() {
+    if (!this.recs.length) { this.tick(); return null; }
+    const o = this.recs[0];
+    if (Date.now() - o.t0 < 6000) return null;
+    await new Promise((res) => { o.r.onstop = res; try { o.r.stop(); } catch (e) { res(); } setTimeout(res, 1500); });
+    this.recs = this.recs.filter((x) => x !== o);
+    if (!this.recs.length) this.tick();
+    const type = this.mime.split(";")[0];
+    return { blob: new Blob(o.chunks, { type }), dur: (Date.now() - o.t0) / 1000, ext: type.includes("webm") ? "webm" : "mp4" };
+  }
+  stop() { clearInterval(this.timer); this.timer = null; this.recs.forEach((x) => { try { x.r.stop(); } catch (e) {} }); this.recs = []; }
+}
+const clipUrl = (id) => location.origin + "/c/" + id;
+function shareClip(id, title) {
+  const url = clipUrl(id);
+  if (Native.has()) return Native.post("share", { url, text: title || "Wahj Live" });
+  if (navigator.share) return navigator.share({ url, title: title || "Wahj Live" }).catch(() => {});
+  navigator.clipboard && navigator.clipboard.writeText(url); toast(t("clipCopied"));
+}
+function upload(url, blob, onProgress) {
+  return new Promise((res) => {
+    const x = new XMLHttpRequest(); x.open("POST", url); if (S.token) x.setRequestHeader("authorization", "Bearer " + S.token);
+    x.upload.onprogress = (e) => e.lengthComputable && onProgress && onProgress(Math.round((e.loaded / e.total) * 100));
+    x.onload = () => { try { res(JSON.parse(x.responseText)); } catch (e) { res({ error: "net" }); } };
+    x.onerror = () => res({ error: "net" }); x.send(blob);
+  });
+}
+function grabThumb(video) {
+  return new Promise((res) => {
+    try {
+      const w = video.videoWidth, h = video.videoHeight; if (!w) return res(null);
+      const k = Math.min(1, 640 / Math.max(w, h)), c = document.createElement("canvas"); c.width = w * k; c.height = h * k;
+      c.getContext("2d").drawImage(video, 0, 0, c.width, c.height); c.toBlob((b) => res(b), "image/jpeg", 0.8);
+    } catch (e) { res(null); }
+  });
+}
+function clipSheet(clip, room, defTitle, thumb) {
+  const src = URL.createObjectURL(clip.blob);
+  sheet(`<h3>${eic("clip", "brand")} ${t("clip")} · ${Math.round(clip.dur)}s</h3>
+    <video class="clipv" src="${src}" controls playsinline autoplay loop></video>
+    <div class="field" style="margin-top:10px"><input class="inp" id="ct" maxlength="80" placeholder="${t("clipTitle")}" value="${esc(defTitle || "")}"></div>
+    <button class="btn p" id="cp">${t("clipPublish")}</button><div id="cr"></div>`, (sh, close) => {
+    $("#cp", sh).onclick = async () => {
+      const b = $("#cp", sh); b.disabled = true;
+      const q = new URLSearchParams({ room, title: $("#ct", sh).value.trim(), dur: clip.dur.toFixed(1), ext: clip.ext });
+      const r = await upload("/api/clip?" + q, clip.blob, (n) => (b.textContent = t("clipUploading", { n })));
+      if (r.error) { b.disabled = false; b.textContent = t("clipPublish"); return toast(terr(r.error) === r.error ? t(r.error) : terr(r.error)); }
+      if (thumb) upload(`/api/clip/${r.id}/thumb`, thumb);
+      haptic("success"); b.remove();
+      $("#cr", sh).innerHTML = `<div class="clipok">${eic("check", "green")} ${t("clipDone")}</div>
+        <div class="row" style="margin-top:10px"><button class="btn p" id="cs">${t("clipShare")}</button><button class="btn g" id="cc">${t("clipCopy")}</button></div>
+        <p class="small mut" dir="ltr" style="text-align:center;margin-top:8px;word-break:break-all">${clipUrl(r.id)}</p>`;
+      $("#cs", sh).onclick = () => shareClip(r.id, $("#ct", sh).value);
+      $("#cc", sh).onclick = () => { navigator.clipboard && navigator.clipboard.writeText(clipUrl(r.id)); toast(t("clipCopied")); };
+    };
+  }, () => URL.revokeObjectURL(src));
+}
+const clipCard = (c) => `<div class="clipc" data-clip="${c.id}"><div class="ct">${c.thumb ? `<img src="/clips/${c.id}.jpg" loading="lazy">` : `<div class="ph">${eic("clip", "brand")}</div>`}
+  <span class="cd">${Math.round(c.dur)}s</span><span class="cv">${ic("eye")} ${fmtN(c.views)}</span><div class="cplay">${ic("play")}</div></div>
+  <div class="cn">${esc(c.title || "")}</div><div class="cm2">${c.host ? esc(c.host.name) : ""}${c.by && c.host && c.by.id !== c.host.id ? ` · ${t("clipBy")} ${esc(c.by.name)}` : ""}</div></div>`;
+const bindClips = (el) => $$("[data-clip]", el).forEach((x) => (x.onclick = () => go("clip", x.dataset.clip)));
+VIEWS.clip = (root, id) => {
+  root.innerHTML = `<div class="view clipview"><div class="top"><button class="ibtn" id="cb">${ic("back")}</button><div class="h1">${eic("clip", "brand")} ${t("clip")}</div></div>
+    <div class="scroll" id="cvs"><div style="height:260px;position:relative"><div class="spin"></div></div></div></div>`;
+  $("#cb").onclick = () => go(prevView && prevView !== "clip" ? prevView : "home", prevArg);
+  api("/api/clip/" + id + "?view=1").then((r) => {
+    const el = $("#cvs"); if (!el) return;
+    if (!r.clip) { el.innerHTML = `<p class="mut" style="text-align:center;padding:40px">${t("noClips")}</p>`; return; }
+    const c = r.clip, mine = S.user && ((c.by && c.by.id === S.user.id) || (c.host && c.host.id === S.user.id) || S.user.admin);
+    el.innerHTML = `<video class="clipv big" src="/clips/${c.id}.${c.ext}" ${c.thumb ? `poster="/clips/${c.id}.jpg"` : ""} controls playsinline autoplay loop></video>
+      <h2 style="margin:14px 0 4px">${esc(c.title || "")}</h2>
+      <div class="mut small">${ic("eye")} ${fmtN(c.views)} ${t("views")} · ${c.game ? esc(c.game) + " · " : ""}${new Date(c.t).toLocaleDateString(S.lang)}</div>
+      ${c.host ? `<div class="sm" data-h="${esc(c.host.handle)}" style="margin-top:12px;align-items:center">${avatar(c.host, "md")}<div class="tx"><b>${uname(c.host, "span")}</b>${c.by && c.by.id !== c.host.id ? `<br><span class="small mut">${t("clipBy")} ${esc(c.by.name)}</span>` : ""}</div><span class="mut">›</span></div>` : ""}
+      <div class="row" style="margin-top:14px"><button class="btn p" id="csh">${t("clipShare")}</button><button class="btn g" id="cdl">${ic("download")} ${t("download")}</button></div>
+      ${mine ? `<button class="btn g" id="cdel" style="margin-top:10px;color:#ff7b88">${t("clipDel")}</button>` : ""}`;
+    $("#csh").onclick = () => shareClip(c.id, c.title);
+    $("#cdl").onclick = () => { const u = location.origin + `/clips/${c.id}.${c.ext}`; Native.has() ? Native.post("open", { url: u }) : window.open(u, "_blank"); };
+    const h = $("[data-h]", el); if (h) h.onclick = () => go("user", h.dataset.h);
+    const d = $("#cdel"); if (d) d.onclick = () => confirmBox(t("clipDel") + "؟", async () => { const x = await api(`/api/clip/${c.id}/del`, {}); if (x.error) return toast(terr(x.error)); toast(t("saved")); go(prevView || "home", prevArg); });
+  });
+};
+
 /* ---------- streamer support: donations, goal, top supporters ---------- */
 const donAmt = (d) => (d.usd ? "$" + d.usd : fmtN(d.coins) + " " + t("coins"));
 function goalHtml(g, big) {
@@ -2587,6 +2716,7 @@ VIEWS.home = (root) => {
       <div id="hg"></div>
       <div class="chips" style="margin-top:12px" id="hc">${CATS.map((c) => `<button class="chip ${c === "all" ? "on" : ""}" data-c="${c}">${CAT_EMO[c]} ${t(c)}</button>`).join("")}</div>
       <div id="hl"><div style="height:200px;position:relative"><div class="spin"></div></div></div>
+      <div id="hclips"></div>
     </div></div>`;
   const card = (s, big) => {
     const thumb = `/api/thumb/${s.id}?b=${Math.floor(Date.now() / 20000)}`;
@@ -2618,6 +2748,7 @@ VIEWS.home = (root) => {
     el.innerHTML = card(f, true) + (rest.length ? `<div class="h2">${ic("zap")} ${t("liveNow")}</div><div class="grid">${rest.map((s) => card(s)).join("")}</div>` : "");
     $$("[data-id]", el).forEach((c) => (c.onclick = () => { haptic(); go("watch", c.dataset.id); }));
   };
+  api("/api/clips").then((x) => { const el = $("#hclips"); if (el && x.clips && x.clips.length) { el.innerHTML = `<div class="h2">${eic("clip", "brand")} ${t("topClips")}</div><div class="cliprow">${x.clips.map(clipCard).join("")}</div>`; bindClips(el); } });
   const load = async () => { const r = await api("/api/live"); if (r.streams) { data = r.streams; render(); } else if (!data.length) render(); };
   $$("#ht button").forEach((b) => (b.onclick = () => { tab = b.dataset.t; $$("#ht button").forEach((x) => x.classList.toggle("on", x === b)); render(); }));
   $$("#hc .chip").forEach((b) => (b.onclick = () => { cat = b.dataset.c; $$("#hc .chip").forEach((x) => x.classList.toggle("on", x === b)); render(); }));
@@ -2675,6 +2806,7 @@ VIEWS.watch = (root, id) => {
       <span class="stat" id="wv">${ic("eye")} 0</span></div>
     <div class="pinned hide" id="wpin"></div>
     <div id="wgoal" class="wgoal"></div>
+    <button class="clipbtn" id="wclip">${eic("clip")}<span>${t("clip")}</span></button>
     <div class="chatov" id="wc"></div>
     <div class="hype" id="whype"><i style="height:0%"></i></div><div class="hypel" id="whl">x1</div>
     <div id="wpoll"></div>
@@ -2686,6 +2818,13 @@ VIEWS.watch = (root, id) => {
   </div>`;
   const stageEl = $("#ws");
   const stage = new Stage(stageEl, { muted: !P.autoSound });
+  // clip buffer: the main screen video + every audio track currently playing
+  const clipBuf = new ClipBuffer(() => {
+    const ms = new MediaStream(); let v = null;
+    for (const [k, tr] of stage.tracks) { if (tr.readyState !== "live") continue; if (k.endsWith(":screen") && !v) { v = tr; ms.addTrack(tr); } else if (tr.kind === "audio") ms.addTrack(tr); }
+    return v ? ms : null;
+  });
+  if (P.clipBuf) setTimeout(() => clipBuf.start(), 4000);
   if (!P.chatOnStream) setTimeout(() => $("#wc") && $("#wc").classList.add("hide"));
   let meta = null, me = {}, myVote = null, poll = null, isFollowing = false, hostInfo = null, sawPubs = false;
   stage.onBlocked = () => {
@@ -2704,6 +2843,7 @@ VIEWS.watch = (root, id) => {
     if (fade) setTimeout(() => { d.classList.add("fade"); setTimeout(() => d.remove(), 1300); }, 20000);
   };
   chatEl.addEventListener("click", (e) => {
+    const cl = e.target.closest && e.target.closest(".clipl"); if (cl) { e.stopPropagation(); return go("clip", cl.dataset.c); }
     const c = e.target.closest(".cm[data-id]"); if (!c) return;
     const m = chatMsgs.get(c.dataset.id); if (!m || !m.uid) return;
     userSheet(m, { myRole, hostId: meta && meta.host });
@@ -2757,6 +2897,7 @@ VIEWS.watch = (root, id) => {
       case "modlog": addChat(`${eic("shield", "green")} ${modLine(m)}`, "sys"); break;
       case "donation": donationAlert(m, $("#fx")); addChat(`${eic("coin", "gold")} ${uname(m)} ${t("donated")} <b>${donAmt(m)}</b>${m.msg ? " — " + esc(m.msg) : ""}`, "hl"); break;
       case "goal": { const g = $("#wgoal"); if (g) g.innerHTML = goalHtml(m.goal); break; }
+      case "clip": addChat(`${eic("clip", "brand")} <b>${esc(m.name)}</b> ${t("clipMade")}: <a class="clipl" data-c="${m.id}">${esc(m.title || t("clip"))}</a>`, "sys"); break;
       case "delmsg": { const c = $(`.cm[data-id="${m.id}"]`, chatEl); if (c) c.remove(); break; }
       case "purge": $$(`.cm[data-uid="${m.uid}"]`, chatEl).forEach((c) => c.remove()); break;
       case "clearchat": chatEl.innerHTML = ""; addChat(`${eic("broom", "cyan")} ${t("chatCleared")}`, "sys"); break;
@@ -2925,7 +3066,17 @@ VIEWS.watch = (root, id) => {
         $("#msh", sh).onclick = () => { close(); shareLink(location.origin + "/w/" + id, hostInfo ? hostInfo.name : ""); };
       });
   };
-  return () => { clearInterval(statT); clearInterval(pollTick); ws.close(); stage.destroy(); };
+  $("#wclip").onclick = async () => {
+    FX.audio(); if (!S.token) return toast(terr("login"));
+    if (!clipBuf.ok) return toast(t("clipUnsup"));
+    if (!clipBuf.timer) { clipBuf.start(); return toast(t("clipWait")); }
+    haptic("medium"); const b = $("#wclip"); b.classList.add("busy");
+    const thumb = await grabThumb($(".tile video", stageEl) || $("video", stageEl));
+    const c = await clipBuf.take(); b.classList.remove("busy");
+    if (!c || c.blob.size < 1000) return toast(t("clipWait"));
+    clipSheet(c, id, (meta && meta.title) || "", thumb);
+  };
+  return () => { clipBuf.stop(); clearInterval(statT); clearInterval(pollTick); ws.close(); stage.destroy(); };
 };
 function shareLink(url, text) {
   if (Native.has()) return Native.post("share", { url, text });
@@ -3000,7 +3151,7 @@ VIEWS.golive = (root, arg = {}) => {
     store.set("golive", { ...cfg, gameIconData: "" });
     if (!nat && !webCap) return toast(t("needApp"));
     const b = $("#gs"); b.disabled = true;
-    const r = await api("/api/go-live", { ...cfg, record: !joining && !!cfg.record, wifiOnly: !!store.get("recWifi", false), youtube: !joining && !!cfg.youtube && !!(S.user && S.user.yt), gameIconData: cfg.gameIconData || undefined, joinRoom: arg.joinRoom, device: S.native && S.native.device });
+    const r = await api("/api/go-live", { ...cfg, record: !joining && !!cfg.record, wifiOnly: !!P.recWifi, youtube: !joining && !!cfg.youtube && !!(S.user && S.user.yt), gameIconData: cfg.gameIconData || undefined, joinRoom: arg.joinRoom, device: S.native && S.native.device });
     b.disabled = false;
     if (r.error) return toast(terr(r.error));
     S.live = { ...r.job, title: cfg.title, game: cfg.game, startedAt: Date.now(), launch: !joining && cfg.autoLaunch && cfg.game ? { name: cfg.game, pkg: cfg.gamePkg, appId: cfg.gameId } : null };
@@ -3260,6 +3411,7 @@ function profileHtml(r, self) {
   </div>
   <div id="pact"></div>
   ${supportersHtml(r.topSupporters)}
+  <div id="pclips"></div>
   ${r.games.length ? `<div class="h2">${ic("game")} ${t("gamesPlayed")}</div><div class="chips">${r.games.map((g) => `<span class="chip gchip">${g.icon ? gIcon(g.icon) : eic("game", "brand")}<span>${esc(g.name)}</span><b>${g.n}</b></span>`).join("")}</div>` : ""}
   ${(() => { const recs = r.streams.filter((s) => s.rec && !s.live); return recs.length ? `<div class="h2">${ic("live")} ${t("recordings")}</div><div class="grid">${recs.map((s) => `<div class="card" data-id="${s.id}" data-rec="1">
       <div class="th land">${s.gameIcon ? `<div class="thbg" style="background-image:url('${esc(s.gameIcon)}')"></div>` : `<div class="ph">${eic("game", "brand")}</div>`}<img src="/api/thumb/${s.id}" onerror="this.remove()" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
@@ -3340,6 +3492,7 @@ function editProfile() {
 function bindStreams(el, r, own) {
   $$("[data-del]", el).forEach((b) => (b.onclick = (e) => { e.stopPropagation(); deleteRec(b.dataset.del, () => go(current === "me" ? "me" : "home")); }));
   $$(".sl [data-h]", el).forEach((x) => (x.onclick = () => go("user", x.dataset.h)));
+  if (r.user) api("/api/clips?host=" + encodeURIComponent(r.user.handle)).then((x) => { const pc = $("#pclips"); if (pc && x.clips && x.clips.length) { pc.innerHTML = `<div class="h2">${eic("clip", "brand")} ${t("clips")} · ${x.clips.length}</div><div class="clipg">${x.clips.map(clipCard).join("")}</div>`; bindClips(pc); } });
   $$("[data-dl]", el).forEach((b) => (b.onclick = (e) => {
     e.stopPropagation(); const url = location.origin + "/api/rec/" + b.dataset.dl + "/download.mp4";
     if (Native.has()) Native.post("open", { url }); else window.open(url, "_blank");
@@ -3383,7 +3536,8 @@ VIEWS.settings = (root) => {
     ${u ? sec(t("yt"), row("live", t("ytAdd"), u.yt ? t("ytLinked", { k: `<span dir="ltr">${esc(u.yt)}</span>` }) : t("ytNot"), `<span class="mut">›</span>`, "xyt")) : ""}
     ${u ? sec(t("recordings"),
       row("live", t("recDefault"), t("recThisD"), sw("rec", rp.rec)) +
-      row("globe", t("recWifi"), t("recWifiD"), sw("p:recWifi", store.get("recWifi", false))) +
+      row("globe", t("recWifi"), t("recWifiD"), sw("p:recWifi", !!P.recWifi)) +
+      row("clip", t("clipBuf"), t("clipBufD"), sw("p:clipBuf", P.clipBuf)) +
       row("layers", t("storage"), `<span id="xstor">…</span>`, "") +
       `<div class="tg" id="xdelall" style="color:#ff7b88"><div class="ic">${ic("x")}</div><div class="tx"><b>${t("delAllRecs")}</b></div></div>`) : ""}
     ${u ? sec(t("secRoom"),
@@ -3479,6 +3633,7 @@ Native.on((e) => { if (e.type === "broadcast" || e.type === "diag") diag("native
 
 /* ================= boot ================= */
 async function afterLogin() {
+  const cq = new URLSearchParams(location.search).get("clip"); if (cq) { afterLogin(); return go("clip", cq); }
   const m = location.pathname.match(/^\/w\/([a-z0-9]+)/);
   if (S.live && S.bstate !== "idle") return go("studio");
   if (m) return go("watch", m[1]);

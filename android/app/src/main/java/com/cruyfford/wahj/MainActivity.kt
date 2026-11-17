@@ -100,7 +100,7 @@ class MainActivity : AppCompatActivity() {
         }
         Bus.sink = { emit(it) }
         val deep = intent?.data
-        web.loadUrl(server + (deep?.let { if (it.host == "w") "/w" + (it.path ?: "") else "/" } ?: "/"))
+        web.loadUrl(server + (deep?.let { if (it.host == "w") "/w" + (it.path ?: "") else if (it.host == "c") "/?clip=" + (it.path ?: "").trim('/') else "/" } ?: "/"))
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -115,6 +115,7 @@ class MainActivity : AppCompatActivity() {
         super.onNewIntent(intent)
         val d = intent.data ?: return
         if (d.host == "w") web.loadUrl(server + "/w" + (d.path ?: ""))
+        if (d.host == "c") { val id = (d.path ?: "").trim('/').filter { it.isLetterOrDigit() }; web.evaluateJavaScript("window.Wahj && Wahj.go('clip','$id')", null) }
         if (d.host == "wallet") web.evaluateJavascript("window.Wahj && Wahj.go('wallet')", null)
     }
 
