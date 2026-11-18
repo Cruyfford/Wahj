@@ -74,7 +74,7 @@ const T = {
     offline: "البث غير متاح الآن", endedT: "انتهى البث", back: "رجوع", tapSound: "اضغط لتشغيل الصوت", follow: "متابعة",
     unfollow: "متابَع", followers: "متابِع", past: "بثوث سابقة", edit: "تعديل الملف", save: "حفظ", bio: "نبذة", color: "لون الحساب",
     settings: "الإعدادات", language: "اللغة", ytChan: "رابط قناتك على يوتيوب", ytChanPh: "youtube.com/@اسم_قناتك", ytChanD: "لعرض تعليقات يوتيوب في شات وهج أثناء البث", ytChat: "تعليقات يوتيوب في الشات", ytChatD: "تظهر تعليقات بثك على يوتيوب في شات وهج وفوق اللعبة",
-    ytChatOff: "إخفاء تعليقات يوتيوب", showYt: "إظهار تعليقات يوتيوب في الشات", ytApiMissing: "قراءة تعليقات يوتيوب تحتاج إضافة مفتاح YouTube API في إعدادات السيرفر", ytChatOnT: "تعليقات يوتيوب ظاهرة", ytChatOffT: "تعليقات يوتيوب مخفية", del: "حذف", predT: "توقعات", newPred: "توقّع جديد", predQ: "ماذا سيحدث؟", predHint: "المشاهدون يراهنون بالكوينز، والفائزون يتقاسمون كل المبلغ", betWin: "مدة الرهان", startPred: "ابدأ التوقع", lockPred: "إغلاق الرهان", pickWin: "اختر النتيجة الصحيحة", cancelPred: "إلغاء وإرجاع الكوينز", predOpen: "الرهان مفتوح", predLocked: "الرهان مغلق — بانتظار النتيجة", predDone: "انتهى التوقع", predCancel: "أُلغي التوقع وأُرجعت الكوينز", yourBet: "رهانك", bet: "راهن", betOn: "راهن على", pool: "المجموع", predWon: "ربحت {n} كوينز", predLost: "خسرت هذا التوقع", newPredSys: "توقّع جديد:", clearT: "إزالة",
+    ytChatOff: "إخفاء تعليقات يوتيوب", showYt: "إظهار تعليقات يوتيوب في الشات", ytApiMissing: "قراءة تعليقات يوتيوب تحتاج إضافة مفتاح YouTube API في إعدادات السيرفر", ytChatOnT: "تعليقات يوتيوب ظاهرة", ytChatOffT: "تعليقات يوتيوب مخفية", aboutT: "حول التطبيق", madeBy: "صُنع بواسطة CRUYFFORD", aboutD: "منصّة بث مباشر للألعاب من الهاتف — فكرة وتصميم وتطوير", version: "الإصدار", ytCh: "قناتي على يوتيوب", rights: "جميع الحقوق محفوظة", del: "حذف", predT: "توقعات", newPred: "توقّع جديد", predQ: "ماذا سيحدث؟", predHint: "المشاهدون يراهنون بالكوينز، والفائزون يتقاسمون كل المبلغ", betWin: "مدة الرهان", startPred: "ابدأ التوقع", lockPred: "إغلاق الرهان", pickWin: "اختر النتيجة الصحيحة", cancelPred: "إلغاء وإرجاع الكوينز", predOpen: "الرهان مفتوح", predLocked: "الرهان مغلق — بانتظار النتيجة", predDone: "انتهى التوقع", predCancel: "أُلغي التوقع وأُرجعت الكوينز", yourBet: "رهانك", bet: "راهن", betOn: "راهن على", pool: "المجموع", predWon: "ربحت {n} كوينز", predLost: "خسرت هذا التوقع", newPredSys: "توقّع جديد:", clearT: "إزالة",
     gwT: "سحب", newGw: "سحب جديد", gwPrize: "الجائزة (كوينز)", gwPrizeD: "تُخصم من رصيدك وتذهب للفائز", gwKw: "كلمة الدخول", gwTitle: "عنوان السحب (اختياري)", gwDur: "مدة التسجيل", startGw: "ابدأ السحب", gwJoin: "انضم", gwJoined: "أنت مشارك ✓", gwHow: "اكتب {kw} في الشات للمشاركة", gwEntrants: "مشارك", gwDraw: "اسحب الفائز", gwClosed: "انتهى التسجيل", gwWin: "الفائز", gwNone: "لا يوجد مشاركون — أُرجعت الجائزة", gwWinSys: "فاز {name} بالسحب", gwYouWon: "مبروك! فزت بالسحب",
     wheelT: "عجلة الحظ", wheelChat: "آخر المتكلمين في الشات", wheelCustom: "خيارات من عندك", wheelOpts: "الخيارات (سطر لكل خيار)", spin: "أدر العجلة", wheelRes: "النتيجة",
     schedT: "البثوث القادمة", addSched: "أضف موعد بث", schedWhen: "الموعد", schedTitle: "عنوان البث", schedNone: "لا توجد مواعيد قادمة", startsIn: "يبدأ بعد", startingNow: "يبدأ الآن", upcomingT: "قادم قريباً",
@@ -166,7 +166,7 @@ const T = {
     offline: "This stream is not available", endedT: "Stream ended", back: "Back", tapSound: "Tap for sound", follow: "Follow",
     unfollow: "Following", followers: "followers", past: "Past streams", edit: "Edit profile", save: "Save", bio: "Bio", color: "Accent color",
     settings: "Settings", language: "Language", ytChan: "Your YouTube channel link", ytChanPh: "youtube.com/@yourchannel", ytChanD: "Shows YouTube comments in Wahj chat while you stream", ytChat: "YouTube comments in chat", ytChatD: "Comments from your YouTube live show up in Wahj chat and over the game",
-    ytChatOff: "Hide YouTube comments", showYt: "Show YouTube comments in chat", ytApiMissing: "Reading YouTube comments needs a YouTube API key in the server settings", ytChatOnT: "YouTube comments shown", ytChatOffT: "YouTube comments hidden", del: "Delete", predT: "Predictions", newPred: "New prediction", predQ: "What will happen?", predHint: "Viewers bet coins; the winners split the whole pool", betWin: "Betting window", startPred: "Start prediction", lockPred: "Lock bets", pickWin: "Pick the correct outcome", cancelPred: "Cancel & refund", predOpen: "Bets are open", predLocked: "Bets locked — waiting for result", predDone: "Prediction ended", predCancel: "Prediction cancelled, coins refunded", yourBet: "Your bet", bet: "Bet", betOn: "Bet on", pool: "Pool", predWon: "You won {n} coins", predLost: "You lost this prediction", newPredSys: "New prediction:", clearT: "Remove",
+    ytChatOff: "Hide YouTube comments", showYt: "Show YouTube comments in chat", ytApiMissing: "Reading YouTube comments needs a YouTube API key in the server settings", ytChatOnT: "YouTube comments shown", ytChatOffT: "YouTube comments hidden", aboutT: "About", madeBy: "Made by CRUYFFORD", aboutD: "A mobile game live-streaming platform — idea, design and development", version: "Version", ytCh: "My YouTube channel", rights: "All rights reserved", del: "Delete", predT: "Predictions", newPred: "New prediction", predQ: "What will happen?", predHint: "Viewers bet coins; the winners split the whole pool", betWin: "Betting window", startPred: "Start prediction", lockPred: "Lock bets", pickWin: "Pick the correct outcome", cancelPred: "Cancel & refund", predOpen: "Bets are open", predLocked: "Bets locked — waiting for result", predDone: "Prediction ended", predCancel: "Prediction cancelled, coins refunded", yourBet: "Your bet", bet: "Bet", betOn: "Bet on", pool: "Pool", predWon: "You won {n} coins", predLost: "You lost this prediction", newPredSys: "New prediction:", clearT: "Remove",
     gwT: "Giveaway", newGw: "New giveaway", gwPrize: "Prize (coins)", gwPrizeD: "Taken from your balance, goes to the winner", gwKw: "Entry keyword", gwTitle: "Giveaway title (optional)", gwDur: "Entry time", startGw: "Start giveaway", gwJoin: "Join", gwJoined: "You're in ✓", gwHow: "Type {kw} in chat to enter", gwEntrants: "entered", gwDraw: "Draw winner", gwClosed: "Entries closed", gwWin: "Winner", gwNone: "No entries — prize refunded", gwWinSys: "{name} won the giveaway", gwYouWon: "Congrats! You won the giveaway",
     wheelT: "Wheel", wheelChat: "Latest chatters", wheelCustom: "Your own options", wheelOpts: "Options (one per line)", spin: "Spin", wheelRes: "Result",
     schedT: "Upcoming streams", addSched: "Schedule a stream", schedWhen: "When", schedTitle: "Stream title", schedNone: "No upcoming streams", startsIn: "Starts in", startingNow: "Starting now", upcomingT: "Coming up",
@@ -1985,6 +1985,17 @@ VIEWS.ranks = (root) => {
 };
 
 /* ---------- watch ---------- */
+function aboutSheet() {
+  sheet(`<div class="about">
+    <div class="alogo">${ic("live")}</div>
+    <div class="aname">${AR_() ? "وهج" : "Wahj"} <span>Live</span></div>
+    <div class="small mut">${t("version")} ${esc((S.native && S.native.version) || (S.cfg && S.cfg.v) || "1.0")}</div>
+    <div class="aby"><span class="small mut">${AR_() ? "صُنع بواسطة" : "Made by"}</span><b>CRUYFFORD</b><span class="small mut">${t("aboutD")}</span></div>
+    <button class="btn g" id="ayt" style="margin-top:16px;background:linear-gradient(120deg,#ff3d3d,#c4002b);color:#fff">▶ ${t("ytCh")}</button>
+    <div class="small mut" style="margin-top:16px">© ${new Date().getFullYear()} CRUYFFORD · ${t("rights")}</div></div>`, (sh) => {
+    $("#ayt", sh).onclick = () => { const u = "https://www.youtube.com/@Cruyfford14"; Native.has() ? Native.post("open", { url: u }) : window.open(u, "_blank"); };
+  });
+}
 // ---------------- predictions · giveaways · wheel · schedule ----------------
 const AR_ = () => S.lang === "ar";
 const fmtIn = (ms) => {
@@ -2976,7 +2987,8 @@ VIEWS.settings = (root) => {
     ${sec(t("secApp"),
       row("globe", t("language"), langName(S.lang), `<span class="mut">›</span>`, "xlang") +
       (Native.has() ? row("zap", t("haptics"), "", sw("p:haptics", P.haptics)) : "") +
-      row("refresh", t("clearCache"), "", "", "xcache"))}
+      row("refresh", t("clearCache"), "", "", "xcache") +
+      row("spark", t("aboutT"), t("madeBy"), `<span class="mut">›</span>`, "xabout"))}
     ${sec(t("secAbout"), row("live", "Wahj Live", t("version") + " " + esc((S.native && S.native.version) || "web"), ""))}
   </div></div>`;
   $("#xb").onclick = () => go(S.token ? "me" : "home");
@@ -3011,6 +3023,7 @@ VIEWS.settings = (root) => {
   on("xspeed", () => go("speed"));
   on("xfocus", focusGuide);
   on("xlang", () => langSheet(() => go("settings")));
+  on("xabout", aboutSheet);
   on("xcache", () => { const keep = ["token", "user", "lang", "prefs", "golive", "overlay"]; Object.keys(localStorage).filter((k) => k.startsWith("wahj.") && !keep.includes(k.slice(5))).forEach((k) => localStorage.removeItem(k)); Games.top = null; Games.phone = null; toast(t("saved")); });
   on("xout", () => confirmBox(t("logout") + "?", () => { S.token = ""; S.user = null; store.set("token", ""); store.set("user", null); store.set("guest", false); Native.post("auth", { token: "" }); syncAlerts(); go("auth"); }));
   on("xpw", () => sheet(`<h3>${ic("lock")} ${t("changePass")}</h3><div class="field">${pwField("po", t("oldPass"))}</div><div class="field">${pwField("pn", t("newPass"))}</div><button class="btn p" id="ps">${t("save")}</button>`, (sh, close) => {

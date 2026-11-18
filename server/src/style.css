@@ -765,3 +765,9 @@ a.clipl{color:#c8a2ff;text-decoration:underline;cursor:pointer}
 .upc{flex:none;width:210px;display:flex;gap:10px;align-items:center;padding:10px;border-radius:18px;background:var(--card);border:1px solid rgba(255,255,255,.06);cursor:pointer}
 .upc .tx{display:flex;flex-direction:column;gap:3px;min-width:0}.upc .tx span.small{color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .upc .badge.cd{align-self:flex-start}
+.about{text-align:center;padding:8px 4px 6px}
+.about .alogo{width:84px;height:84px;margin:4px auto 12px;border-radius:26px;display:grid;place-items:center;background:var(--grad);box-shadow:0 12px 40px rgba(255,77,141,.35)}
+.about .alogo svg{width:44px;height:44px;color:#fff}
+.about .aname{font-size:28px;font-weight:900}.about .aname span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.about .aby{margin-top:18px;padding:16px;border-radius:20px;background:var(--card2);display:flex;flex-direction:column;gap:4px}
+.about .aby b{font-size:26px;letter-spacing:2px;background:linear-gradient(120deg,#ffd36b,#ff4d8d,#7c5cff);-webkit-background-clip:text;background-clip:text;color:transparent}
