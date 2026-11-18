@@ -2875,10 +2875,7 @@ function aboutSheet() {
     <div class="aname">${AR_() ? "وهج" : "Wahj"} <span>Live</span></div>
     <div class="small mut">${t("version")} ${esc((S.native && S.native.version) || (S.cfg && S.cfg.v) || "1.0")}</div>
     <div class="aby"><span class="small mut">${AR_() ? "صُنع بواسطة" : "Made by"}</span><b>CRUYFFORD</b><span class="small mut">${t("aboutD")}</span></div>
-    <button class="btn g" id="ayt" style="margin-top:16px;background:linear-gradient(120deg,#ff3d3d,#c4002b);color:#fff">▶ ${t("ytCh")}</button>
-    <div class="small mut" style="margin-top:16px">© ${new Date().getFullYear()} CRUYFFORD · ${t("rights")}</div></div>`, (sh) => {
-    $("#ayt", sh).onclick = () => { const u = "https://www.youtube.com/@Cruyfford14"; Native.has() ? Native.post("open", { url: u }) : window.open(u, "_blank"); };
-  });
+    <div class="small mut" style="margin-top:16px">© ${new Date().getFullYear()} CRUYFFORD · ${t("rights")}</div></div>`);
 }
 // ---------------- predictions · giveaways · wheel · schedule ----------------
 const AR_ = () => S.lang === "ar";
