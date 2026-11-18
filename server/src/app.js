@@ -31,7 +31,7 @@ const store = {
 };
 
 /* ---------------- app settings (this device) ---------------- */
-const P = Object.assign({ showYt: true, clipBuf: true, haptics: true, fxSound: true, reduceFx: false, showLat: true, chatOnStream: true, autoSound: true }, store.get("prefs", {}));
+const P = Object.assign({ liveNotif: true, showYt: true, clipBuf: true, haptics: true, fxSound: true, reduceFx: false, showLat: true, chatOnStream: true, autoSound: true }, store.get("prefs", {}));
 const setP = (k, v) => { P[k] = v; store.set("prefs", P); };
 
 /* ---------------- state ---------------- */
@@ -74,13 +74,17 @@ const T = {
     offline: "البث غير متاح الآن", endedT: "انتهى البث", back: "رجوع", tapSound: "اضغط لتشغيل الصوت", follow: "متابعة",
     unfollow: "متابَع", followers: "متابِع", past: "بثوث سابقة", edit: "تعديل الملف", save: "حفظ", bio: "نبذة", color: "لون الحساب",
     settings: "الإعدادات", language: "اللغة", ytChan: "رابط قناتك على يوتيوب", ytChanPh: "youtube.com/@اسم_قناتك", ytChanD: "لعرض تعليقات يوتيوب في شات وهج أثناء البث", ytChat: "تعليقات يوتيوب في الشات", ytChatD: "تظهر تعليقات بثك على يوتيوب في شات وهج وفوق اللعبة",
-    ytChatOff: "إخفاء تعليقات يوتيوب", showYt: "إظهار تعليقات يوتيوب في الشات", ytApiMissing: "قراءة تعليقات يوتيوب تحتاج إضافة مفتاح YouTube API في إعدادات السيرفر", ytChatOnT: "تعليقات يوتيوب ظاهرة", ytChatOffT: "تعليقات يوتيوب مخفية",
+    ytChatOff: "إخفاء تعليقات يوتيوب", showYt: "إظهار تعليقات يوتيوب في الشات", ytApiMissing: "قراءة تعليقات يوتيوب تحتاج إضافة مفتاح YouTube API في إعدادات السيرفر", ytChatOnT: "تعليقات يوتيوب ظاهرة", ytChatOffT: "تعليقات يوتيوب مخفية", del: "حذف", predT: "توقعات", newPred: "توقّع جديد", predQ: "ماذا سيحدث؟", predHint: "المشاهدون يراهنون بالكوينز، والفائزون يتقاسمون كل المبلغ", betWin: "مدة الرهان", startPred: "ابدأ التوقع", lockPred: "إغلاق الرهان", pickWin: "اختر النتيجة الصحيحة", cancelPred: "إلغاء وإرجاع الكوينز", predOpen: "الرهان مفتوح", predLocked: "الرهان مغلق — بانتظار النتيجة", predDone: "انتهى التوقع", predCancel: "أُلغي التوقع وأُرجعت الكوينز", yourBet: "رهانك", bet: "راهن", betOn: "راهن على", pool: "المجموع", predWon: "ربحت {n} كوينز", predLost: "خسرت هذا التوقع", newPredSys: "توقّع جديد:", clearT: "إزالة",
+    gwT: "سحب", newGw: "سحب جديد", gwPrize: "الجائزة (كوينز)", gwPrizeD: "تُخصم من رصيدك وتذهب للفائز", gwKw: "كلمة الدخول", gwTitle: "عنوان السحب (اختياري)", gwDur: "مدة التسجيل", startGw: "ابدأ السحب", gwJoin: "انضم", gwJoined: "أنت مشارك ✓", gwHow: "اكتب {kw} في الشات للمشاركة", gwEntrants: "مشارك", gwDraw: "اسحب الفائز", gwClosed: "انتهى التسجيل", gwWin: "الفائز", gwNone: "لا يوجد مشاركون — أُرجعت الجائزة", gwWinSys: "فاز {name} بالسحب", gwYouWon: "مبروك! فزت بالسحب",
+    wheelT: "عجلة الحظ", wheelChat: "آخر المتكلمين في الشات", wheelCustom: "خيارات من عندك", wheelOpts: "الخيارات (سطر لكل خيار)", spin: "أدر العجلة", wheelRes: "النتيجة",
+    schedT: "البثوث القادمة", addSched: "أضف موعد بث", schedWhen: "الموعد", schedTitle: "عنوان البث", schedNone: "لا توجد مواعيد قادمة", startsIn: "يبدأ بعد", startingNow: "يبدأ الآن", upcomingT: "قادم قريباً",
+    liveNotif: "إشعار عند بدء البث", liveNotifD: "إشعار على هاتفك عندما يبدأ من تتابعه البث أو يقترب موعده (قد يتأخر حتى ١٥ دقيقة)",
     clip: "كليب", clips: "الكليبات", topClips: "أفضل الكليبات هذا الأسبوع", clipMaking: "جارٍ حفظ الكليب…", clipTitle: "عنوان الكليب", clipPublish: "نشر الكليب", clipUploading: "جارٍ الرفع… {n}%",
     clipDone: "تم نشر الكليب!", clipShare: "مشاركة", clipCopy: "نسخ الرابط", clipCopied: "تم نسخ الرابط", clipWait: "انتظر قليلاً — الكليب يحتاج بضع ثوانٍ من البث", clipUnsup: "جهازك لا يدعم صنع الكليبات",
     clipMade: "صنع كليب", views: "مشاهدة", clipBy: "بواسطة", clipDel: "حذف الكليب", clipBuf: "تجهيز الكليبات أثناء المشاهدة", clipBufD: "يحفظ آخر 30 ثانية حتى تصنع كليب بضغطة (يستهلك بطارية أكثر قليلاً)", noClips: "لا توجد كليبات بعد",
     search: "ابحث…", langLoading: "جارٍ تجهيز اللغة… (أول مرة فقط)", langFail: "تعذّر تحميل اللغة الآن، حاول لاحقاً", langAuto: "العربية والإنجليزية مترجمة يدوياً، وباقي اللغات مترجمة تلقائياً.", logout: "تسجيل الخروج", focusGuide: "دليل إخفاء الإشعارات في آيفون",
     focusSteps: "١. افتح تطبيق «الاختصارات» ← «الأتمتة» ← «أتمتة جديدة»<br>٢. اختر «تطبيق» ← وهج ← «عند الفتح»<br>٣. اختر «تشغيل فوري»<br>٤. أضف إجراء «تعيين التركيز» ← «عدم الإزعاج» ← تشغيل<br><br>الآن كل مرة تفتح وهج يتفعّل عدم الإزعاج تلقائياً ✓",
-    openShortcuts: "فتح الاختصارات", errs: { bad_handle: "اسم المستخدم: ٣–٢٠ حرفاً إنجليزياً أو أرقام", weak_password: "كلمة المرور ٦ أحرف على الأقل", taken: "الاسم محجوز", bad_login: "بيانات الدخول غير صحيحة", rate: "محاولات كثيرة، انتظر قليلاً", net: "تعذّر الاتصال", auth: "سجّل الدخول أولاً", not_invited: "لم تتم دعوتك", login: "سجّل الدخول للمشاركة", slow: "انتظر لحظة", guests_full: "اكتمل عدد الضيوف (٣)", bad_email: "البريد الإلكتروني غير صحيح", email_taken: "هذا البريد مسجّل مسبقاً", bad_code: "الرمز غير صحيح أو منتهي", mail_off: "إرسال البريد غير مفعّل في السيرفر بعد", bad_link: "الرابط غير صحيح", no_points: "نقاطك غير كافية", need_text: "اكتب رسالتك أولاً", too_many: "الحد ١٢ مكافأة", no_coins: "رصيدك غير كافٍ", vip_only: "خاص بمشتركي VIP", owned: "تملكه مسبقاً", self: "لا يمكنك إهداء نفسك", pay_off: "الدفع غير مفعّل بعد", pay_fail: "تعذّر إنشاء الدفع", forbidden: "غير مسموح", not_found: "غير موجود", bad_old: "كلمة المرور الحالية غير صحيحة", bad_image: "الصورة غير مدعومة", fx_off: "البثّاث أوقف المؤثرات", ch_off: "البثّاث أوقف التحديات", co_off: "البثّاث لا يقبل طلبات البث المشترك", bad_ytkey: "مفتاح يوتيوب غير صحيح", bad_ytchan: "لم أجد هذه القناة — الصق رابط قناتك" },
+    openShortcuts: "فتح الاختصارات", errs: { bad_handle: "اسم المستخدم: ٣–٢٠ حرفاً إنجليزياً أو أرقام", weak_password: "كلمة المرور ٦ أحرف على الأقل", taken: "الاسم محجوز", bad_login: "بيانات الدخول غير صحيحة", rate: "محاولات كثيرة، انتظر قليلاً", net: "تعذّر الاتصال", auth: "سجّل الدخول أولاً", not_invited: "لم تتم دعوتك", login: "سجّل الدخول للمشاركة", slow: "انتظر لحظة", guests_full: "اكتمل عدد الضيوف (٣)", bad_email: "البريد الإلكتروني غير صحيح", email_taken: "هذا البريد مسجّل مسبقاً", bad_code: "الرمز غير صحيح أو منتهي", mail_off: "إرسال البريد غير مفعّل في السيرفر بعد", bad_link: "الرابط غير صحيح", no_points: "نقاطك غير كافية", need_text: "اكتب رسالتك أولاً", too_many: "الحد ١٢ مكافأة", no_coins: "رصيدك غير كافٍ", vip_only: "خاص بمشتركي VIP", owned: "تملكه مسبقاً", self: "لا يمكنك إهداء نفسك", pay_off: "الدفع غير مفعّل بعد", pay_fail: "تعذّر إنشاء الدفع", forbidden: "غير مسموح", not_found: "غير موجود", bad_old: "كلمة المرور الحالية غير صحيحة", bad_image: "الصورة غير مدعومة", fx_off: "البثّاث أوقف المؤثرات", ch_off: "البثّاث أوقف التحديات", co_off: "البثّاث لا يقبل طلبات البث المشترك", bad_ytkey: "مفتاح يوتيوب غير صحيح", bad_ytchan: "لم أجد هذه القناة — الصق رابط قناتك", pred_busy: "يوجد توقع قائم — أنهِه أولاً", pred_closed: "الرهان مغلق", bad_bet: "أقل رهان ١٠ كوينز", one_side: "راهنت على خيار آخر", gw_busy: "يوجد سحب قائم", wheel_few: "تحتاج خيارين على الأقل", bad_time: "اختر موعداً بعد دقيقة وخلال ٦٠ يوماً", sched_full: "الحد ١٠ مواعيد" },
     sentFx: "أرسل", hypeTrain: "قطار الحماس", latency: "تأخير", guestsN: "ضيوف", layoutSplit: "شاشة مقسومة", layoutFocus: "تركيز",
     declined: "تم الرفض", errorT: "خطأ",
     support: "ادعم", supportT: "ادعم {n}", donCoins: "كوينز", donPaypal: "PayPal", donMsg: "رسالة تظهر على شاشة البث (اختياري)", donSend: "أرسل الدعم", donCustom: "مبلغ آخر",
@@ -162,13 +166,17 @@ const T = {
     offline: "This stream is not available", endedT: "Stream ended", back: "Back", tapSound: "Tap for sound", follow: "Follow",
     unfollow: "Following", followers: "followers", past: "Past streams", edit: "Edit profile", save: "Save", bio: "Bio", color: "Accent color",
     settings: "Settings", language: "Language", ytChan: "Your YouTube channel link", ytChanPh: "youtube.com/@yourchannel", ytChanD: "Shows YouTube comments in Wahj chat while you stream", ytChat: "YouTube comments in chat", ytChatD: "Comments from your YouTube live show up in Wahj chat and over the game",
-    ytChatOff: "Hide YouTube comments", showYt: "Show YouTube comments in chat", ytApiMissing: "Reading YouTube comments needs a YouTube API key in the server settings", ytChatOnT: "YouTube comments shown", ytChatOffT: "YouTube comments hidden",
+    ytChatOff: "Hide YouTube comments", showYt: "Show YouTube comments in chat", ytApiMissing: "Reading YouTube comments needs a YouTube API key in the server settings", ytChatOnT: "YouTube comments shown", ytChatOffT: "YouTube comments hidden", del: "Delete", predT: "Predictions", newPred: "New prediction", predQ: "What will happen?", predHint: "Viewers bet coins; the winners split the whole pool", betWin: "Betting window", startPred: "Start prediction", lockPred: "Lock bets", pickWin: "Pick the correct outcome", cancelPred: "Cancel & refund", predOpen: "Bets are open", predLocked: "Bets locked — waiting for result", predDone: "Prediction ended", predCancel: "Prediction cancelled, coins refunded", yourBet: "Your bet", bet: "Bet", betOn: "Bet on", pool: "Pool", predWon: "You won {n} coins", predLost: "You lost this prediction", newPredSys: "New prediction:", clearT: "Remove",
+    gwT: "Giveaway", newGw: "New giveaway", gwPrize: "Prize (coins)", gwPrizeD: "Taken from your balance, goes to the winner", gwKw: "Entry keyword", gwTitle: "Giveaway title (optional)", gwDur: "Entry time", startGw: "Start giveaway", gwJoin: "Join", gwJoined: "You're in ✓", gwHow: "Type {kw} in chat to enter", gwEntrants: "entered", gwDraw: "Draw winner", gwClosed: "Entries closed", gwWin: "Winner", gwNone: "No entries — prize refunded", gwWinSys: "{name} won the giveaway", gwYouWon: "Congrats! You won the giveaway",
+    wheelT: "Wheel", wheelChat: "Latest chatters", wheelCustom: "Your own options", wheelOpts: "Options (one per line)", spin: "Spin", wheelRes: "Result",
+    schedT: "Upcoming streams", addSched: "Schedule a stream", schedWhen: "When", schedTitle: "Stream title", schedNone: "No upcoming streams", startsIn: "Starts in", startingNow: "Starting now", upcomingT: "Coming up",
+    liveNotif: "Notify me when streams start", liveNotifD: "A phone notification when someone you follow goes live or is about to (may be up to 15 min late)",
     clip: "Clip", clips: "Clips", topClips: "Top clips this week", clipMaking: "Saving clip…", clipTitle: "Clip title", clipPublish: "Publish clip", clipUploading: "Uploading… {n}%",
     clipDone: "Clip published!", clipShare: "Share", clipCopy: "Copy link", clipCopied: "Link copied", clipWait: "Hold on — a clip needs a few seconds of stream first", clipUnsup: "This device can't make clips",
     clipMade: "made a clip", views: "views", clipBy: "by", clipDel: "Delete clip", clipBuf: "Prepare clips while watching", clipBufD: "Keeps the last 30 seconds so you can clip in one tap (uses slightly more battery)", noClips: "No clips yet",
     search: "Search…", langLoading: "Preparing language… (first time only)", langFail: "Couldn't load that language right now, try later", langAuto: "Arabic and English are hand-translated; other languages are translated automatically.", logout: "Sign out", focusGuide: "Hide notifications on iPhone",
     focusSteps: "1. Open Shortcuts → Automation → New Automation<br>2. Choose App → Wahj → Is Opened<br>3. Choose Run Immediately<br>4. Add action Set Focus → Do Not Disturb → On<br><br>Now Do Not Disturb turns on automatically every time you open Wahj ✓",
-    openShortcuts: "Open Shortcuts", errs: { bad_handle: "Username: 3–20 latin letters/digits", weak_password: "Password needs 6+ characters", taken: "Username taken", bad_login: "Wrong username or password", rate: "Too many attempts, wait a bit", net: "Connection failed", auth: "Sign in first", not_invited: "You were not invited", login: "Sign in to take part", slow: "Slow down a moment", guests_full: "Guest slots are full (3)", bad_email: "Invalid email address", email_taken: "Email already registered", bad_code: "Wrong or expired code", mail_off: "Email sending isn't enabled on the server yet", bad_link: "Invalid link", no_points: "Not enough points", need_text: "Write your message first", too_many: "Max 12 rewards", no_coins: "Not enough coins", vip_only: "VIP only", owned: "Already owned", self: "You can't gift yourself", pay_off: "Payments aren't enabled yet", pay_fail: "Couldn't start the payment", forbidden: "Not allowed", not_found: "Not found", bad_old: "Current password is wrong", bad_image: "Unsupported image", fx_off: "The streamer turned effects off", ch_off: "The streamer turned challenges off", co_off: "The streamer isn't accepting co-stream requests", bad_ytkey: "Invalid YouTube stream key", bad_ytchan: "Channel not found — paste your channel link" },
+    openShortcuts: "Open Shortcuts", errs: { bad_handle: "Username: 3–20 latin letters/digits", weak_password: "Password needs 6+ characters", taken: "Username taken", bad_login: "Wrong username or password", rate: "Too many attempts, wait a bit", net: "Connection failed", auth: "Sign in first", not_invited: "You were not invited", login: "Sign in to take part", slow: "Slow down a moment", guests_full: "Guest slots are full (3)", bad_email: "Invalid email address", email_taken: "Email already registered", bad_code: "Wrong or expired code", mail_off: "Email sending isn't enabled on the server yet", bad_link: "Invalid link", no_points: "Not enough points", need_text: "Write your message first", too_many: "Max 12 rewards", no_coins: "Not enough coins", vip_only: "VIP only", owned: "Already owned", self: "You can't gift yourself", pay_off: "Payments aren't enabled yet", pay_fail: "Couldn't start the payment", forbidden: "Not allowed", not_found: "Not found", bad_old: "Current password is wrong", bad_image: "Unsupported image", fx_off: "The streamer turned effects off", ch_off: "The streamer turned challenges off", co_off: "The streamer isn't accepting co-stream requests", bad_ytkey: "Invalid YouTube stream key", bad_ytchan: "Channel not found — paste your channel link", pred_busy: "A prediction is already running", pred_closed: "Bets are closed", bad_bet: "Minimum bet is 10 coins", one_side: "You already bet on another option", gw_busy: "A giveaway is already running", wheel_few: "Needs at least 2 options", bad_time: "Pick a time at least 1 minute ahead, within 60 days", sched_full: "Max 10 scheduled streams" },
     sentFx: "sent", hypeTrain: "HYPE TRAIN", latency: "Delay", guestsN: "guests", layoutSplit: "Split screen", layoutFocus: "Focus",
     declined: "Declined", errorT: "Error",
     support: "Support", supportT: "Support {n}", donCoins: "Coins", donPaypal: "PayPal", donMsg: "Message shown on stream (optional)", donSend: "Send support", donCustom: "Other amount",
@@ -1894,6 +1902,7 @@ VIEWS.home = (root) => {
       <div id="hg"></div>
       <div class="chips" style="margin-top:12px" id="hc">${CATS.map((c) => `<button class="chip ${c === "all" ? "on" : ""}" data-c="${c}">${CAT_EMO[c]} ${t(c)}</button>`).join("")}</div>
       <div id="hl"><div style="height:200px;position:relative"><div class="spin"></div></div></div>
+      <div id="hup"></div>
       <div id="hclips"></div>
     </div></div>`;
   const card = (s, big) => {
@@ -1927,6 +1936,11 @@ VIEWS.home = (root) => {
     $$("[data-id]", el).forEach((c) => (c.onclick = () => { haptic(); go("watch", c.dataset.id); }));
   };
   api("/api/clips").then((x) => { const el = $("#hclips"); if (el && x.clips && x.clips.length) { el.innerHTML = `<div class="h2">${eic("clip", "brand")} ${t("topClips")}</div><div class="cliprow">${x.clips.map(clipCard).join("")}</div>`; bindClips(el); } });
+  if (S.token) api("/api/upcoming").then((x) => {
+    const el = $("#hup"); if (!el || !x.list || !x.list.length) return;
+    el.innerHTML = `<div class="h2">${eic("cal", "cyan")} ${t("upcomingT")}</div><div class="cliprow">${x.list.map((s) => `<div class="upc" data-h="${esc(s.host.handle || "")}">${avatar(s.host)}<div class="tx"><b>${uname({ ...s.host, look: { ...(s.host.look || {}), badge: "", top: 0 } }, "span")}</b><span class="small">${esc(s.title || "")}</span><span class="badge cd" data-at="${s.at}">${fmtIn(s.at - Date.now())}</span></div></div>`).join("")}</div>`;
+    $$("[data-h]", el).forEach((c) => (c.onclick = () => c.dataset.h && go("user", c.dataset.h)));
+  });
   const load = async () => { const r = await api("/api/live"); if (r.streams) { data = r.streams; render(); } else if (!data.length) render(); };
   $$("#ht button").forEach((b) => (b.onclick = () => { tab = b.dataset.t; $$("#ht button").forEach((x) => x.classList.toggle("on", x === b)); render(); }));
   $$("#hc .chip").forEach((b) => (b.onclick = () => { cat = b.dataset.c; $$("#hc .chip").forEach((x) => x.classList.toggle("on", x === b)); render(); }));
@@ -1971,6 +1985,175 @@ VIEWS.ranks = (root) => {
 };
 
 /* ---------- watch ---------- */
+// ---------------- predictions · giveaways · wheel · schedule ----------------
+const AR_ = () => S.lang === "ar";
+const fmtIn = (ms) => {
+  if (ms <= 30000) return t("startingNow");
+  const m = Math.ceil(ms / 60000);
+  if (m < 60) return m + (AR_() ? " د" : "m");
+  const h = Math.floor(m / 60);
+  if (h < 48) return h + (AR_() ? " س " : "h ") + (m % 60 ? (m % 60) + (AR_() ? " د" : "m") : "");
+  return Math.round(h / 24) + (AR_() ? " يوم" : "d");
+};
+const evHtml = (m) => m.ev === "pred" ? `${eic("predict", "violet")} <b>${t("newPredSys")}</b> ${esc(m.text)}`
+  : m.ev === "gwwin" ? `${eic("gift", "gold")} <b>${esc(t("gwWinSys", { name: m.wname }))}</b>${m.prize ? ` · +${fmtN(m.prize)} ${eic("coin", "gold")}` : ""}` : "";
+const predTotal = (p) => p.pools.reduce((a, b) => a + b, 0);
+function predTm(p, mybet) {
+  const total = predTotal(p), left = Math.max(0, p.ends - Date.now());
+  const stx = p.state === "open" ? `${t("predOpen")} · ${fmtDur(left)}` : p.state === "locked" ? t("predLocked") : p.state === "done" ? t("predDone") : t("predCancel");
+  return `${eic("coin", "gold")} ${t("pool")} <b dir="ltr">${fmtN(total)}</b> · ${stx}${mybet ? ` · ${t("yourBet")}: <b dir="ltr">${fmtN(mybet.amt)}</b>` : ""}`;
+}
+function predHtml(p, mybet) {
+  const total = predTotal(p);
+  return `<div class="poll pred ${p.state}"><div class="q">${eic("predict", "violet")} ${esc(p.q || t("predT"))}</div>${p.opts.map((o, i) => {
+    const pct = total ? Math.round((p.pools[i] * 100) / total) : 0;
+    const mult = p.pools[i] ? "x" + (total / p.pools[i]).toFixed(2) : "";
+    const cls = p.state === "done" ? (p.win === i ? "win" : "lose") : mybet && mybet.opt === i ? "me" : "";
+    return `<button class="po pc${i} ${cls}" data-b="${i}"><i style="width:${pct}%"></i><span><span>${p.state === "done" && p.win === i ? eic("check", "green") + " " : ""}${esc(o)}</span><b dir="ltr">${fmtN(p.pools[i])} ${mult}</b></span></button>`;
+  }).join("")}<div class="tm">${predTm(p, mybet)}</div></div>`;
+}
+function betSheet(p, opt, mybet, send) {
+  const bal = (S.user && S.user.coins) | 0;
+  sheet(`<h3>${eic("predict", "violet")} ${t("betOn")}: ${esc(p.opts[opt])}</h3>
+    <p class="small mut" style="margin:-4px 0 12px">${esc(p.q)} · ${t("pool")} ${fmtN(predTotal(p))}${mybet ? ` · ${t("yourBet")} ${fmtN(mybet.amt)}` : ""}</p>
+    <div class="chips" style="flex-wrap:wrap;gap:8px">${[10, 100, 500, 1000, 10000].map((n) => `<button class="chip" data-a="${n}">${coinHtml(n)}</button>`).join("")}</div>
+    <div class="field" style="margin-top:12px"><input class="inp" id="ba" type="number" inputmode="numeric" min="10" placeholder="${t("coins")}" dir="ltr"></div>
+    <p class="small mut">${t("coins")}: ${coinHtml(bal)}</p>
+    <button class="btn p" id="bgo" style="margin-top:8px">${t("bet")}</button>`, (sh, close) => {
+    $$("[data-a]", sh).forEach((b) => (b.onclick = () => { $("#ba", sh).value = b.dataset.a; haptic(); }));
+    $("#bgo", sh).onclick = () => { const a = Math.floor(+$("#ba", sh).value || 0); if (a < 10) return toast(terr("bad_bet")); send(opt, a); haptic("success"); close(); };
+  });
+}
+const gwTm = (g) => `${g.n} ${t("gwEntrants")}${g.state === "open" ? " · " + fmtDur(Math.max(0, g.ends - Date.now())) : ""}`;
+function gwHtml(g, joined, host) {
+  const body = g.state === "done"
+    ? (g.winner ? `<div class="gwwin">${eic("crown", "gold")} ${t("gwWin")}: <b style="color:${esc(g.winner.color || "#fff")}">${esc(g.winner.name)}</b></div>` : `<div class="small mut">${t("gwNone")}</div>`)
+    : `<div class="small" style="margin:6px 0">${g.state === "open" ? t("gwHow", { kw: `<b class="kw" dir="ltr">${esc(g.kw)}</b>` }) : t("gwClosed")}</div>
+       ${!host && g.state === "open" ? (joined ? `<div class="gwok">${eic("check", "green")} ${t("gwJoined")}</div>` : `<button class="btn p gwj" id="gwj">${t("gwJoin")}</button>`) : ""}`;
+  return `<div class="poll gw"><div class="q">${eic("gift", "gold")} ${esc(g.title || t("gwT"))}${g.prize ? `<span class="sp"></span>${coinHtml(g.prize)}` : ""}</div>${body}
+    <div class="tm">${gwTm(g)}</div></div>`;
+}
+const WCOL = ["#7c5cff", "#ff4d8d", "#ffb020", "#00c2ff", "#22c55e", "#f97316", "#a855f7", "#14b8a6", "#ef4444", "#eab308", "#3b82f6", "#ec4899"];
+function spinWheel(m) {
+  $$(".wheelfx").forEach((x) => x.remove());
+  const n = m.opts.length, seg = 360 / n, R = 140, C = 150;
+  const pt = (a, r) => [C + r * Math.cos(((a - 90) * Math.PI) / 180), C + r * Math.sin(((a - 90) * Math.PI) / 180)];
+  let svg = "";
+  m.opts.forEach((o, i) => {
+    const a0 = i * seg, a1 = a0 + seg, [x0, y0] = pt(a0, R), [x1, y1] = pt(a1, R), mid = a0 + seg / 2, [tx, ty] = pt(mid, R * 0.62);
+    svg += `<path d="M${C},${C} L${x0},${y0} A${R},${R} 0 ${seg > 180 ? 1 : 0} 1 ${x1},${y1} Z" fill="${WCOL[i % WCOL.length]}" stroke="rgba(0,0,0,.35)" stroke-width="2"/>
+      <text x="${tx}" y="${ty}" transform="rotate(${mid - 90 + (mid > 180 ? 180 : 0)} ${tx} ${ty})" text-anchor="middle" dominant-baseline="middle" font-size="${n > 8 ? 11 : 13}" font-weight="800" fill="#fff">${esc(o.length > 12 ? o.slice(0, 11) + "…" : o)}</text>`;
+  });
+  const el = document.createElement("div");
+  el.className = "wheelfx";
+  el.innerHTML = `<div class="wbox">${m.title ? `<div class="wt">${esc(m.title)}</div>` : ""}<div class="wwrap"><div class="wptr"></div>
+    <svg viewBox="0 0 300 300" class="wsvg"><g class="wrot">${svg}</g><circle cx="150" cy="150" r="20" fill="#0e0b18" stroke="#fff" stroke-width="3"/></svg></div>
+    <div class="wres"></div></div>`;
+  document.body.appendChild(el);
+  const g = $(".wrot", el);
+  const target = 360 * 7 - (m.pick * seg + seg / 2) + (Math.random() - 0.5) * seg * 0.6;
+  requestAnimationFrame(() => requestAnimationFrame(() => { g.style.transform = `rotate(${target}deg)`; }));
+  setTimeout(() => { $(".wres", el).innerHTML = `${t("wheelRes")}: <b>${esc(m.opts[m.pick])}</b>`; el.classList.add("done"); haptic("success"); FX.play("confetti", null, null, null); }, 5300);
+  setTimeout(() => { el.classList.add("out"); setTimeout(() => el.remove(), 500); }, 9000);
+  el.onclick = () => { if (el.classList.contains("done")) el.remove(); };
+}
+// streamer controls
+function predManager(st, send) {
+  const p = st.pred;
+  if (!p || p.state === "done" || p.state === "cancel") {
+    return sheet(`${p ? predHtml(p, null) + `<button class="btn g" id="pcl" style="margin:10px 0 18px">${t("clearT")}</button>` : ""}
+      <h3>${eic("predict", "violet")} ${t("newPred")}</h3><p class="small mut" style="margin:-4px 0 10px">${t("predHint")}</p>
+      <div class="field"><input class="inp" id="pq" placeholder="${t("predQ")}" maxlength="100"></div>
+      <div id="pos">${[0, 1].map((i) => `<div class="field"><input class="inp" data-po placeholder="${t("option")} ${i + 1}" maxlength="30"></div>`).join("")}</div>
+      <button class="mini" id="padd" style="margin-bottom:10px">+ ${t("option")}</button>
+      <label class="small mut">${t("betWin")}</label><div class="seg" id="pd">${[[60, "1"], [120, "2"], [300, "5"], [600, "10"]].map(([v, l], i) => `<button data-v="${v}" class="${i === 1 ? "on" : ""}">${l} ${AR_() ? "د" : "min"}</button>`).join("")}</div>
+      <button class="btn p" id="pgo" style="margin-top:14px">${t("startPred")}</button>`, (sh, close) => {
+      let secs = 120;
+      if ($("#pcl", sh)) $("#pcl", sh).onclick = () => { send({ t: "predclear" }); close(); };
+      $$("#pd button", sh).forEach((b) => (b.onclick = () => { $$("#pd button", sh).forEach((x) => x.classList.toggle("on", x === b)); secs = +b.dataset.v; }));
+      $("#padd", sh).onclick = () => { const n = $$("[data-po]", sh).length; if (n >= 4) return; $("#pos", sh).insertAdjacentHTML("beforeend", `<div class="field"><input class="inp" data-po placeholder="${t("option")} ${n + 1}" maxlength="30"></div>`); };
+      $("#pgo", sh).onclick = () => { const opts = $$("[data-po]", sh).map((i) => i.value.trim()).filter(Boolean); if (opts.length < 2) return toast(t("option") + " ×2"); send({ t: "pred", q: $("#pq", sh).value.trim(), opts, secs }); haptic("success"); close(); };
+    });
+  }
+  sheet(`${predHtml(p, null)}
+    ${p.state === "open" ? `<button class="btn g" id="plk" style="margin-top:12px">${ic("lock")} ${t("lockPred")}</button>` : ""}
+    <div class="h2" style="margin-top:14px">${t("pickWin")}</div>
+    ${p.opts.map((o, i) => `<button class="btn g" data-w="${i}" style="margin-top:8px">${eic("check", "green")} ${esc(o)}</button>`).join("")}
+    <button class="btn d" id="pcn" style="margin-top:14px">${t("cancelPred")}</button>`, (sh, close) => {
+    if ($("#plk", sh)) $("#plk", sh).onclick = () => { send({ t: "predlock" }); close(); };
+    $$("[data-w]", sh).forEach((b) => (b.onclick = () => confirmBox(`${t("pickWin")}: ${p.opts[+b.dataset.w]}؟`, () => { send({ t: "predres", opt: +b.dataset.w }); haptic("success"); close(); })));
+    $("#pcn", sh).onclick = () => confirmBox(t("cancelPred") + "؟", () => { send({ t: "predcancel" }); close(); });
+  });
+}
+function gwManager(st, send) {
+  const g = st.gw;
+  if (!g || g.state === "done") {
+    return sheet(`${g ? gwHtml(g, false, true) + `<button class="btn g" id="gcl" style="margin:10px 0 18px">${t("clearT")}</button>` : ""}
+      <h3>${eic("gift", "gold")} ${t("newGw")}</h3>
+      <div class="field"><input class="inp" id="gt" placeholder="${t("gwTitle")}" maxlength="60"></div>
+      <div class="row"><div class="field" style="flex:1"><label class="small mut">${t("gwPrize")}</label><input class="inp" id="gp" type="number" inputmode="numeric" min="0" value="1000" dir="ltr"></div>
+      <div class="field" style="flex:1"><label class="small mut">${t("gwKw")}</label><input class="inp" id="gk" value="join" maxlength="20" dir="ltr" autocapitalize="none"></div></div>
+      <p class="small mut" style="margin:-4px 0 10px">${t("gwPrizeD")}</p>
+      <label class="small mut">${t("gwDur")}</label><div class="seg" id="gd">${[[60, "1"], [120, "2"], [300, "5"], [600, "10"]].map(([v, l], i) => `<button data-v="${v}" class="${i === 1 ? "on" : ""}">${l} ${AR_() ? "د" : "min"}</button>`).join("")}</div>
+      <button class="btn p" id="ggo" style="margin-top:14px">${t("startGw")}</button>`, (sh, close) => {
+      let secs = 120;
+      if ($("#gcl", sh)) $("#gcl", sh).onclick = () => { send({ t: "gwclear" }); close(); };
+      $$("#gd button", sh).forEach((b) => (b.onclick = () => { $$("#gd button", sh).forEach((x) => x.classList.toggle("on", x === b)); secs = +b.dataset.v; }));
+      $("#ggo", sh).onclick = () => { send({ t: "gw", title: $("#gt", sh).value.trim(), prize: Math.max(0, +$("#gp", sh).value | 0), kw: $("#gk", sh).value.trim(), secs }); haptic("success"); close(); };
+    });
+  }
+  sheet(`${gwHtml(g, false, true)}<button class="btn p" id="gdr" style="margin-top:14px">${eic("crown", "gold")} ${t("gwDraw")}</button>`, (sh, close) => {
+    $("#gdr", sh).onclick = () => { send({ t: "gwdraw" }); haptic("success"); close(); };
+  });
+}
+function wheelManager(send) {
+  sheet(`<h3>${eic("wheel", "brand")} ${t("wheelT")}</h3>
+    <div class="field"><input class="inp" id="wt" placeholder="${t("gwTitle")}" maxlength="60"></div>
+    <div class="seg" id="wsrc"><button class="on" data-v="chat">${t("wheelChat")}</button><button data-v="custom">${t("wheelCustom")}</button></div>
+    <div class="field hide" id="wcf" style="margin-top:10px"><textarea class="inp" id="wo" rows="5" placeholder="${t("wheelOpts")}"></textarea></div>
+    <button class="btn p" id="wgo" style="margin-top:14px">${eic("wheel")} ${t("spin")}</button>`, (sh, close) => {
+    let src = "chat";
+    const saved = store.get("wheelOpts", ""); if (saved) $("#wo", sh).value = saved;
+    $$("#wsrc button", sh).forEach((b) => (b.onclick = () => { $$("#wsrc button", sh).forEach((x) => x.classList.toggle("on", x === b)); src = b.dataset.v; $("#wcf", sh).classList.toggle("hide", src !== "custom"); }));
+    $("#wgo", sh).onclick = () => {
+      const opts = $("#wo", sh).value.split("\n").map((x) => x.trim()).filter(Boolean);
+      if (src === "custom") { if (opts.length < 2) return toast(terr("wheel_few")); store.set("wheelOpts", $("#wo", sh).value); }
+      send({ t: "wheel", src, opts, title: $("#wt", sh).value.trim() }); close();
+    };
+  });
+}
+// schedule
+function schedHtml(list, self) {
+  list = list || [];
+  if (!list.length && !self) return "";
+  return `<div class="row" style="justify-content:space-between;align-items:center"><div class="h2">${eic("cal", "cyan")} ${t("schedT")}</div>${self ? `<button class="mini" id="sadd">+ ${t("addSched")}</button>` : ""}</div>
+    <div class="sl">${list.length ? list.map((s) => `<div class="sm sched" style="align-items:center"><div class="calb"><b>${new Date(s.at).getDate()}</b><span>${new Date(s.at).toLocaleDateString(S.lang, { month: "short" })}</span></div>
+      <div class="tx"><b>${esc(s.title || t("liveNow"))}</b><br><span class="mut small">${new Date(s.at).toLocaleString(S.lang, { weekday: "short", hour: "numeric", minute: "2-digit" })}${s.game ? " · " + esc(s.game) : ""}</span></div>
+      <span class="badge cd" data-at="${s.at}">${fmtIn(s.at - Date.now())}</span>${self ? `<button class="mini" data-sdel="${s.id}" style="color:#ff7b88">${ic("x")}</button>` : ""}</div>`).join("") : `<p class="mut small" style="text-align:center;padding:12px">${t("schedNone")}</p>`}</div>`;
+}
+function bindSched(el, onChange) {
+  const add = $("#sadd", el);
+  if (add) add.onclick = () => {
+    const d = new Date(Date.now() + 3600000); d.setMinutes(0, 0, 0);
+    const pad = (n) => String(n).padStart(2, "0");
+    const v = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    sheet(`<h3>${eic("cal", "cyan")} ${t("addSched")}</h3>
+      <div class="field"><input class="inp" id="stt" placeholder="${t("schedTitle")}" maxlength="80"></div>
+      <div class="field"><label class="small mut">${t("schedWhen")}</label><input class="inp" id="sat" type="datetime-local" value="${v}" dir="ltr"></div>
+      <button class="btn p" id="sgo">${t("save")}</button>`, (sh, close) => {
+      $("#sgo", sh).onclick = async () => {
+        const at = new Date($("#sat", sh).value).getTime();
+        const r = await api("/api/sched", { title: $("#stt", sh).value.trim(), at });
+        if (r.error) return toast(terr(r.error));
+        haptic("success"); close(); onChange && onChange();
+      };
+    });
+  };
+  $$("[data-sdel]", el).forEach((b) => (b.onclick = () => confirmBox(t("del") + "؟", async () => { await api("/api/sched", { op: "del", id: b.dataset.sdel }); onChange && onChange(); })));
+}
+setInterval(() => $$(".badge.cd[data-at]").forEach((b) => (b.textContent = fmtIn(+b.dataset.at - Date.now()))), 30000);
+const syncAlerts = () => { if (Native.has()) Native.post("alerts", { on: !!(S.token && P.liveNotif !== false), token: S.token || "", server: location.origin }); };
+
 VIEWS.watch = (root, id) => {
   history.replaceState(null, "", "/w/" + id);
   root.innerHTML = `<div class="view" id="watch">
@@ -1987,7 +2170,7 @@ VIEWS.watch = (root, id) => {
     <button class="clipbtn" id="wclip">${eic("clip")}<span>${t("clip")}</span></button>
     <div class="chatov" id="wc"></div>
     <div class="hype" id="whype"><i style="height:0%"></i></div><div class="hypel" id="whl">x1</div>
-    <div id="wpoll"></div>
+    <div class="wstack"><div id="wpoll"></div><div id="wpred"></div><div id="wgw"></div></div>
     <div class="wbar">
       <div class="cin"><input id="wi" placeholder="${S.token ? t("chatPh") : t("loginToChat")}" maxlength="200" enterkeyhint="send"><button class="rbtn" id="wsend" style="width:36px;height:36px;background:none">${ic("send")}</button></div>
       <button class="rbtn ptsbtn" id="wpts">${eic("star", "gold")}</button><button class="rbtn" id="wr">${eic("heart", "pink")}</button><button class="rbtn" id="wgf">${eic("gift", "pink")}</button><button class="rbtn hot" id="we">${ic("spark")}</button><button class="rbtn" id="wm">${ic("layers")}</button>
@@ -2004,6 +2187,7 @@ VIEWS.watch = (root, id) => {
   });
   if (P.clipBuf) setTimeout(() => clipBuf.start(), 4000);
   if (!P.chatOnStream) setTimeout(() => $("#wc") && $("#wc").classList.add("hide"));
+  let pred = null, mybet = null, gw = null, gwIn = false;
   let meta = null, me = {}, myVote = null, poll = null, isFollowing = false, hostInfo = null, sawPubs = false;
   stage.onBlocked = () => {
     if ($(".tapsound", root)) return;
@@ -2026,7 +2210,7 @@ VIEWS.watch = (root, id) => {
     const m = chatMsgs.get(c.dataset.id); if (!m || !m.uid) return;
     userSheet(m, { myRole, hostId: meta && meta.host });
   });
-  const chatHtml = (m) => m.src === "yt" ? `${YTB}${m.ysc ? `<b class="ysc">${esc(m.ysc)}</b> ` : ""}<b style="color:${m.ymod ? "#5ec8ff" : "#ff8a84"}">${esc(m.name)}</b> ${esc(m.text)}` : m.don ? `${eic("coin", "gold")} ${uname(m)} ${t("donated")} <b>${typeof m.don === "string" ? m.don : fmtN(m.don) + " " + t("coins")}</b>${m.text ? " — " + esc(m.text) : ""}` : `${roleTag(m.role)}${lvlHtml(m.lvl)}${m.sub ? `<span class="bdg bdg-sub">${eic("star")}${m.sub}</span>` : ""}${m.host ? `<span class="tag">${t("hostTag")}</span>` : m.guest ? `<span class="tag" style="background:var(--grad2)">${t("guestTag")}</span>` : ""}${uname(m)} ${m.giftId ? GIFT_E[m.giftId] + " " : ""}${esc(m.text)}`;
+  const chatHtml = (m) => m.ev ? evHtml(m) : m.src === "yt" ? `${YTB}${m.ysc ? `<b class="ysc">${esc(m.ysc)}</b> ` : ""}<b style="color:${m.ymod ? "#5ec8ff" : "#ff8a84"}">${esc(m.name)}</b> ${esc(m.text)}` : m.don ? `${eic("coin", "gold")} ${uname(m)} ${t("donated")} <b>${typeof m.don === "string" ? m.don : fmtN(m.don) + " " + t("coins")}</b>${m.text ? " — " + esc(m.text) : ""}` : `${roleTag(m.role)}${lvlHtml(m.lvl)}${m.sub ? `<span class="bdg bdg-sub">${eic("star")}${m.sub}</span>` : ""}${m.host ? `<span class="tag">${t("hostTag")}</span>` : m.guest ? `<span class="tag" style="background:var(--grad2)">${t("guestTag")}</span>` : ""}${uname(m)} ${m.giftId ? GIFT_E[m.giftId] + " " : ""}${esc(m.text)}`;
   const offline = (txt) => {
     $$(".wtop .badge.red").forEach((b) => (b.parentElement.style.display = "none"));
     if ($(".offline", stageEl)) return;
@@ -2047,7 +2231,29 @@ VIEWS.watch = (root, id) => {
     $$(".po", el).forEach((b) => (b.onclick = () => { if (poll.done) return; if (!S.token) return toast(terr("login")); myVote = +b.dataset.o; ws.send({ t: "vote", opt: myVote }); haptic(); renderPoll(); }));
     if (poll.done) setTimeout(() => { if (poll && poll.done) { poll = null; renderPoll(); } }, 8000);
   };
-  const pollTick = setInterval(() => poll && !poll.done && renderPoll(), 1000);
+  const renderPred = () => {
+    const el = $("#wpred"); if (!el) return;
+    if (!pred) return (el.innerHTML = "");
+    el.innerHTML = predHtml(pred, mybet);
+    $$(".po", el).forEach((b) => (b.onclick = () => {
+      if (pred.state !== "open") return;
+      if (!S.token) return toast(terr("login"));
+      if (S.user && meta && meta.host === S.user.id) return;
+      const o = +b.dataset.b; if (mybet && mybet.opt !== o) return toast(terr("one_side"));
+      betSheet(pred, o, mybet, (opt, amt) => ws.send({ t: "bet", opt, amt }));
+    }));
+  };
+  const renderGw = () => {
+    const el = $("#wgw"); if (!el) return;
+    if (!gw) return (el.innerHTML = "");
+    el.innerHTML = gwHtml(gw, gwIn, S.user && meta && meta.host === S.user.id);
+    const j = $("#gwj", el); if (j) j.onclick = () => { if (!S.token) return toast(terr("login")); ws.send({ t: "gwjoin" }); haptic(); };
+  };
+  const pollTick = setInterval(() => {
+    poll && !poll.done && renderPoll();
+    if (pred && pred.state === "open") { const e = $("#wpred .tm"); if (e) e.innerHTML = predTm(pred, mybet); }
+    if (gw && gw.state === "open") { const e = $("#wgw .tm"); if (e) e.innerHTML = gwTm(gw); }
+  }, 1000);
   const setHype = (v, lvl) => { $("#whype i").style.height = Math.min(100, v) + "%"; $("#whl").textContent = "x" + (lvl || 1); };
   const banner = (txt) => { const b = document.createElement("div"); b.className = "banner"; b.innerHTML = txt; $("#watch").appendChild(b); setTimeout(() => b.remove(), 4200); };
 
@@ -2066,6 +2272,7 @@ VIEWS.watch = (root, id) => {
         if (!m.publishers.length) addChat(t("pendingLive"), "sys");
         $("#wv").innerHTML = ic("eye") + " " + fmtN(m.viewers);
         poll = m.poll; renderPoll(); setHype(m.hype.v, m.hype.lvl);
+        pred = m.pred; mybet = m.mybet || null; renderPred(); gw = m.gw; gwIn = !!m.gwIn; renderGw();
         if (m.pinned) showPin(m.pinned);
         break;
       case "publishers": stage.setPubs(m.list); sawPubs = true; break;
@@ -2109,6 +2316,19 @@ VIEWS.watch = (root, id) => {
         addChat(`<b style="color:${esc(m.color)}">${esc(m.name)}</b>${t("sentFx")} ${m.id === "goldrain" ? eic("coin", "gold") : eic((FX.list.find((x) => x.id === m.id) || {}).e || "spark", "brand")}`, "fx");
         break;
       case "hype": setHype(m.v, m.lvl); if (m.train) { const d = document.createElement("div"); d.className = "train"; d.textContent = t("hypeTrain") + " x" + m.lvl; $("#watch").appendChild(d); setTimeout(() => d.remove(), 2700); FX.play("confetti", null, null, $("#fx")); } break;
+      case "pred": if (!m.pred || !pred || pred.id !== m.pred.id) mybet = null; pred = m.pred; renderPred(); break;
+      case "mybet": mybet = m.bet; if (m.coins !== undefined && S.user) { S.user.coins = m.coins; store.set("user", S.user); } renderPred(); toast(`${eic("check", "green")} ${t("bet")} · ${fmtN(m.bet.amt)}`); break;
+      case "predres":
+        if (m.coins !== undefined && m.coins !== null && S.user) { S.user.coins = m.coins; store.set("user", S.user); }
+        if (m.won === true) { toast(`${eic("coin", "gold")} ${t("predWon", { n: fmtN(m.got) })}`, 5000); FX.play("confetti", null, null, null); haptic("success"); }
+        else if (m.won === false) toast(t("predLost"));
+        else toast(t("predCancel"));
+        break;
+      case "gw": if (!m.gw || !gw || gw.id !== m.gw.id) gwIn = false;
+        if (m.gw && m.gw.state === "done" && m.gw.winner && S.user && m.gw.winner.uid === S.user.id && !(gw && gw.state === "done")) { toast(`${eic("crown", "gold")} ${t("gwYouWon")}${m.gw.prize ? " +" + fmtN(m.gw.prize) : ""}`, 6000); FX.play("confetti", null, null, null); haptic("success"); }
+        gw = m.gw; renderGw(); break;
+      case "gwin": gwIn = true; renderGw(); haptic("success"); break;
+      case "wheel": spinWheel(m); break;
       case "poll": if (!poll || poll.id !== m.poll.id) myVote = null; poll = m.poll; renderPoll(); break;
       case "challenges":
         if (m.changed && hostInfo) {
@@ -2392,6 +2612,9 @@ VIEWS.studio = (root) => {
       ${job.role === "host" && job.yt ? `<button class="act hide" id="aytc">${YTB}<span>${t("ytChat")}</span></button>` : ""}
       <button class="act" id="acam">${ic("cam")}<span>${t("camBubble")}</span></button>
       <button class="act" id="apoll">${ic("poll")}<span>${t("poll")}</span></button>
+      <button class="act" id="apred">${eic("predict", "violet")}<span>${t("predT")}</span></button>
+      <button class="act" id="agw">${eic("gift", "gold")}<span>${t("gwT")}</span></button>
+      <button class="act" id="awheel">${eic("wheel", "brand")}<span>${t("wheelT")}</span></button>
       <button class="act" id="ach">${ic("trophy")}<span>${t("challenges")}</span></button>
       <button class="act" id="areq">${ic("users")}<span>${t("costream")}</span></button>
       <button class="act" id="apv">${ic("eye")}<span>${t("preview")}</span></button>
@@ -2405,6 +2628,10 @@ VIEWS.studio = (root) => {
     <div class="row" style="margin-bottom:8px"><div class="cin" style="background:var(--card)"><input id="si" placeholder="${t("chatPh")}" maxlength="200"><button class="rbtn" id="ssend" style="width:36px;height:36px;background:none">${ic("send")}</button></div></div>
     <div class="sl" id="sl"><p class="mut" style="text-align:center;padding:20px">${t("noChat")}</p></div>
   </div></div>`;
+  if (job.role === "guest") ["#apred", "#agw", "#awheel"].forEach((x) => $(x).classList.add("hide"));
+  $("#apred").onclick = () => predManager(st, (o) => ws.send(o));
+  $("#agw").onclick = () => gwManager(st, (o) => ws.send(o));
+  $("#awheel").onclick = () => wheelManager((o) => ws.send(o));
   if (job.role === "guest") { $("#apoll").classList.add("hide"); $("#ach").classList.add("hide"); $("#areq").classList.add("hide"); }
   if (!isAndroid()) $("#acam").onclick = () => toast(t("camNA"));
   const dot = (el, n) => { let d = $(".dot", el); if (!n) return d && d.remove(); if (!d) { d = document.createElement("span"); d.className = "dot"; el.appendChild(d); } d.textContent = n; };
@@ -2413,7 +2640,7 @@ VIEWS.studio = (root) => {
   const renderChat = () => {
     const el = $("#sl");
     if (!st.chat.length) return;
-    el.innerHTML = st.chat.filter((m) => m.src !== "yt" || (P.showYt && st.ytOn !== false)).slice(-60).reverse().map((m) => m.src === "yt" ? `<div class="sm ytrow">${avatar0({ name: m.name, color: "#ff3d3d", avatar: m.yav })}<div class="tx">${YTB}<b style="color:${m.ymod ? "#5ec8ff" : "#ff8a84"}">${esc(m.name)}</b>${m.ysc ? ` <b class="ysc">${esc(m.ysc)}</b>` : ""}<br>${esc(m.text)}</div></div>` : m.sys ? `<div class="sm small mut" style="justify-content:center">${m.sys}</div>` : `<div class="sm">${avatar(m)}<div class="tx">${roleTag(m.role)}${uname(m)}<br>${m.giftId ? GIFT_E[m.giftId] + " " : ""}${esc(m.text)}</div>
+    el.innerHTML = st.chat.filter((m) => m.src !== "yt" || (P.showYt && st.ytOn !== false)).slice(-60).reverse().map((m) => (m.ev ? { ...m, sys: evHtml(m) } : m)).map((m) => m.src === "yt" ? `<div class="sm ytrow">${avatar0({ name: m.name, color: "#ff3d3d", avatar: m.yav })}<div class="tx">${YTB}<b style="color:${m.ymod ? "#5ec8ff" : "#ff8a84"}">${esc(m.name)}</b>${m.ysc ? ` <b class="ysc">${esc(m.ysc)}</b>` : ""}<br>${esc(m.text)}</div></div>` : m.sys ? `<div class="sm small mut" style="justify-content:center">${m.sys}</div>` : `<div class="sm">${avatar(m)}<div class="tx">${roleTag(m.role)}${uname(m)}<br>${m.giftId ? GIFT_E[m.giftId] + " " : ""}${esc(m.text)}</div>
       ${job.role === "host" && m.uid !== S.user.id ? `<button class="mini" data-mod="${m.id}">${MOD_SVG.replace("<svg", '<svg width="16" height="16" fill="currentColor"')}</button><button class="mini" data-pin="${m.id}">${ic("pin")}</button><button class="mini" data-inv="${m.uid}" data-n="${esc(m.name)}">${ic("users")}</button>` : ""}</div>`).join("");
     $$("[data-pin]", el).forEach((b) => (b.onclick = () => { ws.send({ t: "pin", id: b.dataset.pin }); toast(t("pin") + " ✓"); }));
     $$("[data-mod]", el).forEach((b) => (b.onclick = () => { const m = st.chat.find((x) => x.id === b.dataset.mod); if (m) userSheet(m, { myRole: "owner", hostId: S.user.id }); }));
@@ -2441,7 +2668,8 @@ VIEWS.studio = (root) => {
         if (m.requests) { st.reqs = m.requests; dot($("#areq"), st.reqs.length); }
         if (m.redeems) { st.redeems = m.redeems; dot($("#arw"), m.redeems.filter((x) => x.state === "new").length); }
         st.ch = m.challenges || []; dot($("#ach"), st.ch.filter((c) => c.state === "new").length);
-        st.hype = m.hype.v; st.lvl = m.hype.lvl; st.guests = m.guests || []; st.poll = m.poll;
+        st.hype = m.hype.v; st.lvl = m.hype.lvl; st.guests = m.guests || []; st.poll = m.poll; st.pred = m.pred; st.gw = m.gw;
+        $("#apred").classList.toggle("on", !!(st.pred && (st.pred.state === "open" || st.pred.state === "locked"))); $("#agw").classList.toggle("on", !!(st.gw && st.gw.state !== "done"));
         upd(); if (st.pubs.find((p) => p.uid === S.user.id)) setState("live");
         if (m.meta && m.meta.ended) { toast(t("endedT")); endLive(); }
         break;
@@ -2458,6 +2686,10 @@ VIEWS.studio = (root) => {
       case "challenges": st.ch = m.list; dot($("#ach"), st.ch.filter((c) => c.state === "new").length); break;
       case "guests": st.guests = m.list; break;
       case "poll": st.poll = m.poll; break;
+      case "pred": st.pred = m.pred; $("#apred").classList.toggle("on", !!(m.pred && (m.pred.state === "open" || m.pred.state === "locked"))); if (m.pred && m.pred.state === "locked" && !st.predLockNote) { st.predLockNote = m.pred.id; toast(`${eic("predict", "violet")} ${t("predLocked")}`); } break;
+      case "gw": st.gw = m.gw; $("#agw").classList.toggle("on", !!(m.gw && m.gw.state !== "done")); if (m.gw && m.gw.state === "done" && m.gw.winner) toast(`${eic("crown", "gold")} ${t("gwWin")}: ${esc(m.gw.winner.name)}`, 5000); break;
+      case "wheel": spinWheel(m); break;
+      case "coins": if (S.user) { S.user.coins = m.coins; store.set("user", S.user); } break;
       case "publishers": st.pubs = m.list; if (m.list.find((p) => p.uid === S.user.id)) setState("live"); previewStage && previewStage.setPubs(m.list);
         if (nat) Native.post("voice", { room: job.room, pub: job.pub, server: location.origin, publishers: m.list, me: S.user.id });
         break;
@@ -2603,6 +2835,7 @@ function profileHtml(r, self) {
         ${self ? `<button class="mini" data-del="${s.id}" style="position:absolute;top:8px;inset-inline-end:8px;background:rgba(0,0,0,.55);color:#ff7b88">${ic("x")}</button>
           <button class="mini" data-dl="${s.id}" style="position:absolute;top:8px;inset-inline-start:8px;background:rgba(0,0,0,.55)">${ic("download")} ${t("download")}</button>` : ""}</div>
       <div class="meta"><div class="tt">${esc(s.title)}</div><div class="small mut" style="margin-top:4px">${s.game ? esc(s.game) + " · " : ""}${new Date(s.started).toLocaleDateString(S.lang)}</div></div></div>`).join("")}</div>` : ""; })()}
+  ${schedHtml(r.sched, self)}
   <div class="row" style="justify-content:space-between;align-items:center"><div class="h2">${t("past")}</div>${self && r.streams.some((s) => !s.live) ? `<button class="mini" id="pdelall" style="color:#ff7b88">${ic("x")} ${t("delAll")}</button>` : ""}</div>
   <div class="sl">${r.streams.length ? r.streams.map((s) => `<div class="sm" data-id="${s.id}" data-rec="${s.rec && !s.live ? 1 : ""}" style="align-items:center">${s.gameIcon ? gIcon(s.gameIcon, "gi", 40) : `<div class="ph2" style="width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:var(--card2)">${eic("game", "brand")}</div>`}
     <div class="tx"><b>${esc(s.title)}</b><br><span class="mut small">${esc(s.game || "")} · ${new Date(s.started).toLocaleDateString(S.lang)} · ${t("peak")} ${s.peak}</span></div>${s.live ? '<span class="badge red">LIVE</span>' : s.recPending && self ? `<span class="badge" style="background:rgba(255,184,0,.18);color:#ffd36b">${t("recUploading")}</span>` : s.rec ? `<span class="badge" style="background:var(--grad)">▶ ${fmtDur(s.rec.dur * 1000)}</span>` : ""}${self && !s.live ? `<button class="mini" data-pdel="${s.id}" style="color:#ff7b88;margin-inline-start:6px">${ic("x")}</button>` : ""}</div>`).join("") : `<p class="mut small" style="text-align:center;padding:16px">${t("noPast")}</p>`}</div>`;
@@ -2674,6 +2907,7 @@ function editProfile() {
 
 function bindStreams(el, r, own) {
   $$("[data-del]", el).forEach((b) => (b.onclick = (e) => { e.stopPropagation(); deleteRec(b.dataset.del, () => go(current === "me" ? "me" : "home")); }));
+  bindSched(el, () => go(current === "me" ? "me" : "home"));
   const pdel = (id) => confirmBox(id === "all" ? t("delPastAllQ") : t("delPastQ"), async () => { const r = await api(`/api/past/${id}/delete`, {}); if (r.error) return toast(terr(r.error)); toast(t("saved")); go(current === "me" ? "me" : "home"); });
   $$("[data-pdel]", el).forEach((b) => (b.onclick = (e) => { e.stopPropagation(); pdel(b.dataset.pdel); }));
   if ($("#pdelall", el)) $("#pdelall", el).onclick = () => pdel("all");
@@ -2738,7 +2972,7 @@ VIEWS.settings = (root) => {
       row("spark", t("fxSound"), "", sw("p:fxSound", P.fxSound)) +
       row("zap", t("reduceFx"), t("reduceFxD"), sw("p:reduceFx", P.reduceFx)) +
       row("gauge", t("showLat"), "", sw("p:showLat", P.showLat)))}
-    ${u ? sec(t("secNotif"), row("mail", t("notifyMail"), t("notifyMailD"), sw("notify", u.notify !== false))) : ""}
+    ${u ? sec(t("secNotif"), (Native.has() ? row("bellon", t("liveNotif"), t("liveNotifD"), sw("p:liveNotif", P.liveNotif !== false)) : "") + row("mail", t("notifyMail"), t("notifyMailD"), sw("notify", u.notify !== false))) : ""}
     ${sec(t("secApp"),
       row("globe", t("language"), langName(S.lang), `<span class="mut">›</span>`, "xlang") +
       (Native.has() ? row("zap", t("haptics"), "", sw("p:haptics", P.haptics)) : "") +
@@ -2752,7 +2986,7 @@ VIEWS.settings = (root) => {
   $$("[data-s]", root).forEach((el) => (el.onclick = async () => {
     const on = el.classList.toggle("on"); haptic();
     const k = el.dataset.s;
-    if (k.startsWith("p:")) return setP(k.slice(2), on);
+    if (k.startsWith("p:")) { setP(k.slice(2), on); if (k === "p:liveNotif") syncAlerts(); return; }
     if (k === "mic") g.mic = on, saveG();
     else if (k === "overlay") store.set("overlay", on);
     else if (["callGuard", "dnd", "bannerGuard"].includes(k)) { g.privacy[k] = on; saveG(); if (k === "dnd" && on && isAndroid()) Native.post("perm", { kind: "dnd" }); }
@@ -2778,7 +3012,7 @@ VIEWS.settings = (root) => {
   on("xfocus", focusGuide);
   on("xlang", () => langSheet(() => go("settings")));
   on("xcache", () => { const keep = ["token", "user", "lang", "prefs", "golive", "overlay"]; Object.keys(localStorage).filter((k) => k.startsWith("wahj.") && !keep.includes(k.slice(5))).forEach((k) => localStorage.removeItem(k)); Games.top = null; Games.phone = null; toast(t("saved")); });
-  on("xout", () => confirmBox(t("logout") + "?", () => { S.token = ""; S.user = null; store.set("token", ""); store.set("user", null); store.set("guest", false); Native.post("auth", { token: "" }); go("auth"); }));
+  on("xout", () => confirmBox(t("logout") + "?", () => { S.token = ""; S.user = null; store.set("token", ""); store.set("user", null); store.set("guest", false); Native.post("auth", { token: "" }); syncAlerts(); go("auth"); }));
   on("xpw", () => sheet(`<h3>${ic("lock")} ${t("changePass")}</h3><div class="field">${pwField("po", t("oldPass"))}</div><div class="field">${pwField("pn", t("newPass"))}</div><button class="btn p" id="ps">${t("save")}</button>`, (sh, close) => {
     bindEyes(sh);
     $("#ps", sh).onclick = async () => { const r = await api("/api/password", { old: $("#po", sh).value, password: $("#pn", sh).value }); if (r.error) return toast(terr(r.error)); close(); toast(t("saved")); };
@@ -2820,6 +3054,7 @@ Native.on((e) => { if (e.type === "broadcast" || e.type === "diag") diag("native
 
 /* ================= boot ================= */
 async function afterLogin() {
+  syncAlerts();
   const cq = new URLSearchParams(location.search).get("clip"); if (cq) { afterLogin(); return go("clip", cq); }
   const m = location.pathname.match(/^\/w\/([a-z0-9]+)/);
   if (S.live && S.bstate !== "idle") return go("studio");

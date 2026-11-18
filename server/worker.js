@@ -405,6 +405,13 @@ export default {
         const r = await hub(env, p.slice(4), { ...b, token: bearer(req) });
         return J(r, r.error ? 400 : 200);
       }
+      if (p === "/api/sched" && req.method === "POST") {
+        const b = await req.json().catch(() => ({}));
+        const r = await hub(env, "/sched", { ...b, token: bearer(req) });
+        return J(r, r.error ? 400 : 200);
+      }
+      if (p === "/api/upcoming") return J(await hub(env, "/upcoming", { token: bearer(req), handle: url.searchParams.get("u") || "" }));
+      if (p === "/api/alerts") return J(await hub(env, "/alerts", { token: bearer(req) || url.searchParams.get("t") || "", since: +url.searchParams.get("since") || 0 }), 200, { "cache-control": "no-store" });
       if (p === "/api/streamers") {
         return J(await hub(env, "/streamers", { mode: url.searchParams.get("mode") || "month", token: bearer(req) }));
       }
@@ -736,6 +743,7 @@ export class Hub {
       CREATE TABLE IF NOT EXISTS pubs(pub TEXT PRIMARY KEY, uid TEXT, room TEXT, role TEXT, created INTEGER, beat INTEGER DEFAULT 0);
       CREATE TABLE IF NOT EXISTS pending(device TEXT PRIMARY KEY, data TEXT, created INTEGER);
       CREATE TABLE IF NOT EXISTS follows(uid TEXT, target TEXT, PRIMARY KEY(uid, target));
+      CREATE TABLE IF NOT EXISTS sched(id TEXT PRIMARY KEY, uid TEXT, title TEXT, game TEXT, gameIcon TEXT, at INTEGER, created INTEGER);
       CREATE TABLE IF NOT EXISTS hits(k TEXT PRIMARY KEY, n INTEGER, t INTEGER);
       CREATE TABLE IF NOT EXISTS resets(email TEXT PRIMARY KEY, code TEXT, until INTEGER, tries INTEGER DEFAULT 0);
     `);
@@ -914,6 +922,8 @@ export class Hub {
     const tp = this.top3()[u.id || u.uid]; if (tp) out.top = tp;
     return out;
   }
+  schedOut(r) { const h = this.one("SELECT * FROM users WHERE id=?", r.uid); return { id: r.id, title: r.title, game: r.game, gameIcon: r.gameIcon, at: r.at, host: h ? this.pubUser(h) : { id: r.uid } }; }
+  schedOf(uid) { return this.all("SELECT * FROM sched WHERE uid=? AND at>? ORDER BY at LIMIT 10", uid, now() - 30 * 60000).map((r) => this.schedOut(r)); }
   addCoins(uid, delta, kind, ref) {
     this.sql.exec("UPDATE users SET coins=coins+? WHERE id=?", delta, uid);
     this.sql.exec("INSERT INTO tx(uid, delta, kind, ref, t) VALUES(?,?,?,?,?)", uid, delta, kind, String(ref || ""), now());
@@ -1084,7 +1094,7 @@ export class Hub {
       const games = this.all("SELECT game, MAX(gameIcon) icon, COUNT(*) n FROM streams WHERE uid=? AND game<>'' GROUP BY lower(game) ORDER BY n DESC LIMIT 8", u.id);
       const viewer = b.token ? this.user(b.token) : null;
       const subsCount = this.one("SELECT COUNT(*) n FROM subs WHERE host=? AND until>?", u.id, t).n;
-      return J2({ goal: this.goalOf(u.id), topSupporters: this.topSupporters(u.id, 5), streamer: this.streamerOf(u), mySub: viewer ? this.subOf(viewer.id, u.id) : null, subsCount, user: this.pubUser(u), followers, following, streamsCount: st.n || 0, bestPeak: st.p || 0, hours: Math.round((st.d || 0) / 360000) / 10, games: games.map((g) => ({ name: g.game, icon: g.icon === "local" ? "" : g.icon, n: g.n })), streams: past });
+      return J2({ goal: this.goalOf(u.id), topSupporters: this.topSupporters(u.id, 5), streamer: this.streamerOf(u), mySub: viewer ? this.subOf(viewer.id, u.id) : null, subsCount, user: this.pubUser(u), followers, following, streamsCount: st.n || 0, bestPeak: st.p || 0, hours: Math.round((st.d || 0) / 360000) / 10, games: games.map((g) => ({ name: g.game, icon: g.icon === "local" ? "" : g.icon, n: g.n })), streams: past, sched: this.schedOf(u.id) });
     }
     if (p === "/password") {
       const u = this.user(b.token);
@@ -1569,6 +1579,48 @@ export class Hub {
         vips: this.all("SELECT uid, role FROM modroles WHERE host=? AND role='vip' ORDER BY t", h.id).map(U).filter(Boolean),
         sanctions: this.all("SELECT uid, kind, until FROM sanctions WHERE host=? AND until>? ORDER BY until DESC LIMIT 200", h.id, t).map(U).filter(Boolean) });
     }
+    if (p === "/coins-move") {
+      // called by a Room (predictions / giveaways). list: [{uid, delta, ref}]; a negative delta needs the balance
+      const out = {};
+      for (const m of b.list || []) {
+        const u = this.one("SELECT id, coins FROM users WHERE id=? AND deleted=0", String(m.uid)); if (!u) continue;
+        const d = Math.trunc(+m.delta || 0); if (!d) continue;
+        if (d < 0 && (u.coins | 0) < -d) { if (b.list.length === 1) return J2({ error: "no_coins" }); continue; }
+        this.addCoins(u.id, d, String(b.kind || "game"), m.ref || "");
+        out[u.id] = (u.coins | 0) + d;
+      }
+      return J2({ ok: true, coins: out });
+    }
+    if (p === "/sched") {
+      const u = this.user(b.token); if (!u) return J2({ error: "auth" });
+      if (b.op === "del") { this.sql.exec("DELETE FROM sched WHERE id=? AND uid=?", String(b.id), u.id); }
+      else {
+        const at = +b.at || 0;
+        if (at < t + 60000 || at > t + 60 * 86400000) return J2({ error: "bad_time" });
+        if (this.one("SELECT COUNT(*) n FROM sched WHERE uid=? AND at>?", u.id, t).n >= 10) return J2({ error: "sched_full" });
+        this.sql.exec("INSERT INTO sched VALUES(?,?,?,?,?,?,?)", rid(8), u.id, String(b.title || "").trim().slice(0, 80), String(b.game || "").slice(0, 60), String(b.gameIcon || "").slice(0, 300), at, t);
+      }
+      return J2({ ok: true, list: this.schedOf(u.id) });
+    }
+    if (p === "/upcoming") {
+      if (b.handle) { const h = this.one("SELECT id FROM users WHERE handle=? AND deleted=0", String(b.handle).toLowerCase()); return J2({ list: h ? this.schedOf(h.id) : [] }); }
+      const u = this.user(b.token);
+      const rows = u
+        ? this.all("SELECT s.* FROM sched s JOIN follows f ON f.target=s.uid WHERE f.uid=? AND s.at>? ORDER BY s.at LIMIT 20", u.id, t - 30 * 60000)
+        : this.all("SELECT * FROM sched WHERE at>? ORDER BY at LIMIT 20", t - 30 * 60000);
+      return J2({ list: rows.map((r) => this.schedOut(r)) });
+    }
+    if (p === "/alerts") {
+      // polled by the phone in the background: followed streamers who went live + scheduled streams starting soon
+      const u = this.user(b.token); if (!u) return J2({ error: "auth" });
+      const since = Math.max(t - 6 * 3600000, b.since || t - 20 * 60000);
+      const live = this.all(`SELECT s.id, s.title, s.game, s.started, u.name, u.handle FROM streams s JOIN follows f ON f.target=s.uid JOIN users u ON u.id=s.uid
+        WHERE f.uid=? AND s.ended=0 AND s.started>? AND s.beat>? ORDER BY s.started DESC LIMIT 5`, u.id, since, t - 120000);
+      const soon = this.all(`SELECT s.*, u.name, u.handle FROM sched s JOIN follows f ON f.target=s.uid JOIN users u ON u.id=s.uid
+        WHERE f.uid=? AND s.at>? AND s.at<=? ORDER BY s.at LIMIT 5`, u.id, t, t + 12 * 60000);
+      return J2({ t, live: live.map((x) => ({ id: x.id, title: x.title, game: x.game, name: x.name, handle: x.handle, at: x.started })),
+        soon: soon.map((x) => ({ id: x.id, title: x.title, game: x.game, name: x.name, handle: x.handle, at: x.at })) });
+    }
     if (p === "/streamers") {
       const t2 = now(), mk = monthKey(t2), month = b.mode !== "all";
       const rows = month
@@ -1671,6 +1723,8 @@ export class Room {
       this.guests = (await state.storage.get("guests")) || []; // approved uids
       this.requests = (await state.storage.get("requests")) || []; // [{uid,name,color}]
       this.poll = (await state.storage.get("poll")) || null;
+      this.pred = (await state.storage.get("pred")) || null;
+      this.gw = (await state.storage.get("gw")) || null;
       this.challenges = (await state.storage.get("challenges")) || [];
       this.hype = (await state.storage.get("hype")) || { v: 0, t: now(), lvl: 1 };
       this.pinned = (await state.storage.get("pinned")) || null;
@@ -1888,7 +1942,7 @@ export class Room {
       const h = this.hypeNow();
       this.send(server, {
         t: "hello", yt: this.yt || null, me: att, meta: this.meta && { room: this.meta.room, host: this.meta.host, hostName: this.meta.hostName, title: this.meta.title, started: this.meta.started, ended: this.meta.ended, ytChan: !!this.meta.ytChan, ytOn: !!this.meta.ytOn }, history: this.history, publishers: this.publishers(),
-        viewers: this.counts(), poll: this.pollOut(), hype: { v: Math.round(h.v), lvl: h.lvl },
+        viewers: this.counts(), poll: this.pollOut(), pred: this.predOut(), mybet: this.pred && this.pred.bets[uid] || null, gw: this.gwOut(), gwIn: !!(this.gw && this.gw.ent[uid]), hype: { v: Math.round(h.v), lvl: h.lvl },
         challenges: this.challenges, pinned: this.pinned, guests: this.guests,
         requests: this.isHost(uid) ? this.requests : undefined,
         redeems: this.isHost(uid) ? this.redeems || [] : undefined,
@@ -1922,6 +1976,51 @@ export class Room {
     return R({ error: "unknown" }, 404);
   }
 
+  predOut() {
+    const p = this.pred; if (!p) return null;
+    return { id: p.id, q: p.q, opts: p.opts, pools: p.pools, counts: p.counts, ends: p.ends, state: p.state, win: p.win };
+  }
+  gwOut() {
+    const g = this.gw; if (!g) return null;
+    return { id: g.id, kw: g.kw, prize: g.prize, title: g.title, ends: g.ends, state: g.state, n: Object.keys(g.ent).length, winner: g.winner || null };
+  }
+  async coins(list, kind) {
+    return this.env.HUB.get(this.env.HUB.idFromName("hub")).fetch("https://hub/coins-move", { method: "POST", body: JSON.stringify({ list, kind }) }).then((x) => x.json()).catch(() => ({ error: "hub" }));
+  }
+  async savePred() { await this.state.storage.put("pred", this.pred); this.bcast({ t: "pred", pred: this.predOut() }); }
+  async saveGw() { await this.state.storage.put("gw", this.gw); this.bcast({ t: "gw", gw: this.gwOut() }); }
+  // pays out (or refunds) a prediction; winners split the whole pool in proportion to their bets
+  async settlePred(win) {
+    const p = this.pred; if (!p || p.state === "done" || p.state === "cancel") return;
+    const bets = Object.entries(p.bets);
+    const total = p.pools.reduce((a, b) => a + b, 0);
+    const list = [];
+    if (win < 0 || !(p.pools[win] > 0)) { for (const [uid, b] of bets) list.push({ uid, delta: b.amt, ref: "refund:" + p.id }); p.state = "cancel"; }
+    else {
+      for (const [uid, b] of bets) if (b.opt === win) list.push({ uid, delta: Math.floor((b.amt * total) / p.pools[win]), ref: "win:" + p.id });
+      p.state = "done"; p.win = win;
+    }
+    const r = list.length ? await this.coins(list, win < 0 ? "pred_refund" : "pred_win") : { coins: {} };
+    for (const ws of this.sockets()) {
+      const a = ws.deserializeAttachment() || {}; const b = p.bets[a.uid]; if (!b) continue;
+      const got = list.find((x) => x.uid === a.uid);
+      this.send(ws, { t: "predres", won: p.state === "done" ? b.opt === win : null, got: got ? got.delta : 0, coins: r.coins && r.coins[a.uid] });
+    }
+    await this.savePred();
+  }
+  async drawGw() {
+    const g = this.gw; if (!g || g.state === "done") return;
+    const ids = Object.keys(g.ent);
+    g.state = "done";
+    if (!ids.length) { if (g.prize > 0) await this.coins([{ uid: this.meta.host, delta: g.prize, ref: "gw_refund:" + g.id }], "giveaway"); g.winner = null; }
+    else {
+      const w = ids[Math.floor(Math.random() * ids.length)];
+      g.winner = { uid: w, name: g.ent[w].name, color: g.ent[w].color };
+      if (g.prize > 0) await this.coins([{ uid: w, delta: g.prize, ref: "gw:" + g.id }], "giveaway");
+      const sm = { t: "chat", id: rid(8), uid: "", name: "", color: "#ffd36b", text: "", at: now(), ev: "gwwin", wname: g.winner.name, prize: g.prize }; this.pushHistory(sm); this.bcast(sm);
+    }
+    await this.saveGw();
+  }
   pollOut() {
     const p = this.poll;
     if (!p) return null;
@@ -1958,6 +2057,11 @@ export class Room {
         this.pushHistory(msg);
         this.bcast(msg);
         this.addHype(1);
+        const g = this.gw;
+        if (g && g.state === "open" && !host && !g.ent[me.uid] && text.toLowerCase().replace(/^[!#]/, "") === g.kw.toLowerCase()) {
+          g.ent[me.uid] = { name: me.name, color: me.color }; this.send(ws, { t: "gwin" });
+          this.state.storage.put("gw", g); if (this.allowed("gwb", 1000)) this.bcast({ t: "gw", gw: this.gwOut() });
+        }
         return;
       }
       case "react": {
@@ -2038,6 +2142,76 @@ export class Room {
         if (it.state === "refund") { this.addXp(it.uid, 0, it.cost); await this.flushLoyalty(); }
         await this.state.storage.put("redeems", this.redeems);
         this.bcast({ t: "redeems", list: this.redeems }, (i) => this.isHost(i.uid));
+        return;
+      }
+      // ---- predictions (viewers bet coins; the winning side splits the pool) ----
+      case "pred": {
+        if (!host) return;
+        if (this.pred && (this.pred.state === "open" || this.pred.state === "locked")) return this.send(ws, { t: "err", e: "pred_busy" });
+        const opts = (m.opts || []).map((o) => String(o).trim().slice(0, 30)).filter(Boolean).slice(0, 4);
+        if (opts.length < 2) return;
+        const secs = Math.min(900, Math.max(20, m.secs | 0 || 120));
+        this.pred = { id: rid(6), q: String(m.q || "").slice(0, 100), opts, pools: opts.map(() => 0), counts: opts.map(() => 0), bets: {}, ends: t + secs * 1000, state: "open", win: -1 };
+        await this.savePred();
+        await this.state.storage.setAlarm(Math.min(this.pred.ends, (await this.state.storage.getAlarm()) || Infinity));
+        { const sm = { t: "chat", id: rid(8), uid: "", name: "", color: "#a78bfa", text: this.pred.q, at: t, ev: "pred" }; this.pushHistory(sm); this.bcast(sm); }
+        return;
+      }
+      case "bet": {
+        const p = this.pred;
+        if (me.anon) return this.send(ws, { t: "err", e: "login" });
+        if (host || !p || p.state !== "open" || t >= p.ends) return this.send(ws, { t: "err", e: "pred_closed" });
+        const opt = m.opt | 0, amt = Math.floor(+m.amt || 0);
+        if (opt < 0 || opt >= p.opts.length || amt < 10 || amt > 1000000) return this.send(ws, { t: "err", e: "bad_bet" });
+        const cur = p.bets[me.uid];
+        if (cur && cur.opt !== opt) return this.send(ws, { t: "err", e: "one_side" });
+        if (!this.allowed("bet:" + me.uid, 800)) return this.send(ws, { t: "err", e: "slow" });
+        const r = await this.coins([{ uid: me.uid, delta: -amt, ref: "bet:" + p.id }], "pred_bet");
+        if (r.error) return this.send(ws, { t: "err", e: r.error });
+        if (!cur) p.counts[opt]++;
+        p.bets[me.uid] = { opt, amt: (cur ? cur.amt : 0) + amt };
+        p.pools[opt] += amt;
+        this.send(ws, { t: "mybet", bet: p.bets[me.uid], coins: r.coins[me.uid] });
+        await this.state.storage.put("pred", p);
+        if (this.allowed("pb", 400)) this.bcast({ t: "pred", pred: this.predOut() });
+        this.addHype(Math.min(20, 2 + amt / 200));
+        return;
+      }
+      case "predlock": { if (!host || !this.pred || this.pred.state !== "open") return; this.pred.state = "locked"; this.pred.ends = t; await this.savePred(); return; }
+      case "predres": { if (!host || !this.pred) return; const w = m.opt | 0; if (w < 0 || w >= this.pred.opts.length) return; await this.settlePred(w); return; }
+      case "predcancel": { if (!host || !this.pred) return; await this.settlePred(-1); return; }
+      case "predclear": { if (!host || !this.pred || this.pred.state === "open" || this.pred.state === "locked") return; this.pred = null; await this.savePred(); return; }
+      // ---- giveaway (type the keyword in chat to enter) ----
+      case "gw": {
+        if (!host) return;
+        if (this.gw && (this.gw.state === "open" || this.gw.state === "closed")) return this.send(ws, { t: "err", e: "gw_busy" });
+        const kw = String(m.kw || "").trim().replace(/\s+/g, "").slice(0, 20) || "join";
+        const prize = Math.max(0, Math.min(10000000, Math.floor(+m.prize || 0)));
+        const secs = Math.min(1800, Math.max(15, m.secs | 0 || 120));
+        if (prize > 0) { const r = await this.coins([{ uid: me.uid, delta: -prize, ref: "gw" }], "giveaway"); if (r.error) return this.send(ws, { t: "err", e: r.error }); this.send(ws, { t: "coins", coins: r.coins[me.uid] }); }
+        this.gw = { id: rid(6), kw, prize, title: String(m.title || "").slice(0, 60), ent: {}, ends: t + secs * 1000, state: "open", winner: null };
+        await this.saveGw();
+        await this.state.storage.setAlarm(Math.min(this.gw.ends, (await this.state.storage.getAlarm()) || Infinity));
+        return;
+      }
+      case "gwjoin": {
+        const g = this.gw; if (me.anon) return this.send(ws, { t: "err", e: "login" });
+        if (host || !g || g.state !== "open" || g.ent[me.uid]) return;
+        g.ent[me.uid] = { name: me.name, color: me.color }; this.send(ws, { t: "gwin" });
+        await this.state.storage.put("gw", g); if (this.allowed("gwb", 1000)) this.bcast({ t: "gw", gw: this.gwOut() });
+        return;
+      }
+      case "gwdraw": { if (!host || !this.gw) return; await this.drawGw(); return; }
+      case "gwclear": { if (!host || !this.gw || this.gw.state !== "done") return; this.gw = null; await this.saveGw(); return; }
+      // ---- wheel of fortune: custom entries or the latest chatters ----
+      case "wheel": {
+        if (!host || !this.allowed("wheel", 6000)) return;
+        let opts = (m.opts || []).map((o) => String(o).trim().slice(0, 24)).filter(Boolean).slice(0, 12);
+        if (m.src === "chat") { const seen = new Set(); opts = []; for (let i = this.history.length - 1; i >= 0 && opts.length < 12; i--) { const h = this.history[i]; if (h.t === "chat" && h.uid && !h.host && !seen.has(h.uid)) { seen.add(h.uid); opts.push(String(h.name || "").slice(0, 24)); } } }
+        if (opts.length < 2) return this.send(ws, { t: "err", e: "wheel_few" });
+        const pick = Math.floor(Math.random() * opts.length);
+        this.bcast({ t: "wheel", id: rid(6), opts, pick, title: String(m.title || "").slice(0, 60), at: t });
+        this.addHype(10);
         return;
       }
       case "vote": {
@@ -2274,11 +2448,15 @@ export class Room {
       await this.state.storage.put("poll", this.poll);
       this.bcast({ t: "poll", poll: this.pollOut() });
     }
+    if (this.pred && this.pred.state === "open" && t >= this.pred.ends) { this.pred.state = "locked"; await this.savePred(); }
+    if (this.gw && this.gw.state === "open" && t >= this.gw.ends) { this.gw.state = "closed"; await this.saveGw(); }
     await this.syncHub();
     try { await this.loyaltyTick(t); } catch (e) {}
     if (this.pinned && this.pinned.until && t > this.pinned.until) { this.pinned = null; await this.state.storage.put("pinned", null); this.bcast({ t: "pinned", msg: null }); }
     const next = [];
     if (this.poll && !this.poll.done) next.push(this.poll.ends);
+    if (this.pred && this.pred.state === "open") next.push(this.pred.ends);
+    if (this.gw && this.gw.state === "open") next.push(this.gw.ends);
     if (this.pinned && this.pinned.until) next.push(this.pinned.until + 200);
     if (this.meta && this.meta.ytChan && this.meta.ytOn && !this.meta.ended && this.env.YT_API_KEY) {
       try { await this.ytStep(t); } catch (e) {}

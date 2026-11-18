@@ -234,6 +234,11 @@ class MainActivity : AppCompatActivity() {
                 val t = listOf(d.optString("text"), d.optString("url")).filter { it.isNotBlank() }.joinToString("\n")
                 startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, t), null))
             }
+            "alerts" -> {
+                val on = d.optBoolean("on", true)
+                if (on && Build.VERSION.SDK_INT >= 33 && !granted(Manifest.permission.POST_NOTIFICATIONS)) perms.launch(arrayOf(Manifest.permission.POST_NOTIFICATIONS))
+                LiveAlerts.configure(applicationContext, on, d.optString("token"), d.optString("server").ifEmpty { server })
+            }
             "open" -> runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(d.optString("url")))) }
             "haptic" -> {
                 val v = getSystemService(VIBRATOR_SERVICE) as Vibrator

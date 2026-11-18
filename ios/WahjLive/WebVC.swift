@@ -129,6 +129,8 @@ final class WebVC: UIViewController, WKScriptMessageHandler, WKNavigationDelegat
             let a = UIActivityViewController(activityItems: items, applicationActivities: nil)
             a.popoverPresentationController?.sourceView = view
             present(a, animated: true)
+        case "alerts":
+            LiveAlerts.configure(data)
         case "open":
             if let s = data["url"] as? String, let u = URL(string: s) { UIApplication.shared.open(u) }
         case "haptic":

@@ -16,7 +16,8 @@
 	<array><dict><key>CFBundleURLSchemes</key><array><string>wahj</string></array></dict></array>
 	<key>LSRequiresIPhoneOS</key><true/>
 	<key>LSApplicationQueriesSchemes</key><array><string>shortcuts</string></array>
-	<key>UIBackgroundModes</key><array><string>audio</string></array>
+	<key>UIBackgroundModes</key><array><string>audio</string><string>fetch</string><string>processing</string></array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key><array><string>com.cruyfford.wahj.alerts</string></array>
 	<key>NSMicrophoneUsageDescription</key><string>يُستخدم الميكروفون لدمج صوتك مع صوت اللعبة أثناء البث.</string>
 	<key>NSCameraUsageDescription</key><string>تُستخدم الكاميرا لعرض وجهك أثناء البث.</string>
 	<key>NSLocalNetworkUsageDescription</key><string>يتواصل وهج مع إضافة البث على نفس الجهاز.</string>
