@@ -3868,9 +3868,8 @@ VIEWS.settings = (root) => {
     ${sec(t("secApp"),
       row("globe", t("language"), langName(S.lang), `<span class="mut">›</span>`, "xlang") +
       (Native.has() ? row("zap", t("haptics"), "", sw("p:haptics", P.haptics)) : "") +
-      row("refresh", t("clearCache"), "", "", "xcache") +
-      row("spark", t("aboutT"), t("madeBy"), `<span class="mut">›</span>`, "xabout"))}
-    ${sec(t("secAbout"), row("live", "Wahj Live", t("version") + " " + esc((S.native && S.native.version) || "web"), ""))}
+      row("refresh", t("clearCache"), "", "", "xcache"))}
+    ${sec(t("secAbout"), row("live", "Wahj Live · " + t("version") + " " + esc((S.native && S.native.version) || "1.0"), t("madeBy"), `<span class="mut">›</span>`, "xabout"))}
   </div></div>`;
   $("#xb").onclick = () => go(S.token ? "me" : "home");
   const saveG = () => store.set("golive", g);
